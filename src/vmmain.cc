@@ -1,4 +1,4 @@
 #include <iostream>
-#include "model/Model.h"
+#include "Model.h"
 
 int main() { std::cout << "hello!" << std::endl; }
