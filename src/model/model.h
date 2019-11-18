@@ -1,6 +1,4 @@
 #include "controller/controller.h"
-#include  "view/view.h"
+#include "view/view.h"
 
-class Model {
-
-};
+class Model {};
