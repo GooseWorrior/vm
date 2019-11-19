@@ -15,7 +15,7 @@ class Model {
   string filename;
 
  public:
-  Model() {}
+  Model();
 };
 }  // namespace CS246E
 #endif
