@@ -6,7 +6,7 @@ OBJECTS = ${addprefix ${SRCDIR}/, Model.o vmmain.o controller/Controller.o contr
 DEPENDS = ${OBJECTS:.o=.d}
 
 ${EXEC}: ${OBJECTS}
-	${CXX} ${OBJECTS} -o ${EXEC}
+	${CXX} ${OBJECTS} -lncurses -o ${EXEC}
 
 -include ${DEPENDS}
 

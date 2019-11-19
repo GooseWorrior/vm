@@ -14,8 +14,10 @@ using std::string;
 
 namespace CS246E {
 class VM : public Model {
+  string text;
+
  public:
-  VM(string filename) {}
+  VM(string filename);
 };
 }  // namespace CS246E
 #endif
