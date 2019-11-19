@@ -1,4 +1,4 @@
-#include "../model/Model.h"
+#include "../Model.h"
 
 #include "Commandline.h"
 #include "Cursor.h"
