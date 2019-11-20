@@ -17,9 +17,11 @@ int main(int argc, char *argv[]) {
   string filename = argv[1];
 
   initscr();
+  noecho();
   unique_ptr<CS246E::VM> model = std::make_unique<CS246E::VM>(filename);
   unique_ptr<CS246E::Keyboard> controller =
       std::make_unique<CS246E::Keyboard>();
   model->addController(std::move(controller));
+  model->process();
   endwin();  // remove after quit command is written
 }

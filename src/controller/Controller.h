@@ -7,7 +7,7 @@ namespace CS246E {
 class Controller {
  public:
   Controller();
-  virtual string getChar() = 0;
+  virtual char getChar() = 0;
 };
 }  // namespace CS246E
 

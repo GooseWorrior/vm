@@ -8,7 +8,7 @@ namespace CS246E {
 class Keyboard : public Controller {
  public:
   Keyboard();
-  string getChar() override;
+  char getChar() override;
 };
 }  // namespace CS246E
 #endif

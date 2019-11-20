@@ -1,6 +1,7 @@
 #include "Model.h"
 #include <memory>
 #include "controller/Keyboard.h"
+#include "ncurses.h"
 #include "view/View.h"
 
 using std::unique_ptr;

@@ -17,6 +17,7 @@ class View;
 class Keyboard;
 
 class Model {
+ protected:
   unique_ptr<View> view;
   unique_ptr<Keyboard> controller;
   string filename;

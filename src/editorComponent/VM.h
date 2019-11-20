@@ -18,6 +18,7 @@ class VM : public Model {
 
  public:
   VM(string filename);
+  void process();
 };
 }  // namespace CS246E
 #endif
