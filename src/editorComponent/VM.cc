@@ -18,20 +18,45 @@ VM::VM(string filename) {
   file >> std::noskipws;
 
   char c;
+  string line = "";
   while (file >> c) {
-    text += c;
+    line += c;
+    if (c == '\n') {
+      this->text.push_back(line);
+    }
+    addch(c);
   }
-  printw("%s", text.c_str());
   refresh();
 }
 void VM::process() {
-  while (true) {
-    char input = controller->getChar();
-    if (input == 'q') {
-      break;
+  int x = text.size();
+  int y = text.back().length();
+  int input;
+  while (input != 'q') {
+    move(y, x);
+    input = controller->getChar();
+    switch (input) {
+      case KEY_LEFT:
+        x--;
+        break;
+      case KEY_RIGHT:
+        x++;
+        break;
+      case KEY_UP:
+        y--;
+        break;
+      case KEY_DOWN:
+        y++;
+        break;
+      default:
+        text.back() += input;
+        if (input == '\n') {
+          text.push_back("");
+        }
+        printw("%c", input);
+        x++;
+        break;
     }
-    text += input;
-    addch(input);
     refresh();
   }
 }

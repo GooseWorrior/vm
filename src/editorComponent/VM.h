@@ -2,6 +2,7 @@
 #define VM_H
 
 #include <string>
+#include <vector>
 
 #include "../Model.h"
 
@@ -11,10 +12,11 @@
 #include "StatusLine.h"
 
 using std::string;
+using std::vector;
 
 namespace CS246E {
 class VM : public Model {
-  string text;
+  vector<string> text;
 
  public:
   VM(string filename);

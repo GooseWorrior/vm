@@ -2,7 +2,7 @@
 #include <ncurses.h>
 
 namespace CS246E {
-char Keyboard::getChar() {
+int Keyboard::getChar() {
   return getch();
   // return string(1, getch());
 }
