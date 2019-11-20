@@ -4,7 +4,7 @@ Task: Setup (Makefile, Git, GitKraken, VS Code, .h files)
 Date: November 17
 Assignee: Han and Derek
 
-Major Task: Implement functionality for Text class (adding and deleting characters). Since Text depends on many other classes such as EditorComponent and KeyBoard, parts of these classes should be implemented too.
+Major Task: Implement functionality for Text class (adding and deleting characters). Since Text depends on many other classes such as EditorComponent and Keyboard, parts of these classes should be implemented too.
 
 Subtask: Implement necessary code for View and Model for Text class to work
 Date: November 20
