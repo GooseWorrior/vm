@@ -1,4 +1,4 @@
-#include <curses.h>
+#include <ncurses.h>
 #include <fstream>
 #include <iostream>  // remove after debugging
 
@@ -13,8 +13,6 @@
 namespace CS246E {
 VM::VM(string filename) {
   // load files
-  initscr();
-
   std::ifstream file{filename};
   file >> std::noskipws;
 
@@ -25,8 +23,6 @@ VM::VM(string filename) {
   string a = "fdsdsfdsfsfdfds\ndsfsdf\nsdfdssdfsdf\n\ndsfsdf";
   printw("%s", text.c_str());
   refresh();
-  getch();
-  endwin();
-  std::cout << text;  // remove after debugging
 }
+
 }  // namespace CS246E

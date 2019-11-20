@@ -5,6 +5,10 @@
 #include "Controller.h"
 
 namespace CS246E {
-class KeyBoard : Controller {};
+class Keyboard : public Controller {
+ public:
+  Keyboard();
+  string getChar() override;
+};
 }  // namespace CS246E
 #endif
