@@ -38,5 +38,6 @@
     "xstddef": "cpp",
     "xtr1common": "cpp"
   },
-  "files.eol": "\n"
+  "files.eol": "\n",
+  "C_Cpp.errorSquiggles": "Disabled"
 }
