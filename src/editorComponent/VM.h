@@ -18,6 +18,8 @@ namespace CS246E {
 class VM : public Model {
   vector<string> text;
 
+  int checkLineLength(int x, int lineLength);
+
  public:
   VM(string filename);
   void process();

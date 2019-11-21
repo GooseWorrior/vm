@@ -28,8 +28,13 @@ VM::VM(string filename) {
     addch(c);
   }
   this->text.push_back(line);
-  refresh();
+  // refresh();
 }
+
+int VM::checkLineLength(int x, int lineLength) {
+  return lineLength > x ? x : lineLength == 0 ? lineLength : lineLength - 1;
+}
+
 void VM::process() {
   int x = text.back().length();
   int y = text.size() - 1;
@@ -37,7 +42,10 @@ void VM::process() {
 
   int input;
   while (input != 'q') {
-    move(y, x);
+    wmove(stdscr, y, x);
+    mvcur(50, 50, y, x);
+    // printw("yeet");
+
     // printw("%d, %d", x, y);
     input = controller->getChar();
     switch (input) {
@@ -47,33 +55,50 @@ void VM::process() {
         }
         break;
       case KEY_RIGHT:
-        if (x < text[y].length() - 1 ||
+        if (x < static_cast<int>(text[y].length()) - 1 ||
             (y == text.size() - 1 && x < text[y].length())) {
+          // printw("[%d,%d, %d]", x, text[y].length() - 1,
+          //        x < text[y].length() - 1);
           ++x;
         }
         break;
       case KEY_UP:
         if (y > 0) {
           --y;
+          x = checkLineLength(x, text[y].length());
         }
         break;
       case KEY_DOWN:
         if (y < text.size() - 1) {
           ++y;
+          x = checkLineLength(x, text[y].length());
         }
         break;
       default:
-        text.back() += input;
-        printw("%c", input);
         if (input == '\n') {
-          text.push_back("");
+          if (y == static_cast<int>(text.size()) - 1) {
+            text.push_back("");
+          } else {
+            // TODO
+            text[y] = text[y].substr(0, x);
+          }
           ++y;
           x = -1;
+        } else {
+          text[y] = text[y].substr(0, x) + string(1, input) +
+                    text[y].substr(x, text[y].length());
+          if (x == text[y].length() - 1) {
+            addch(input);
+          } else {
+            // insch(input);
+            mvprintw(y, 0, "%s", text[y].c_str());
+          }
         }
         ++x;
+
+        // refresh();
         break;
     }
-    refresh();
   }
 }
 }  // namespace CS246E

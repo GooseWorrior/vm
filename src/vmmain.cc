@@ -28,4 +28,5 @@ int main(int argc, char *argv[]) {
   model->process();
 
   endwin();  // remove after quit command is written
+  return 0;
 }
