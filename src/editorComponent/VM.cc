@@ -12,7 +12,7 @@
 #include "StatusLine.h"
 
 namespace CS246E {
-VM::VM(string filename): vcursor(0, 0, text) {
+VM::VM(string filename) : vcursor(0, 0, text) {
   // load files
   std::ifstream file{filename};
   file >> std::noskipws;
@@ -30,53 +30,61 @@ VM::VM(string filename): vcursor(0, 0, text) {
   }
   if (text.empty()) text.push_back("");
   updateWindowSize();
-  //printw("%s", text.c_str());
-  //refresh();
+  // printw("%s", text.c_str());
+  // refresh();
 }
 void VM::process() {
   pair<int, int> prevCursor;
   int prevSize = 0;
-  while (true) {
+  while (input == 'q') {
     int input = controller->getChar(), prevChar = 0;
-    bool edit = false; // could be omitted
+    bool edit = false;  // could be omitted
     prevSize = text.size();
     prevCursor = pair<int, int>(vcursor.getRow(), vcursor.getCol());
-    if (input == 'q') {
-      break;
-    }
-    switch(input) {
+    switch (input) {
       case KEY_LEFT:
-        --vcursor; break;
+        --vcursor;
+        break;
       case KEY_RIGHT:
-        ++vcursor; break;
+        ++vcursor;
+        break;
       case KEY_UP:
-        vcursor.prevLine(); break;
+        vcursor.prevLine();
+        break;
       case KEY_DOWN:
-        vcursor.nextLine(); break;
+        vcursor.nextLine();
+        break;
       case KEY_BACKSPACE:
-        edit = true; prevChar = vcursor.erase(); break;
-      case 410: // special resize character
+        edit = true;
+        prevChar = vcursor.erase();
+        break;
+      case 410:  // special resize character
         break;
       default:
-        edit = true; vcursor.insert(input); break;
-    } 
-    if (updateWindowSize()) printTextAll(); 
-    else if (text.size() != prevSize) printTextAfterward(input, prevCursor);
-    else if (edit && vcursor.getCol() != text[vcursor.getRow()].size()) printTextLine(input, prevCursor, prevChar);
-    else if (edit) printTextChar(input, prevChar);
+        edit = true;
+        vcursor.insert(input);
+        break;
+    }
+    if (updateWindowSize())
+      printTextAll();
+    else if (text.size() != prevSize)
+      printTextAfterward(input, prevCursor);
+    else if (edit && vcursor.getCol() != text[vcursor.getRow()].size())
+      printTextLine(input, prevCursor, prevChar);
+    else if (edit)
+      printTextChar(input, prevChar);
     pair<int, int> loc = updateLoc();
-    move(loc.first, loc.second); 
-    //text += input;
-    //addch(input);
-    //refresh();
+    move(loc.first, loc.second);
+    // text += input;
+    // addch(input);
+    // refresh();
   }
 }
 
-bool VM::updateWindowSize() { 
+bool VM::updateWindowSize() {
   int prevRow = WindowSize.first, prevCol = WindowSize.second;
   getmaxyx(stdscr, WindowSize.first, WindowSize.second);
-  if (prevRow != WindowSize.first || prevCol != WindowSize.second) return true;
-  else return false;
+  return prevRow != WindowSize.first || prevCol != WindowSize.second;
 }
 
 pair<int, int> VM::updateLoc() {
@@ -87,19 +95,18 @@ pair<int, int> VM::updateLoc() {
       for (size_t j = 0; j < vcursor.getCol(); ++j) {
         temp2 += text[i][j] == '\t' ? 8 : 1;
         temp1 += text[i][j] == '\t' ? 8 : 1;
-      }   
+      }
     } else {
       for (size_t j = 0; j < text[i].size(); ++j) {
         temp2 += text[i][j] == '\t' ? 8 : 1;
       }
     }
-    row += temp2 / WindowSize.second + 1;  
+    row += temp2 / WindowSize.second + 1;
   }
   row--;
   col = temp1 % WindowSize.second;
   return pair<int, int>(row, col);
 }
-
 
 void VM::printTextAll() {
   clear();
@@ -110,43 +117,46 @@ void VM::printTextAll() {
 }
 
 void VM::printTextAfterward(int input, pair<int, int> prevCursor) {
-    clrtobot(); 
-    pair<int, int> loc = updateLoc();
-    move(loc.first, loc.second);
-    for (size_t i = vcursor.getRow(); i < text.size(); ++i) {
-       if (i == vcursor.getRow()) {
-         printw("%s\n%s\n", text[i].substr(vcursor.getCol()).c_str(), text[i].substr(vcursor.getCol()).c_str());
-        } else {
-         printw("%s\n", text[i].c_str());
-       }
+  clrtobot();
+  pair<int, int> loc = updateLoc();
+  move(loc.first, loc.second);
+  for (size_t i = vcursor.getRow(); i < text.size(); ++i) {
+    if (i == vcursor.getRow()) {
+      printw("%s\n%s\n", text[i].substr(vcursor.getCol()).c_str(),
+             text[i].substr(vcursor.getCol()).c_str());
+    } else {
+      printw("%s\n", text[i].c_str());
     }
+  }
 }
 
 void VM::printTextLine(int input, pair<int, int> prevCursor, int prevChar) {
   if (input == KEY_BACKSPACE && prevChar == 0) return;
   pair<int, int> loc = updateLoc();
-  clrtoeol(); 
+  clrtoeol();
   if (input == KEY_BACKSPACE) {
-      move(loc.first, loc.second);
-      for (size_t i = vcursor.getCol(); i < text[vcursor.getRow()].size(); ++i) {
-           addch(text[vcursor.getRow()][i]);
-      }
+    move(loc.first, loc.second);
+    for (size_t i = vcursor.getCol(); i < text[vcursor.getRow()].size(); ++i) {
+      addch(text[vcursor.getRow()][i]);
+    }
   } else {
-      for (size_t i = prevCursor.second; i < text[prevCursor.first].size(); ++i) {
-           addch(text[prevCursor.first][i]);
-      }
-  } 
+    for (size_t i = prevCursor.second; i < text[prevCursor.first].size(); ++i) {
+      addch(text[prevCursor.first][i]);
+    }
+  }
   refresh();
 }
 
 void VM::printTextChar(int input, int prevChar) {
   pair<int, int> loc = updateLoc();
   if (input == KEY_BACKSPACE) {
-     move(loc.first, loc.second);
-     if (prevChar == '\t') addch('\t');
-     else if (prevChar != 0) addch(' ');
+    move(loc.first, loc.second);
+    if (prevChar == '\t')
+      addch('\t');
+    else if (prevChar != 0)
+      addch(' ');
   } else {
-     addch(text[vcursor.getRow()][vcursor.getCol() - 1]);
+    addch(text[vcursor.getRow()][vcursor.getCol() - 1]);
   }
   refresh();
 }

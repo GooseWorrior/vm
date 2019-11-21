@@ -4,12 +4,12 @@
 #include "../editorComponent/VM.h"
 #include "View.h"
 namespace CS246E {
-    class PlainView : public View {
-        public:
-            PlainView();
-            void update() override;
-            void display() override;
-            ~PlainView();
-    };
+class PlainView : public View {
+ public:
+  PlainView();
+  void update() override;
+  void display() override;
+  ~PlainView();
+};
 }  // namespace CS246E
 #endif
