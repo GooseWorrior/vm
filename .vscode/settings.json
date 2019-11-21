@@ -39,5 +39,6 @@
     "xtr1common": "cpp",
     "vector": "cpp"
   },
-  "files.eol": "\n"
+  "files.eol": "\n",
+  "C_Cpp.errorSquiggles": "Disabled"
 }
