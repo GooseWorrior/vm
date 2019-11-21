@@ -23,38 +23,54 @@ VM::VM(string filename) {
     line += c;
     if (c == '\n') {
       this->text.push_back(line);
+      line = "";
     }
     addch(c);
   }
+  this->text.push_back(line);
   refresh();
 }
 void VM::process() {
-  int x = text.size();
-  int y = text.back().length();
+  int x = text.back().length();
+  int y = text.size() - 1;
+  // for (auto i = text.begin(); i != text.end(); ++i) std::cout << *i << ' ';
+
   int input;
   while (input != 'q') {
     move(y, x);
+    // printw("%d, %d", x, y);
     input = controller->getChar();
     switch (input) {
       case KEY_LEFT:
-        x--;
+        if (x > 0) {
+          --x;
+        }
         break;
       case KEY_RIGHT:
-        x++;
+        if (x < text[y].length() - 1 ||
+            (y == text.size() - 1 && x < text[y].length())) {
+          ++x;
+        }
         break;
       case KEY_UP:
-        y--;
+        if (y > 0) {
+          --y;
+        }
         break;
       case KEY_DOWN:
-        y++;
+        if (y < text.size() - 1) {
+          ++y;
+        }
         break;
       default:
         text.back() += input;
+        printw("%c", input);
         if (input == '\n') {
           text.push_back("");
+          ++y;
+          x = -1;
         }
-        printw("%c", input);
-        x++;
+        ++x;
         break;
     }
     refresh();
