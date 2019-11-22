@@ -27,17 +27,20 @@ VM::VM(string filename) : vcursor(0, 0, text) {
     } else {
       line += c;
     }
+    addch(c);
   }
-  if (text.empty()) text.push_back("");
+  text.push_back(line);  // pushes last line
+  vcursor.setCursor(text.size() - 1, text.back().length());
   updateWindowSize();
-  // printw("%s", text.c_str());
-  // refresh();
 }
+
 void VM::process() {
   pair<int, int> prevCursor;
   int prevSize = 0;
-  while (input == 'q') {
-    int input = controller->getChar(), prevChar = 0;
+  int input = 0;
+  while (input != 'q') {
+    input = controller->getChar();
+    int prevChar = 0;
     bool edit = false;  // could be omitted
     prevSize = text.size();
     prevCursor = pair<int, int>(vcursor.getRow(), vcursor.getCol());
@@ -65,19 +68,18 @@ void VM::process() {
         vcursor.insert(input);
         break;
     }
-    if (updateWindowSize())
+    if (updateWindowSize()) {
       printTextAll();
-    else if (text.size() != prevSize)
+    } else if (text.size() != prevSize) {
       printTextAfterward(input, prevCursor);
-    else if (edit && vcursor.getCol() != text[vcursor.getRow()].size())
+    } else if (edit && vcursor.getCol() != text[vcursor.getRow()].size()) {
       printTextLine(input, prevCursor, prevChar);
-    else if (edit)
+    } else if (edit) {
       printTextChar(input, prevChar);
+    }
+
     pair<int, int> loc = updateLoc();
     move(loc.first, loc.second);
-    // text += input;
-    // addch(input);
-    // refresh();
   }
 }
 
@@ -117,32 +119,26 @@ void VM::printTextAll() {
 }
 
 void VM::printTextAfterward(int input, pair<int, int> prevCursor) {
-  clrtobot();
-  pair<int, int> loc = updateLoc();
-  move(loc.first, loc.second);
+  clrtoeol();
   for (size_t i = vcursor.getRow(); i < text.size(); ++i) {
-    if (i == vcursor.getRow()) {
-      printw("%s\n%s\n", text[i].substr(vcursor.getCol()).c_str(),
-             text[i].substr(vcursor.getCol()).c_str());
-    } else {
-      printw("%s\n", text[i].c_str());
-    }
+    move(i, 0);
+    clrtoeol();
+    printw("%s\n", text[i].c_str());
+    refresh();
   }
 }
 
 void VM::printTextLine(int input, pair<int, int> prevCursor, int prevChar) {
   if (input == KEY_BACKSPACE && prevChar == 0) return;
   pair<int, int> loc = updateLoc();
-  clrtoeol();
   if (input == KEY_BACKSPACE) {
+    clrtoeol();
     move(loc.first, loc.second);
     for (size_t i = vcursor.getCol(); i < text[vcursor.getRow()].size(); ++i) {
       addch(text[vcursor.getRow()][i]);
     }
   } else {
-    for (size_t i = prevCursor.second; i < text[prevCursor.first].size(); ++i) {
-      addch(text[prevCursor.first][i]);
-    }
+    insch(input);
   }
   refresh();
 }
