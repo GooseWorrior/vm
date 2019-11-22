@@ -21,10 +21,11 @@ VM::VM(string filename) : vcursor(0, 0, text) {
   string line;
 
   while (file >> c) {
-    line += c;
     if (c == '\n') {
       text.push_back(line);
       line.clear();
+    } else {
+      line += c;
     }
     addch(c);
   }
@@ -82,9 +83,6 @@ void VM::process() {
 
     pair<int, int> loc = updateLoc();
     move(loc.first, loc.second);
-    // text += input;
-    // addch(input);
-    // refresh();
   }
 }
 
@@ -128,9 +126,10 @@ void VM::printTextAfterward(int input, pair<int, int> prevCursor) {
   pair<int, int> loc = updateLoc();
   move(loc.first, loc.second);
   for (size_t i = vcursor.getRow(); i < text.size(); ++i) {
+    // clrtoeol();
     if (i == vcursor.getRow()) {
-      printw("%s\n%s\n", text[i].substr(vcursor.getCol()).c_str(),
-             text[i].substr(vcursor.getCol()).c_str());
+      // not sure why this works tbh
+      printw("%s\n", text[i].substr(vcursor.getCol()).c_str());
     } else {
       printw("%s\n", text[i].c_str());
     }

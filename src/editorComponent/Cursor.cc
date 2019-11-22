@@ -44,9 +44,10 @@ int Cursor::getCol() { return theCursor.second; }
 Cursor& Cursor::insert(wchar_t c) {
   if (c == '\n') {
     theText.insert(theText.begin() + theCursor.first + 1,
-                   theText[theCursor.first].substr(theCursor.second));
+                   theText[theCursor.first].substr(
+                       theCursor.second, theText[theCursor.first].length()));
     theText[theCursor.first] =
-        theText[theCursor.first].substr(0, theCursor.second);
+        theText[theCursor.first].substr(0, theCursor.second - 1);
     theCursor.second = 0;
     theCursor.first++;
   } else {
