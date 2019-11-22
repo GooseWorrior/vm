@@ -23,6 +23,8 @@ class VM : public Model {
   vector<string> text;
   vector<unique_ptr<EditorComponent>> components;
 
+  int checkLineLength(int x, int lineLength);
+
  public:
   VM(string filename);
   void process();

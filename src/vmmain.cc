@@ -28,5 +28,7 @@ int main(int argc, char *argv[]) {
   model->addController(std::move(controller));
   model->addView(std::move(view));
   model->process();
+
   endwin();  // remove after quit command is written
+  return 0;
 }

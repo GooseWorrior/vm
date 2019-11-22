@@ -44,7 +44,8 @@ int Cursor::getCol() { return theCursor.second; }
 Cursor& Cursor::insert(wchar_t c) {
   if (c == '\n') {
     theText.insert(theText.begin() + theCursor.first + 1,
-                   theText[theCursor.first].substr(theCursor.second));
+                   theText[theCursor.first].substr(
+                       theCursor.second, theText[theCursor.first].length()));
     theText[theCursor.first] =
         theText[theCursor.first].substr(0, theCursor.second);
     theCursor.second = 0;
@@ -70,5 +71,10 @@ int Cursor::erase() {
     --(*this);
   }
   return prevChar;
+}
+
+void Cursor::setCursor(int x, int y) {
+  theCursor.first = x;
+  theCursor.second = y;
 }
 }  // namespace CS246E

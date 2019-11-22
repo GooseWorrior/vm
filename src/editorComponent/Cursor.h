@@ -23,6 +23,7 @@ class Cursor {
   int erase();
   int getRow();
   int getCol();
+  void setCursor(int x, int y);
 };
 }  // namespace CS246E
 #endif
