@@ -120,6 +120,7 @@ void VM::printTextAll() {
 
 void VM::printTextAfterward(int input, pair<int, int> prevCursor) {
   clrtoeol();
+  refresh();
   for (size_t i = vcursor.getRow(); i < text.size(); ++i) {
     move(i, 0);
     clrtoeol();
