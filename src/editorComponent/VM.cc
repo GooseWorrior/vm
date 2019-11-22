@@ -36,8 +36,10 @@ VM::VM(string filename) : vcursor(0, 0, text) {
 void VM::process() {
   pair<int, int> prevCursor;
   int prevSize = 0;
-  while (input == 'q') {
-    int input = controller->getChar(), prevChar = 0;
+  int input;
+  while (input != 'q') {
+    input = controller->getChar();
+    int prevChar = 0;
     bool edit = false;  // could be omitted
     prevSize = text.size();
     prevCursor = pair<int, int>(vcursor.getRow(), vcursor.getCol());
