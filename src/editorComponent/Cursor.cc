@@ -71,4 +71,9 @@ int Cursor::erase() {
   }
   return prevChar;
 }
+
+void Cursor::setCursor(int x, int y) {
+  theCursor.first = x;
+  theCursor.second = y;
+}
 }  // namespace CS246E

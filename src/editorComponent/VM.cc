@@ -21,28 +21,28 @@ VM::VM(string filename) : vcursor(0, 0, text) {
   string line;
 
   while (file >> c) {
+    line += c;
     if (c == '\n') {
       text.push_back(line);
       line.clear();
-    } else {
-      line += c;
     }
+    addch(c);
   }
-  if (text.empty()) text.push_back("");
+  text.push_back(line);  // pushes last line
+  vcursor.setCursor(text.size() - 1, text.back().length());
+  // if (text.empty()) text.push_back("");
   updateWindowSize();
   // printw("%s", text.c_str());
   // refresh();
 }
 
-int VM::checkLineLength(int x, int lineLength) {
-  return lineLength > x ? x : lineLength == 0 ? lineLength : lineLength - 1;
-}
-
 void VM::process() {
   pair<int, int> prevCursor;
   int prevSize = 0;
-  while (input == 'q') {
-    int input = controller->getChar(), prevChar = 0;
+  int input = 0;
+  while (input != 'q') {
+    input = controller->getChar();
+    int prevChar = 0;
     bool edit = false;  // could be omitted
     prevSize = text.size();
     prevCursor = pair<int, int>(vcursor.getRow(), vcursor.getCol());
@@ -70,14 +70,16 @@ void VM::process() {
         vcursor.insert(input);
         break;
     }
-    if (updateWindowSize())
+    if (updateWindowSize()) {
       printTextAll();
-    else if (text.size() != prevSize)
+    } else if (text.size() != prevSize) {
       printTextAfterward(input, prevCursor);
-    else if (edit && vcursor.getCol() != text[vcursor.getRow()].size())
+    } else if (edit && vcursor.getCol() != text[vcursor.getRow()].size()) {
       printTextLine(input, prevCursor, prevChar);
-    else if (edit)
+    } else if (edit) {
       printTextChar(input, prevChar);
+    }
+
     pair<int, int> loc = updateLoc();
     move(loc.first, loc.second);
     // text += input;
@@ -94,7 +96,7 @@ bool VM::updateWindowSize() {
 
 pair<int, int> VM::updateLoc() {
   int row = 0, col = 0, temp1 = 0;
-  for (size_t i = 0; i <= vcursor.getRow(); ++i) {
+  for (size_t i = 0; i < vcursor.getRow(); ++i) {
     size_t temp2 = 0;
     if (i == vcursor.getRow()) {
       for (size_t j = 0; j < vcursor.getCol(); ++j) {
