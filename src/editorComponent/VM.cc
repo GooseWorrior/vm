@@ -35,6 +35,7 @@ VM::VM(string filename) : vcursor(0, 0, text) {
 }
 
 void VM::process() {
+  int state = 0;  // 0 - readonly, 1 - insert, 2 - command
   pair<int, int> prevCursor;
   int prevSize = 0;
   int input = 0;
@@ -45,6 +46,9 @@ void VM::process() {
     prevSize = text.size();
     prevCursor = pair<int, int>(vcursor.getRow(), vcursor.getCol());
     switch (input) {
+      case 'a':
+        state = 1;
+        break;
       case KEY_LEFT:
         --vcursor;
         break;
@@ -64,8 +68,11 @@ void VM::process() {
       case 410:  // special resize character
         break;
       default:
-        edit = true;
-        vcursor.insert(input);
+        if (state == 1) {
+          edit = true;
+          vcursor.insert(input);
+        }
+
         break;
     }
     if (updateWindowSize()) {
