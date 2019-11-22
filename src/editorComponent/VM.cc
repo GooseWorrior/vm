@@ -96,7 +96,7 @@ bool VM::updateWindowSize() {
 
 pair<int, int> VM::updateLoc() {
   int row = 0, col = 0, temp1 = 0;
-  for (size_t i = 0; i < vcursor.getRow(); ++i) {
+  for (size_t i = 0; i <= vcursor.getRow(); ++i) {
     size_t temp2 = 0;
     if (i == vcursor.getRow()) {
       for (size_t j = 0; j < vcursor.getCol(); ++j) {
@@ -140,16 +140,18 @@ void VM::printTextAfterward(int input, pair<int, int> prevCursor) {
 void VM::printTextLine(int input, pair<int, int> prevCursor, int prevChar) {
   if (input == KEY_BACKSPACE && prevChar == 0) return;
   pair<int, int> loc = updateLoc();
-  clrtoeol();
   if (input == KEY_BACKSPACE) {
+    clrtoeol();
     move(loc.first, loc.second);
     for (size_t i = vcursor.getCol(); i < text[vcursor.getRow()].size(); ++i) {
       addch(text[vcursor.getRow()][i]);
     }
   } else {
-    for (size_t i = prevCursor.second; i < text[prevCursor.first].size(); ++i) {
-      addch(text[prevCursor.first][i]);
-    }
+    // for (size_t i = prevCursor.second; i < text[prevCursor.first].size();
+    // ++i) {
+    //   addch(text[prevCursor.first][i]);
+    // }
+    insch(input);
   }
   refresh();
 }
