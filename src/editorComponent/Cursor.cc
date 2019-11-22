@@ -47,7 +47,7 @@ Cursor& Cursor::insert(wchar_t c) {
                    theText[theCursor.first].substr(
                        theCursor.second, theText[theCursor.first].length()));
     theText[theCursor.first] =
-        theText[theCursor.first].substr(0, theCursor.second - 1);
+        theText[theCursor.first].substr(0, theCursor.second);
     theCursor.second = 0;
     theCursor.first++;
   } else {

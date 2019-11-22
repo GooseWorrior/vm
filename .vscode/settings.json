@@ -37,7 +37,8 @@
     "xmemory0": "cpp",
     "xstddef": "cpp",
     "xtr1common": "cpp",
-    "vector": "cpp"
+    "vector": "cpp",
+    "algorithm": "cpp"
   },
   "files.eol": "\n",
   "C_Cpp.errorSquiggles": "Disabled"

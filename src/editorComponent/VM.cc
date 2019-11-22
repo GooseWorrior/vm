@@ -31,10 +31,7 @@ VM::VM(string filename) : vcursor(0, 0, text) {
   }
   text.push_back(line);  // pushes last line
   vcursor.setCursor(text.size() - 1, text.back().length());
-  // if (text.empty()) text.push_back("");
   updateWindowSize();
-  // printw("%s", text.c_str());
-  // refresh();
 }
 
 void VM::process() {
@@ -122,17 +119,12 @@ void VM::printTextAll() {
 }
 
 void VM::printTextAfterward(int input, pair<int, int> prevCursor) {
-  clrtobot();
-  pair<int, int> loc = updateLoc();
-  move(loc.first, loc.second);
+  clrtoeol();
   for (size_t i = vcursor.getRow(); i < text.size(); ++i) {
-    // clrtoeol();
-    if (i == vcursor.getRow()) {
-      // not sure why this works tbh
-      printw("%s\n", text[i].substr(vcursor.getCol()).c_str());
-    } else {
-      printw("%s\n", text[i].c_str());
-    }
+    move(i, 0);
+    clrtoeol();
+    printw("%s\n", text[i].c_str());
+    refresh();
   }
 }
 
@@ -146,10 +138,6 @@ void VM::printTextLine(int input, pair<int, int> prevCursor, int prevChar) {
       addch(text[vcursor.getRow()][i]);
     }
   } else {
-    // for (size_t i = prevCursor.second; i < text[prevCursor.first].size();
-    // ++i) {
-    //   addch(text[prevCursor.first][i]);
-    // }
     insch(input);
   }
   refresh();
