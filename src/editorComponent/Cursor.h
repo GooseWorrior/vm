@@ -31,6 +31,8 @@ class Cursor {
   void setCursor(int x, int y);
   void handlePercentage(char input);
   void handleCaret();
+  void handlef(int toFind);
+  void handleF(int toFind);
 };
 }  // namespace CS246E
 #endif

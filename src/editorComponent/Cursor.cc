@@ -208,4 +208,25 @@ void Cursor::handleCaret() {
     setCursor(theCursor.first, index);
   }
 }
+
+void Cursor::handlef(int toFind) {
+  size_t index;
+  for (index = theCursor.second + 1; index < theText[theCursor.first].length();
+       ++index) {
+    if (theText[theCursor.first][index] == toFind) {
+      setCursor(theCursor.first, index);
+      return;
+    }
+  }
+}
+
+void Cursor::handleF(int toFind) {
+  int index;
+  for (index = theCursor.second - 1; index >= 0; --index) {
+    if (theText[theCursor.first][index] == toFind) {
+      setCursor(theCursor.first, index);
+      return;
+    }
+  }
+}
 }  // namespace CS246E

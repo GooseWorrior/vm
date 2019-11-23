@@ -88,6 +88,16 @@ void VM::process() {
           vcursor.handleCaret();
         }
         break;
+      case 70:  // big F
+        if (state == 0) {
+          vcursor.handleF(getch());
+        }
+        break;
+      case 102:  // little f
+        if (state == 0) {
+          vcursor.handlef(getch());
+        }
+        break;
       default:
         if (state == 1) {
           edit = true;
