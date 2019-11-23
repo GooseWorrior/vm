@@ -12,9 +12,10 @@ namespace CS246E {
 class Cursor {
   pair<int, int> theCursor;
   vector<string>& theText;
-
+  pair<int, int> & winPtr;
+  pair<int, int> & winSize;
  public:
-  Cursor(int row, int col, vector<string>& theText);
+  Cursor(int row, int col, vector<string>& theText, pair<int, int> & winPtr, pair<int, int> & winSize);
   Cursor& operator++();
   Cursor& operator--();
   Cursor& nextLine();
@@ -24,6 +25,8 @@ class Cursor {
   int getRow();
   int getCol();
   void setCursor(int x, int y);
+  private:
+  void updatePointer(int mode);
 };
 }  // namespace CS246E
 #endif
