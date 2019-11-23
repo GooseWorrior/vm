@@ -24,6 +24,10 @@ class Cursor {
   int getRow();
   int getCol();
   void setCursor(int x, int y);
+  void handlePercentage(char input);
+  void moveToCloseBracket(char openBracket, char closeBracket);
+  void moveToOpenBracket(char openBracket, char closeBracket);
+  void findPairedBracket();
 };
 }  // namespace CS246E
 #endif
