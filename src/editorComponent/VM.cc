@@ -1,7 +1,6 @@
 #include <ncurses.h>
 #include <fstream>
 #include <iostream>  // remove after debugging
-#include <stack>
 
 #include "../Model.h"
 #include "../controller/Keyboard.h"
@@ -12,7 +11,6 @@
 #include "EditorComponent.h"
 #include "StatusLine.h"
 
-using std::stack;
 
 namespace CS246E {
 VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
