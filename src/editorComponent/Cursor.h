@@ -11,6 +11,7 @@ using std::vector;
 namespace CS246E {
 class Cursor {
   pair<int, int> theCursor;
+  pair<char, char> lastFind;  // first is f/F, second is any char
   vector<string>& theText;
 
   // helpers for handlePercentage
@@ -33,6 +34,7 @@ class Cursor {
   void handleCaret();
   void handlef(int toFind);
   void handleF(int toFind);
+  void handleSemiColon();
 };
 }  // namespace CS246E
 #endif

@@ -210,6 +210,8 @@ void Cursor::handleCaret() {
 }
 
 void Cursor::handlef(int toFind) {
+  lastFind.first = 'F';
+  lastFind.second = toFind;
   size_t index;
   for (index = theCursor.second + 1; index < theText[theCursor.first].length();
        ++index) {
@@ -221,12 +223,22 @@ void Cursor::handlef(int toFind) {
 }
 
 void Cursor::handleF(int toFind) {
+  lastFind.first = 'F';
+  lastFind.second = toFind;
   int index;
   for (index = theCursor.second - 1; index >= 0; --index) {
     if (theText[theCursor.first][index] == toFind) {
       setCursor(theCursor.first, index);
       return;
     }
+  }
+}
+
+void Cursor::handleSemiColon() {
+  if (lastFind.first == 'f') {
+    handlef(lastFind.second);
+  } else if (lastFind.first == 'F') {
+    handlef(lastFind.second);
   }
 }
 }  // namespace CS246E

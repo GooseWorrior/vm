@@ -98,6 +98,11 @@ void VM::process() {
           vcursor.handlef(getch());
         }
         break;
+      case 59:  // semi colon ;
+        if (state == 0) {
+          vcursor.handleSemiColon();
+        }
+        break;
       default:
         if (state == 1) {
           edit = true;
