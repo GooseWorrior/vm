@@ -20,6 +20,7 @@ namespace CS246E {
 class VM : public Model {
   Cursor vcursor;
   pair<int, int> WindowSize;
+  pair<int, int> WindowPointer;
   vector<string> text;
   vector<unique_ptr<EditorComponent>> components;
 
