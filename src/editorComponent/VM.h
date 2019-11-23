@@ -24,12 +24,8 @@ class VM : public Model {
   vector<string> text;
   vector<unique_ptr<EditorComponent>> components;
 
-  vector<pair<pair<int, int>, pair<int, int>>> bracketLoc;
-
   int checkLineLength(int x, int lineLength);
   void findPairedBracket();
-  void moveToCloseBracket(char openBracket, char closeBracket);
-  void moveToOpenBracket(char openBracket, char closeBracket);
 
  public:
   VM(string filename);
