@@ -238,7 +238,7 @@ void Cursor::handleSemiColon() {
   if (lastFind.first == 'f') {
     handlef(lastFind.second);
   } else if (lastFind.first == 'F') {
-    handlef(lastFind.second);
+    handleF(lastFind.second);
   }
 }
 }  // namespace CS246E
