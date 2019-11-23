@@ -193,4 +193,19 @@ void Cursor::findPairedBracket() {
     setCursor(theCursor.first, closest);
   }
 }
+
+void Cursor::handleCaret() {
+  size_t index;
+  for (index = 0; index < theText[theCursor.first].length(); ++index) {
+    if (theText[theCursor.first][index] != ' ' &&
+        theText[theCursor.first][index] != '\t') {
+      break;
+    }
+  }
+  if (index == theText[theCursor.first].length()) {
+    setCursor(theCursor.first, index - 1);
+  } else {
+    setCursor(theCursor.first, index);
+  }
+}
 }  // namespace CS246E

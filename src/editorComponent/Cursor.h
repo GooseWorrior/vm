@@ -13,6 +13,11 @@ class Cursor {
   pair<int, int> theCursor;
   vector<string>& theText;
 
+  // helpers for handlePercentage
+  void moveToCloseBracket(char openBracket, char closeBracket);
+  void moveToOpenBracket(char openBracket, char closeBracket);
+  void findPairedBracket();
+
  public:
   Cursor(int row, int col, vector<string>& theText);
   Cursor& operator++();
@@ -25,9 +30,7 @@ class Cursor {
   int getCol();
   void setCursor(int x, int y);
   void handlePercentage(char input);
-  void moveToCloseBracket(char openBracket, char closeBracket);
-  void moveToOpenBracket(char openBracket, char closeBracket);
-  void findPairedBracket();
+  void handleCaret();
 };
 }  // namespace CS246E
 #endif

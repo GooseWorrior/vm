@@ -71,19 +71,23 @@ void VM::process() {
         break;
       case 410:  // special resize character
         break;
-      case 36:  // dollar sign $
+      case 36:  // dollar $
         if (state == 0) {
           // set to end of line
           vcursor.setCursor(vcursor.getRow(),
                             text[vcursor.getRow()].length() - 1);
         }
         break;
-      case 37: {
+      case 37:  // percentage %
         if (state == 0) {
           vcursor.handlePercentage(text[vcursor.getRow()][vcursor.getCol()]);
         }
         break;
-      }
+      case 94:  // caret ^
+        if (state == 0) {
+          vcursor.handleCaret();
+        }
+        break;
       default:
         if (state == 1) {
           edit = true;
