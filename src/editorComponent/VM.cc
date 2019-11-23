@@ -15,12 +15,7 @@
 using std::stack;
 
 namespace CS246E {
-<<<<<<< HEAD
-
-VM::VM(string filename) : vcursor(0, 0, text) {
-=======
 VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
->>>>>>> develop
   // load files
   std::ifstream file{filename};
   file >> std::noskipws;
@@ -123,9 +118,10 @@ void VM::process() {
         }
         break;
     }
-    if (updateWindowSize() || 
-    (prevPointer.first != WindowPointer.first &&
-    prevPointer.second != WindowPointer.second && WindowPointer.second - WindowPointer.first + 1 < text.size())) {
+    if (updateWindowSize() ||
+        (prevPointer.first != WindowPointer.first &&
+         prevPointer.second != WindowPointer.second &&
+         WindowPointer.second - WindowPointer.first + 1 < text.size())) {
       printTextAll();
     } else if (text.size() != prevSize) {
       printTextAfterward(input, prevCursor);
@@ -173,7 +169,7 @@ void VM::printTextAll() {
     printw("%s\n", i.c_str());
   }*/
   for (size_t i = WindowPointer.first; i <= WindowPointer.second; ++i) {
-     printw("%s\n", text[i].c_str());
+    printw("%s\n", text[i].c_str());
   }
   refresh();
 }
@@ -181,10 +177,11 @@ void VM::printTextAll() {
 void VM::printTextAfterward(int input, pair<int, int> prevCursor) {
   std::ofstream f;
   f.open("debug.txt");
-  for(auto &i : text) {
+  for (auto &i : text) {
     f << i << "\n";
   }
-  f << vcursor.getRow() << " " << vcursor.getCol() << WindowPointer.first << " " << WindowPointer.second << "\n";
+  f << vcursor.getRow() << " " << vcursor.getCol() << WindowPointer.first << " "
+    << WindowPointer.second << "\n";
   clrtobot();
   refresh();
   pair<int, int> loc = updateLoc();
@@ -214,7 +211,7 @@ void VM::printTextLine(int input, pair<int, int> prevCursor, int prevChar) {
 void VM::printTextChar(int input, int prevChar) {
   std::ofstream f;
   f.open("debug.txt");
-  for(auto &i : text) {
+  for (auto &i : text) {
     f << i << "\n";
   }
   f << vcursor.getRow() << " " << vcursor.getCol() << "\n";
