@@ -67,6 +67,13 @@ void VM::process() {
         break;
       case 410:  // special resize character
         break;
+      case 36:  // dollar sign $
+        if (state == 0) {
+          // set to end of line
+          vcursor.setCursor(vcursor.getRow(),
+                            text[vcursor.getRow()].length() - 1);
+        }
+        break;
       default:
         if (state == 1) {
           edit = true;
