@@ -137,14 +137,11 @@ void VM::moveToCloseBracket(char openBracket, char closeBracket) {
 }
 
 void VM::moveToOpenBracket(char openBracket, char closeBracket) {
-  // std::ofstream f;
-  // f.open("debug.txt");
   vector<bool> stack;
   for (int i = vcursor.getRow(); i >= 0; --i) {
     for (int j = vcursor.getRow() == i ? vcursor.getCol() - 1
                                        : text[i].length() - 1;
          j >= 0; --j) {
-      // f << static_cast<int>(i) << " " << static_cast<int>(j) << "\n";
       if (text[i][j] == openBracket && stack.size() == 0) {
         vcursor.setCursor(i, j);
         return;
@@ -158,59 +155,63 @@ void VM::moveToOpenBracket(char openBracket, char closeBracket) {
 }
 
 void VM::findPairedBracket() {
-  vector<int> squareStack;
-  vector<int> roundStack;
-  vector<int> curlyStack;
+  vector<pair<int, int>> squareStack;
+  vector<pair<int, int>> roundStack;
+  vector<pair<int, int>> curlyStack;
   int closest = text[vcursor.getRow()].length() + 1;
-
-  for (size_t j = 0; j < text[vcursor.getRow()].length(); ++j) {
-    if (text[vcursor.getRow()][j] == '[') {
-      squareStack.push_back(j);
-    } else if (text[vcursor.getRow()][j] == '(') {
-      roundStack.push_back(j);
-    } else if (text[vcursor.getRow()][j] == '{') {
-      curlyStack.push_back(j);
-    } else if (text[vcursor.getRow()][j] == ']') {
-      if (squareStack.size()) {
-        if (squareStack.back() > vcursor.getCol()) {
-          closest =
-              closest - vcursor.getCol() > squareStack.back() - vcursor.getCol()
-                  ? squareStack.back()
-                  : closest;
+  for (size_t i = 0; i < text.size(); ++i) {
+    for (size_t j = 0; j < text[i].length(); ++j) {
+      if (text[i][j] == '[') {
+        squareStack.push_back(std::make_pair(i, j));
+      } else if (text[i][j] == '(') {
+        roundStack.push_back(std::make_pair(i, j));
+      } else if (text[i][j] == '{') {
+        curlyStack.push_back(std::make_pair(i, j));
+      } else if (text[i][j] == ']') {
+        if (squareStack.size()) {
+          if (squareStack.back().second > vcursor.getCol() &&
+              squareStack.back().first == vcursor.getRow()) {
+            closest = closest - vcursor.getCol() >
+                              squareStack.back().second - vcursor.getCol()
+                          ? squareStack.back().second
+                          : closest;
+          }
+          if (j > vcursor.getCol() && i == vcursor.getRow()) {
+            closest =
+                closest - vcursor.getCol() > j - vcursor.getCol() ? j : closest;
+          }
+          squareStack.pop_back();
         }
-        if (j > vcursor.getCol()) {
-          closest =
-              closest - vcursor.getCol() > j - vcursor.getCol() ? j : closest;
+      } else if (text[i][j] == ')') {
+        if (roundStack.size()) {
+          if (roundStack.back().second > vcursor.getCol() &&
+              roundStack.back().first == vcursor.getRow()) {
+            closest = closest - vcursor.getCol() >
+                              roundStack.back().second - vcursor.getCol()
+                          ? roundStack.back().second
+                          : closest;
+          }
+          if (j > vcursor.getCol() && i == vcursor.getRow()) {
+            closest =
+                closest - vcursor.getCol() > j - vcursor.getCol() ? j : closest;
+          }
+          roundStack.pop_back();
         }
-        squareStack.pop_back();
-      }
-    } else if (text[vcursor.getRow()][j] == ')') {
-      if (roundStack.size()) {
-        if (roundStack.back() > vcursor.getCol()) {
-          closest =
-              closest - vcursor.getCol() > roundStack.back() - vcursor.getCol()
-                  ? roundStack.back()
-                  : closest;
+      } else if (text[i][j] == '}') {
+        if (curlyStack.size()) {
+          if (curlyStack.back().second > vcursor.getCol() &&
+              curlyStack.back().first == vcursor.getRow()) {
+            closest = closest - vcursor.getCol() >
+                              curlyStack.back().second - vcursor.getCol()
+                          ? curlyStack.back().second
+                          : closest;
+          }
+          if (j > vcursor.getCol() && i == vcursor.getRow()) {
+            closest =
+                closest - vcursor.getCol() > j - vcursor.getCol() ? j : closest;
+          }
+          curlyStack.pop_back();
         }
-        if (j > vcursor.getCol()) {
-          closest =
-              closest - vcursor.getCol() > j - vcursor.getCol() ? j : closest;
-        }
-        roundStack.pop_back();
-      }
-    } else if (text[vcursor.getRow()][j] == '}') {
-      if (curlyStack.size()) {
-        if (curlyStack.back() > vcursor.getCol()) {
-          closest =
-              closest - vcursor.getCol() > curlyStack.back() - vcursor.getCol()
-                  ? curlyStack.back()
-                  : closest;
-        }
-        if (j > vcursor.getCol()) {
-          closest =
-              closest - vcursor.getCol() > j - vcursor.getCol() ? j : closest;
-        }
-        curlyStack.pop_back();
       }
     }
   }
