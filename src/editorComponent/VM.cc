@@ -78,6 +78,12 @@ void VM::process() {
                             text[vcursor.getRow()].length() - 1);
         }
         break;
+      case 48:
+        if (state == 0) {
+          // set to start of line
+          vcursor.setCursor(vcursor.getRow(), 0);
+        }
+        break;
       case 37:  // percentage %
         if (state == 0) {
           vcursor.handlePercentage(text[vcursor.getRow()][vcursor.getCol()]);
