@@ -12,7 +12,7 @@
 #include "StatusLine.h"
 
 namespace CS246E {
-VM::VM(string filename) : vcursor(0, 0, text) {
+VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
   // load files
   std::ifstream file{filename};
   file >> std::noskipws;
@@ -32,10 +32,13 @@ VM::VM(string filename) : vcursor(0, 0, text) {
   text.push_back(line);  // pushes last line
   vcursor.setCursor(text.size() - 1, text.back().length());
   updateWindowSize();
+  WindowPointer = pair<int, int>(0, text.size() - 1);
 }
 
 void VM::process() {
+  int state = 0;  // 0 - readonly, 1 - insert, 2 - command
   pair<int, int> prevCursor;
+  pair<int, int> prevPointer;
   int prevSize = 0;
   int input = 0;
   while (input != 'q') {
@@ -44,7 +47,11 @@ void VM::process() {
     bool edit = false;  // could be omitted
     prevSize = text.size();
     prevCursor = pair<int, int>(vcursor.getRow(), vcursor.getCol());
+    prevPointer = WindowPointer;
     switch (input) {
+      case 'a':
+        state = 1;
+        break;
       case KEY_LEFT:
         --vcursor;
         break;
@@ -64,11 +71,16 @@ void VM::process() {
       case 410:  // special resize character
         break;
       default:
-        edit = true;
-        vcursor.insert(input);
+        if (state == 1) {
+          edit = true;
+          vcursor.insert(input);
+        }
+
         break;
     }
-    if (updateWindowSize()) {
+    if (updateWindowSize() || 
+    (prevPointer.first != WindowPointer.first &&
+    prevPointer.second != WindowPointer.second && WindowPointer.second - WindowPointer.first + 1 < text.size())) {
       printTextAll();
     } else if (text.size() != prevSize) {
       printTextAfterward(input, prevCursor);
@@ -91,7 +103,7 @@ bool VM::updateWindowSize() {
 
 pair<int, int> VM::updateLoc() {
   int row = 0, col = 0, temp1 = 0;
-  for (size_t i = 0; i <= vcursor.getRow(); ++i) {
+  for (size_t i = WindowPointer.first; i <= vcursor.getRow(); ++i) {
     size_t temp2 = 0;
     if (i == vcursor.getRow()) {
       for (size_t j = 0; j < vcursor.getCol(); ++j) {
@@ -112,16 +124,27 @@ pair<int, int> VM::updateLoc() {
 
 void VM::printTextAll() {
   clear();
-  for (auto i : text) {
+  /*for (auto i : text) {
     printw("%s\n", i.c_str());
+  }*/
+  for (size_t i = WindowPointer.first; i <= WindowPointer.second; ++i) {
+     printw("%s\n", text[i].c_str());
   }
   refresh();
 }
 
 void VM::printTextAfterward(int input, pair<int, int> prevCursor) {
-  clrtoeol();
-  for (size_t i = vcursor.getRow(); i < text.size(); ++i) {
-    move(i, 0);
+  std::ofstream f;
+  f.open("debug.txt");
+  for(auto &i : text) {
+    f << i << "\n";
+  }
+  f << vcursor.getRow() << " " << vcursor.getCol() << WindowPointer.first << " " << WindowPointer.second << "\n";
+  clrtobot();
+  refresh();
+  pair<int, int> loc = updateLoc();
+  move(loc.first, 0);
+  for (size_t i = vcursor.getRow(); i <= WindowPointer.second; ++i) {
     clrtoeol();
     printw("%s\n", text[i].c_str());
     refresh();
@@ -144,6 +167,12 @@ void VM::printTextLine(int input, pair<int, int> prevCursor, int prevChar) {
 }
 
 void VM::printTextChar(int input, int prevChar) {
+  std::ofstream f;
+  f.open("debug.txt");
+  for(auto &i : text) {
+    f << i << "\n";
+  }
+  f << vcursor.getRow() << " " << vcursor.getCol() << "\n";
   pair<int, int> loc = updateLoc();
   if (input == KEY_BACKSPACE) {
     move(loc.first, loc.second);
