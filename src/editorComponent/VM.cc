@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include <fstream>
 #include <iostream>  // remove after debugging
+#include <stack>
 
 #include "../Model.h"
 #include "../controller/Keyboard.h"
@@ -11,7 +12,10 @@
 #include "EditorComponent.h"
 #include "StatusLine.h"
 
+using std::stack;
+
 namespace CS246E {
+
 VM::VM(string filename) : vcursor(0, 0, text) {
   // load files
   std::ifstream file{filename};
@@ -74,12 +78,30 @@ void VM::process() {
                             text[vcursor.getRow()].length() - 1);
         }
         break;
+      case 37: {
+        char curpos = text[vcursor.getRow()][vcursor.getCol()];
+        if (curpos == '[') {
+          moveToCloseBracket('[', ']');
+        } else if (curpos == '(') {
+          moveToCloseBracket('(', ')');
+        } else if (curpos == '{') {
+          moveToCloseBracket('{', '}');
+        } else if (curpos == ']') {
+          moveToOpenBracket('[', ']');
+        } else if (curpos == ')') {
+          moveToOpenBracket('(', ')');
+        } else if (curpos == '}') {
+          moveToOpenBracket('{', '}');
+        } else {
+          findPairedBracket();
+        }
+        break;
+      }
       default:
         if (state == 1) {
           edit = true;
           vcursor.insert(input);
         }
-
         break;
     }
     if (updateWindowSize()) {
@@ -94,6 +116,106 @@ void VM::process() {
 
     pair<int, int> loc = updateLoc();
     move(loc.first, loc.second);
+  }
+}
+
+void VM::moveToCloseBracket(char openBracket, char closeBracket) {
+  vector<bool> stack;
+  for (size_t i = vcursor.getRow(); i < text.size(); ++i) {
+    for (size_t j = vcursor.getRow() == i ? vcursor.getCol() + 1 : 0;
+         j < text[i].length(); ++j) {
+      if (text[i][j] == closeBracket && stack.size() == 0) {
+        vcursor.setCursor(i, j);
+        return;
+      } else if (text[i][j] == closeBracket) {
+        stack.pop_back();
+      } else if (text[i][j] == openBracket) {
+        stack.push_back(true);
+      }
+    }
+  }
+}
+
+void VM::moveToOpenBracket(char openBracket, char closeBracket) {
+  // std::ofstream f;
+  // f.open("debug.txt");
+  vector<bool> stack;
+  for (int i = vcursor.getRow(); i >= 0; --i) {
+    for (int j = vcursor.getRow() == i ? vcursor.getCol() - 1
+                                       : text[i].length() - 1;
+         j >= 0; --j) {
+      // f << static_cast<int>(i) << " " << static_cast<int>(j) << "\n";
+      if (text[i][j] == openBracket && stack.size() == 0) {
+        vcursor.setCursor(i, j);
+        return;
+      } else if (text[i][j] == openBracket) {
+        stack.pop_back();
+      } else if (text[i][j] == closeBracket) {
+        stack.push_back(true);
+      }
+    }
+  }
+}
+
+void VM::findPairedBracket() {
+  vector<int> squareStack;
+  vector<int> roundStack;
+  vector<int> curlyStack;
+  int closest = text[vcursor.getRow()].length() + 1;
+
+  for (size_t j = 0; j < text[vcursor.getRow()].length(); ++j) {
+    if (text[vcursor.getRow()][j] == '[') {
+      squareStack.push_back(j);
+    } else if (text[vcursor.getRow()][j] == '(') {
+      roundStack.push_back(j);
+    } else if (text[vcursor.getRow()][j] == '{') {
+      curlyStack.push_back(j);
+    } else if (text[vcursor.getRow()][j] == ']') {
+      if (squareStack.size()) {
+        if (squareStack.back() > vcursor.getCol()) {
+          closest =
+              closest - vcursor.getCol() > squareStack.back() - vcursor.getCol()
+                  ? squareStack.back()
+                  : closest;
+        }
+        if (j > vcursor.getCol()) {
+          closest =
+              closest - vcursor.getCol() > j - vcursor.getCol() ? j : closest;
+        }
+        squareStack.pop_back();
+      }
+    } else if (text[vcursor.getRow()][j] == ')') {
+      if (roundStack.size()) {
+        if (roundStack.back() > vcursor.getCol()) {
+          closest =
+              closest - vcursor.getCol() > roundStack.back() - vcursor.getCol()
+                  ? roundStack.back()
+                  : closest;
+        }
+        if (j > vcursor.getCol()) {
+          closest =
+              closest - vcursor.getCol() > j - vcursor.getCol() ? j : closest;
+        }
+        roundStack.pop_back();
+      }
+    } else if (text[vcursor.getRow()][j] == '}') {
+      if (curlyStack.size()) {
+        if (curlyStack.back() > vcursor.getCol()) {
+          closest =
+              closest - vcursor.getCol() > curlyStack.back() - vcursor.getCol()
+                  ? curlyStack.back()
+                  : closest;
+        }
+        if (j > vcursor.getCol()) {
+          closest =
+              closest - vcursor.getCol() > j - vcursor.getCol() ? j : closest;
+        }
+        curlyStack.pop_back();
+      }
+    }
+  }
+  if (closest != text[vcursor.getRow()].length() + 1) {
+    vcursor.setCursor(vcursor.getRow(), closest);
   }
 }
 
