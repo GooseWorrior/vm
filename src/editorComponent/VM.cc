@@ -11,7 +11,6 @@
 #include "EditorComponent.h"
 #include "StatusLine.h"
 
-
 namespace CS246E {
 VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
   // load files
@@ -28,22 +27,29 @@ VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
     } else {
       line += c;
     }
-    addch(c);
   }
   text.push_back(line);  // pushes last line
+  WindowPointer = pair<int, int>(0, text.size() - 1);
+
+  printTextAll();
+
   vcursor.setCursor(text.size() - 1, text.back().length());
   updateWindowSize();
-  WindowPointer = pair<int, int>(0, text.size() - 1);
+  pair<int, int> loc = updateLoc();
+
+  move(loc.first, loc.second);
+  vcursor.updatePointer(1);
 }
 
 void VM::process() {
-  int state = 0;  // 0 - readonly, 1 - insert, 2 - command
+  int state = 0;  // 0 - command/readonly, 1 - insert, 2 - commandline
   pair<int, int> prevCursor;
   pair<int, int> prevPointer;
   int prevSize = 0;
   int input = 0;
   while (input != 'q') {
     input = controller->getChar();
+    vcursor.updatePointer(1);
     int prevChar = 0;
     bool edit = false;  // could be omitted
     prevSize = text.size();
@@ -109,6 +115,13 @@ void VM::process() {
           vcursor.handleSemiColon();
         }
         break;
+      case 27:  // escape
+        state = 1;
+        break;
+      case 58:  // colon
+        if (state == 0) {
+          state = 3;
+        }
       default:
         if (state == 1) {
           edit = true;
@@ -128,7 +141,14 @@ void VM::process() {
     } else if (edit) {
       printTextChar(input, prevChar);
     }
-
+    std::ofstream f;
+    f.open("debug.txt");
+    for (auto &i : text) {
+      f << i << "\n";
+    }
+    f << vcursor.getRow() << " " << vcursor.getCol() << " "
+      << WindowPointer.first << " " << WindowPointer.second << " "
+      << text.size() << " " << WindowSize.first << "\n";
     pair<int, int> loc = updateLoc();
     move(loc.first, loc.second);
   }
