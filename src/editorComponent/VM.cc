@@ -13,13 +13,18 @@
 
 namespace CS246E {
 VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
+  loadFile(filename);
+}
+
+void VM::loadFile(string filename) {
   // load files
   std::ifstream file{filename};
   file >> std::noskipws;
 
   char c;
   string line;
-
+  std::ofstream f;
+  f.open("debug.txt");
   while (file >> c) {
     if (c == '\n') {
       text.push_back(line);
@@ -28,9 +33,12 @@ VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
       line += c;
     }
   }
+  for (auto i : text) f << i << "\n";
   text.push_back(line);  // pushes last line
   WindowPointer = pair<int, int>(0, text.size() - 1);
 
+  clear();
+  refresh();
   printTextAll();
 
   vcursor.setCursor(text.size() - 1, text.back().length());
@@ -42,8 +50,6 @@ VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
 }
 
 void VM::process() {
-  // std::ofstream f;
-  // f.open("debug.txt");
   int state = 0;  // 0 - command/readonly, 1 - insert, 2 - commandline
   pair<int, int> prevCursor;
   pair<int, int> prevPointer;
@@ -81,7 +87,7 @@ void VM::process() {
         break;
       default:
         if (state == 0) {
-          state = handleMotion(input, state);
+          state = handleCommands(input, state);
         } else if (state == 1) {
           edit = true;
           vcursor.insert(input);
@@ -101,10 +107,11 @@ void VM::process() {
   }
 }
 
-int VM::handleMotion(int input, int state) {
+int VM::handleCommands(int input, int state) {
   switch (input) {
     case 97:  // a
       // insert mode
+      saveText();
       return 1;
     case 36:  // dollar $
       // set to end of line
@@ -131,6 +138,35 @@ int VM::handleMotion(int input, int state) {
       return state;
     case 58:     // colon
       return 3;  // commandline state
+    case 117:
+      loadUndo();
+      return state;
+  }
+}
+
+void VM::saveText() {
+  string command = "mktemp";
+  FILE *f = popen(command.c_str(), "r");
+  string tempDir;
+  for (char c = fgetc(f); c != EOF; c = fgetc(f)) {
+    tempDir += c;
+  }
+  std::ofstream tempFile;
+  tempFile.open(tempDir);
+  for (auto &line : text) {
+    if (line != "") {
+      tempFile << line << "\n";
+    }
+  }
+  tempFile.close();
+  undoStack.push_back(tempDir);
+}
+
+void VM::loadUndo() {
+  if (undoStack.size()) {
+    text.clear();
+    loadFile(undoStack.back());
+    undoStack.pop_back();
   }
 }
 

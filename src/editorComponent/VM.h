@@ -24,10 +24,14 @@ class VM : public Model {
   pair<int, int> WindowPointer;
   vector<string> text;
   vector<unique_ptr<EditorComponent>> components;
+  vector<string> undoStack;
 
   int checkLineLength(int x, int lineLength);
   void findPairedBracket();
-  int handleMotion(int input, int state);
+  int handleCommands(int input, int state);
+  void loadFile(string filename);
+  void saveText();
+  void loadUndo();
 
  public:
   VM(string filename);
