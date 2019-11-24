@@ -101,19 +101,41 @@ int Cursor::erase() {
 }
 
 void Cursor::updatePointer(int mode) {
-  if (mode == 1) {
-    size_t tempLine = 0;
-    for (int i = winPtr.first; i < theText.size(); ++i) {
-      size_t tempChar = 0;
-      for (int j = 0; j < theText[i].size(); ++j) {
-        tempChar += theText[i][j] == '\t' ? 8 : 1;
-      }
-      tempLine += tempChar / winSize.second + 1;
-      if (tempLine >= winSize.first) {
-        winPtr.second = i;
-        theCursor.first = min(winPtr.second, theCursor.first);
-        return;
-      }
+    if (mode == 1) {
+        size_t tempLine = 0;
+        for (int i = winPtr.first; i < theText.size(); ++i) {
+            size_t tempChar = 0;
+            for (int j = 0; j < theText[i].size(); ++j) {
+                tempChar += theText[i][j] == '\t' ? 8 : 1;
+            }
+            tempLine += tempChar / winSize.second + 1;
+            if (tempLine >= winSize.first) {
+                winPtr.second = i;
+                theCursor.first = min(winPtr.second, theCursor.first);
+                return;
+            }
+        }
+        winPtr.second = theText.size() - 1;
+    } else if (mode == -1) {
+        size_t tempLine = 0;
+        for (int i = winPtr.second; i >= 0; --i) {
+            size_t tempChar = 0;
+            for (int j = 0; j < theText[i].size(); ++j) {
+                tempChar += theText[i][j] == '\t' ? 8 : 1;
+            }
+            tempLine += tempChar / winSize.second + 1;
+            if (tempLine >= winSize.first) {
+                winPtr.first = i;
+                return;
+            }
+        }
+        winPtr.second = 0;
+    } else if (mode == 0) {
+       if (winPtr.first > theCursor.first || winPtr.second + 1 < theCursor.first) {
+           int offset = winPtr.second - winPtr.first;
+           winPtr.second = min<int>((winSize.second - winSize.second) / 2 + theCursor.first, theText.size() - 1);
+           winPtr.first = winPtr.second - offset;
+       }
     }
     winPtr.second = theText.size() - 1;
   } else if (mode = -1) {

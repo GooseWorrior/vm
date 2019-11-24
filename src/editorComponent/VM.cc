@@ -129,10 +129,10 @@ void VM::process() {
         }
         break;
     }
-    if (updateWindowSize() ||
-        (prevPointer.first != WindowPointer.first &&
-         prevPointer.second != WindowPointer.second &&
-         WindowPointer.second - WindowPointer.first + 1 < text.size())) {
+    vcursor.updatePointer(0);
+    if (updateWindowSize() || 
+    (prevPointer.first != WindowPointer.first &&
+    prevPointer.second != WindowPointer.second && WindowPointer.second - WindowPointer.first + 1 < text.size())) {
       printTextAll();
     } else if (text.size() != prevSize) {
       printTextAfterward(input, prevCursor);
@@ -180,6 +180,7 @@ pair<int, int> VM::updateLoc() {
   col = temp1 % WindowSize.second;
   return pair<int, int>(row, col);
 }
+
 
 void VM::printTextAll() {
   clear();
