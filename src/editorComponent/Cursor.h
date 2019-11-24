@@ -11,11 +11,21 @@ using std::vector;
 namespace CS246E {
 class Cursor {
   pair<int, int> theCursor;
+  pair<char, char> lastFind;  // first is f/F, second is any char
   vector<string>& theText;
-  pair<int, int> & winPtr;
-  pair<int, int> & winSize;
+
+  // helpers for handlePercentage
+  void moveToCloseBracket(char openBracket, char closeBracket);
+  void moveToOpenBracket(char openBracket, char closeBracket);
+  void findPairedBracket();
+  int checkClosest(vector<pair<int, int>>& stack, int& closest, int i, int j);
+
+  pair<int, int>& winPtr;
+  pair<int, int>& winSize;
+
  public:
-  Cursor(int row, int col, vector<string>& theText, pair<int, int> & winPtr, pair<int, int> & winSize);
+  Cursor(int row, int col, vector<string>& theText, pair<int, int>& winPtr,
+         pair<int, int>& winSize);
   Cursor& operator++();
   Cursor& operator--();
   Cursor& nextLine();
@@ -25,6 +35,11 @@ class Cursor {
   int getRow();
   int getCol();
   void setCursor(int x, int y);
+  void handlePercentage(char input);
+  void handleCaret();
+  void handlef(int toFind);
+  void handleF(int toFind);
+  void handleSemiColon();
   void updatePointer(int mode);
   int calculateLine();
 };

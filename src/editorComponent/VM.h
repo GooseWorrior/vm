@@ -25,6 +25,7 @@ class VM : public Model {
   vector<unique_ptr<EditorComponent>> components;
 
   int checkLineLength(int x, int lineLength);
+  void findPairedBracket();
 
  public:
   VM(string filename);

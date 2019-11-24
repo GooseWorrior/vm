@@ -27,22 +27,26 @@ VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
     } else {
       line += c;
     }
-    addch(c);
   }
   text.push_back(line);  // pushes last line
+  WindowPointer = pair<int, int>(0, text.size() - 1);
+
+  printTextAll();
+
   vcursor.setCursor(text.size() - 1, text.back().length());
   updateWindowSize();
-  WindowPointer = pair<int, int>(0, text.size() - 1);
+  pair<int, int> loc = updateLoc();
+
+  move(loc.first, loc.second);
   vcursor.updatePointer(1);
 }
 
 void VM::process() {
-  int state = 0;  // 0 - readonly, 1 - insert, 2 - command
+  int state = 0;  // 0 - command/readonly, 1 - insert, 2 - commandline
   pair<int, int> prevCursor;
   pair<int, int> prevPointer;
   int prevSize = 0;
   int input = 0;
-  printTextAll();
   while (input != 'q') {
     input = controller->getChar();
     vcursor.updatePointer(1);
@@ -73,12 +77,56 @@ void VM::process() {
         break;
       case 410:  // special resize character
         break;
+      case 36:  // dollar $
+        if (state == 0) {
+          // set to end of line
+          vcursor.setCursor(vcursor.getRow(),
+                            text[vcursor.getRow()].length() - 1);
+        }
+        break;
+      case 48:
+        if (state == 0) {
+          // set to start of line
+          vcursor.setCursor(vcursor.getRow(), 0);
+        }
+        break;
+      case 37:  // percentage %
+        if (state == 0) {
+          vcursor.handlePercentage(text[vcursor.getRow()][vcursor.getCol()]);
+        }
+        break;
+      case 94:  // caret ^
+        if (state == 0) {
+          vcursor.handleCaret();
+        }
+        break;
+      case 70:  // big F
+        if (state == 0) {
+          vcursor.handleF(getch());
+        }
+        break;
+      case 102:  // little f
+        if (state == 0) {
+          vcursor.handlef(getch());
+        }
+        break;
+      case 59:  // semi colon ;
+        if (state == 0) {
+          vcursor.handleSemiColon();
+        }
+        break;
+      case 27:  // escape
+        state = 1;
+        break;
+      case 58:  // colon
+        if (state == 0) {
+          state = 3;
+        }
       default:
         if (state == 1) {
           edit = true;
           vcursor.insert(input);
         }
-
         break;
     }
     vcursor.updatePointer(0);
@@ -95,11 +143,12 @@ void VM::process() {
     }
     std::ofstream f;
     f.open("debug.txt");
-    for(auto &i : text) {
-     f << i << "\n";
-   }
-    f << vcursor.getRow() << " " << vcursor.getCol() << " " << WindowPointer.first << " " << WindowPointer.second << " " <<
-    text.size() << " " << WindowSize.first << "\n";
+    for (auto &i : text) {
+      f << i << "\n";
+    }
+    f << vcursor.getRow() << " " << vcursor.getCol() << " "
+      << WindowPointer.first << " " << WindowPointer.second << " "
+      << text.size() << " " << WindowSize.first << "\n";
     pair<int, int> loc = updateLoc();
     move(loc.first, loc.second);
   }
@@ -139,7 +188,7 @@ void VM::printTextAll() {
     printw("%s\n", i.c_str());
   }*/
   for (size_t i = WindowPointer.first; i <= WindowPointer.second; ++i) {
-     printw("%s\n", text[i].c_str());
+    printw("%s\n", text[i].c_str());
   }
   refresh();
 }
@@ -147,10 +196,11 @@ void VM::printTextAll() {
 void VM::printTextAfterward(int input, pair<int, int> prevCursor) {
   std::ofstream f;
   f.open("debug.txt");
-  for(auto &i : text) {
+  for (auto &i : text) {
     f << i << "\n";
   }
-  f << vcursor.getRow() << " " << vcursor.getCol() << WindowPointer.first << " " << WindowPointer.second << "\n";
+  f << vcursor.getRow() << " " << vcursor.getCol() << WindowPointer.first << " "
+    << WindowPointer.second << "\n";
   clrtobot();
   refresh();
   pair<int, int> loc = updateLoc();
@@ -180,7 +230,7 @@ void VM::printTextLine(int input, pair<int, int> prevCursor, int prevChar) {
 void VM::printTextChar(int input, int prevChar) {
   std::ofstream f;
   f.open("debug.txt");
-  for(auto &i : text) {
+  for (auto &i : text) {
     f << i << "\n";
   }
   f << vcursor.getRow() << " " << vcursor.getCol() << "\n";
