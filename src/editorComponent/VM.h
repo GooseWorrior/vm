@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "../Model.h"
+#include "../view/PlainView.h"
 
 #include "Commandline.h"
 #include "Cursor.h"
@@ -23,9 +24,14 @@ class VM : public Model {
   pair<int, int> WindowPointer;
   vector<string> text;
   vector<unique_ptr<EditorComponent>> components;
+  vector<string> undoStack;
 
   int checkLineLength(int x, int lineLength);
   void findPairedBracket();
+  int handleCommands(int input, int state);
+  void loadFile(string filename);
+  void saveText();
+  void loadUndo();
 
  public:
   VM(string filename);
@@ -37,6 +43,8 @@ class VM : public Model {
   void printTextLine(int input, pair<int, int> prevCursor,
                      int prevChar);  // temporary
   void printTextChar(int input, int prevChar);
+
+  friend class PlainView;
 };
 }  // namespace CS246E
 #endif
