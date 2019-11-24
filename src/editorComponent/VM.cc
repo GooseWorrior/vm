@@ -26,17 +26,7 @@ void VM::loadFile(string filename) {
 
   char c;
   string line;
-  std::ofstream f;
-  f.open("debug.txt");
-  while (file >> c) {
-    if (c == '\n') {
-      text.push_back(line);
-      line.clear();
-    } else {
-      line += c;
-    }
-  }
-  for (auto i : text) f << i << "\n";
+
   text.push_back(line);  // pushes last line
   WindowPointer = pair<int, int>(0, text.size() - 1);
 
@@ -64,6 +54,8 @@ void VM::process() {
   int prevState = 0;
   int prevSize = 0;
   int input = 0;
+  std::ofstream f;
+  f.open("debug.txt");
   while (input != 'q') {
     input = controller->getChar();
     int prevChar = 0;
@@ -97,7 +89,9 @@ void VM::process() {
         break;
       default:
         if (state == 0) {
-          state = handleCommands(input, state);
+          f << input;
+          f.close();
+          handleCommands(input);
         } else if (state == 1) {
           edit = true;
           vcursor.insert(input);
@@ -134,53 +128,46 @@ void VM::process() {
     theComponents.updateLocation();
     theComponents.print();
     // theComponents.update();
-    std::ofstream f;
-    f.open("debug.txt");
-    for (auto &i : text) {
-      f << i << "\n";
-    }
-    f << vcursor.getRow() << " " << vcursor.getCol() << " "
-      << WindowPointer.first << " " << WindowPointer.second << " "
-      << text.size() << " " << WindowSize.first << "\n";
     pair<int, int> loc = updateLoc();
     move(loc.first, loc.second);
   }
 }
 
-int VM::handleCommands(int input, int state) {
+void VM::handleCommands(int input) {
   switch (input) {
     case 97:  // a
-      // insert mode
+              // insert mode
       saveText();
-      return 1;
+      state = 1;
+      break;
     case 36:  // dollar $
       // set to end of line
       vcursor.setCursor(vcursor.getRow(), text[vcursor.getRow()].length() - 1);
-      return state;
+      break;
     case 48:
       // set to start of line
       vcursor.setCursor(vcursor.getRow(), 0);
-      return state;
+      break;
     case 37:  // percentage %
       vcursor.handlePercentage(text[vcursor.getRow()][vcursor.getCol()]);
-      return state;
+      break;
     case 94:  // caret ^
       vcursor.handleCaret();
-      return state;
+      break;
     case 70:  // big F
       vcursor.handleF(getch());
-      return state;
+      break;
     case 102:  // little f
       vcursor.handlef(getch());
-      return state;
+      break;
     case 59:  // semi colon ;
       vcursor.handleSemiColon();
-      return state;
-    case 58:     // colon
-      return 3;  // commandline state
+      break;
+    case 58:      // colon
+      state = 3;  // commandline state
     case 117:
       loadUndo();
-      return state;
+      break;
   }
 }
 

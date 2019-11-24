@@ -30,7 +30,7 @@ class VM : public Model {
 
   int checkLineLength(int x, int lineLength);
   void findPairedBracket();
-  int handleCommands(int input, int state);
+  void handleCommands(int input);
   void loadFile(string filename);
   void saveText();
   void loadUndo();
