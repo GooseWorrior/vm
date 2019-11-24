@@ -27,6 +27,7 @@ class VM : public Model {
   vector<string> text;
   vector<unique_ptr<EditorComponent>> components;
   vector<string> undoStack;
+  vector<pair<int, int>> cursorStack;
 
   int checkLineLength(int x, int lineLength);
   void findPairedBracket();
@@ -34,6 +35,7 @@ class VM : public Model {
   void loadFile(string filename);
   void saveText();
   void loadUndo();
+  void loadCursor();
 
  public:
   VM(string filename);

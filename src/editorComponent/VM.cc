@@ -26,7 +26,14 @@ void VM::loadFile(string filename) {
 
   char c;
   string line;
-
+  while (file >> c) {
+    if (c == '\n') {
+      text.push_back(line);
+      line.clear();
+    } else {
+      line += c;
+    }
+  }
   text.push_back(line);  // pushes last line
   WindowPointer = pair<int, int>(0, text.size() - 1);
 
@@ -54,6 +61,8 @@ void VM::process() {
   int prevState = 0;
   int prevSize = 0;
   int input = 0;
+  bool shouldSave = true;
+
   std::ofstream f;
   f.open("debug.txt");
   while (input != 'q') {
@@ -67,16 +76,24 @@ void VM::process() {
     prevState = state;
     switch (input) {
       case KEY_LEFT:
-        --vcursor;
+        if (vcursor.getCol() != (--vcursor).getCol()) {
+          shouldSave = true;
+        }
         break;
       case KEY_RIGHT:
-        ++vcursor;
+        if (vcursor.getCol() != (++vcursor).getCol()) {
+          shouldSave = true;
+        }
         break;
       case KEY_UP:
-        vcursor.prevLine();
+        if (vcursor.getRow() != vcursor.prevLine().getRow()) {
+          shouldSave = true;
+        }
         break;
       case KEY_DOWN:
-        vcursor.nextLine();
+        if (vcursor.getRow() != vcursor.nextLine().getRow()) {
+          shouldSave = true;
+        }
         break;
       case KEY_BACKSPACE:
         edit = true;
@@ -94,6 +111,10 @@ void VM::process() {
           handleCommands(input);
         } else if (state == 1) {
           edit = true;
+          if (shouldSave) {
+            saveText();
+            shouldSave = false;
+          }
           vcursor.insert(input);
         }
     }
@@ -137,7 +158,6 @@ void VM::handleCommands(int input) {
   switch (input) {
     case 97:  // a
               // insert mode
-      saveText();
       state = 1;
       break;
     case 36:  // dollar $
@@ -167,6 +187,7 @@ void VM::handleCommands(int input) {
       state = 3;  // commandline state
     case 117:
       loadUndo();
+      loadCursor();
       break;
   }
 }
@@ -180,13 +201,16 @@ void VM::saveText() {
   }
   std::ofstream tempFile;
   tempFile.open(tempDir);
-  for (auto &line : text) {
-    if (line != "") {
-      tempFile << line << "\n";
+  for (int i = 0; i < text.size(); ++i) {
+    if (i != text.size() - 1) {
+      tempFile << text[i] << "\n";
+    } else {
+      tempFile << text[i];
     }
   }
   tempFile.close();
   undoStack.push_back(tempDir);
+  cursorStack.push_back(std::make_pair(vcursor.getRow(), vcursor.getCol()));
 }
 
 void VM::loadUndo() {
@@ -194,6 +218,13 @@ void VM::loadUndo() {
     text.clear();
     loadFile(undoStack.back());
     undoStack.pop_back();
+  }
+}
+
+void VM::loadCursor() {
+  if (cursorStack.size()) {
+    vcursor.setCursor(cursorStack.back().first, cursorStack.back().second);
+    cursorStack.pop_back();
   }
 }
 
