@@ -12,7 +12,8 @@
 #include "StatusLine.h"
 
 namespace CS246E {
-VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
+VM::VM(string filename) : state{0}, vcursor(0, 0, text, WindowPointer, WindowSize),
+ theComponents{WindowSize, WindowPointer, vcursor, text, state} {
   // load files
   std::ifstream file{filename};
   file >> std::noskipws;
@@ -35,26 +36,33 @@ VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
 
   vcursor.setCursor(text.size() - 1, text.back().length());
   updateWindowSize();
-  pair<int, int> loc = updateLoc();
 
+  printPlaceholder();
+  
+  theComponents.addelement({3, 1});
+  theComponents.print();
+  
+  pair<int, int> loc = updateLoc();
   move(loc.first, loc.second);
   vcursor.updatePointer(1);
 }
 
 void VM::process() {
-  int state = 0;  // 0 - command/readonly, 1 - insert, 2 - commandline
+  pair<int, int> prevWindowSize;
   pair<int, int> prevCursor;
   pair<int, int> prevPointer;
+  int prevState = 0;
   int prevSize = 0;
   int input = 0;
   while (input != 'q') {
     input = controller->getChar();
-    vcursor.updatePointer(1);
     int prevChar = 0;
     bool edit = false;  // could be omitted
     prevSize = text.size();
     prevCursor = pair<int, int>(vcursor.getRow(), vcursor.getCol());
     prevPointer = WindowPointer;
+    prevWindowSize = WindowSize;
+    prevState = state;
     switch (input) {
       case 'a':
         state = 1;
@@ -129,8 +137,10 @@ void VM::process() {
         }
         break;
     }
-    vcursor.updatePointer(0);
-    if (updateWindowSize() ||
+    updateWindowSize();
+    vcursor.updatePointer(1);
+    if (!edit) vcursor.updatePointer(0);
+    if (prevWindowSize != WindowSize ||
         (prevPointer.first != WindowPointer.first &&
          prevPointer.second != WindowPointer.second &&
          WindowPointer.second - WindowPointer.first + 1 < text.size())) {
@@ -142,7 +152,22 @@ void VM::process() {
     } else if (edit) {
       printTextChar(input, prevChar);
     }
+    
+    printPlaceholder();
 
+    if (prevState != state) {
+      if (state == 1) {
+        theComponents.reset();   
+        theComponents.addelement({2, 3, 1});
+      } else if (state == 0) {
+        theComponents.reset();   
+        theComponents.addelement({3, 1});
+      }
+    } 
+    theComponents.updateContents();
+    theComponents.updateLocation();
+    theComponents.print();
+    //theComponents.update();
     std::ofstream f;
     f.open("debug.txt");
     for (auto &i : text) {
@@ -159,9 +184,18 @@ void VM::process() {
 bool VM::updateWindowSize() {
   int prevRow = WindowSize.first, prevCol = WindowSize.second;
   getmaxyx(stdscr, WindowSize.first, WindowSize.second);
+   WindowSize.first--; // little trick here
   return prevRow != WindowSize.first || prevCol != WindowSize.second;
 }
 
+void VM::printPlaceholder() {
+    attron(COLOR_PAIR(1));
+    for (int i = vcursor.calculateLine(); i < WindowSize.first; i++) {
+      mvaddch(i, 0,'~');
+    }
+    refresh();
+    attroff(COLOR_PAIR(1));
+}
 pair<int, int> VM::updateLoc() {
   int row = 0, col = 0, temp1 = 0;
   for (size_t i = WindowPointer.first; i <= vcursor.getRow(); ++i) {
