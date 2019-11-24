@@ -19,10 +19,12 @@ class Cursor {
   void moveToOpenBracket(char openBracket, char closeBracket);
   void findPairedBracket();
 
-  pair<int, int> & winPtr;
-  pair<int, int> & winSize;
+  pair<int, int>& winPtr;
+  pair<int, int>& winSize;
+
  public:
-  Cursor(int row, int col, vector<string>& theText, pair<int, int> & winPtr, pair<int, int> & winSize);
+  Cursor(int row, int col, vector<string>& theText, pair<int, int>& winPtr,
+         pair<int, int>& winSize);
   Cursor& operator++();
   Cursor& operator--();
   Cursor& nextLine();
@@ -37,7 +39,6 @@ class Cursor {
   void handlef(int toFind);
   void handleF(int toFind);
   void handleSemiColon();
-  private:
   void updatePointer(int mode);
   int calculateLine();
 };
