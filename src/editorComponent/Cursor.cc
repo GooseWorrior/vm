@@ -84,10 +84,11 @@ int Cursor::erase() {
     theText[theCursor.first - 1] += theText[theCursor.first];
     theText.erase(theText.begin() + theCursor.first);
     if ((theCursor.first - winPtr.first) <=
-            (winPtr.second - winPtr.first) / 3 &&
+            (winPtr.second - winPtr.first)  &&
         winPtr.first > 0) {
       winPtr.first--;
       updatePointer(1);
+      if (winPtr.first == theCursor.first) theCursor.first++;
     } else if (calculateLine() < winSize.first) {
       updatePointer(1);
     }
@@ -131,7 +132,7 @@ void Cursor::updatePointer(int mode) {
     }
     winPtr.second = 0;
   } else if (mode == 0) {
-    if (winPtr.first > theCursor.first || winPtr.second + 1 < theCursor.first) {
+    if (winPtr.first > theCursor.first || winPtr.second < theCursor.first) {
       int offset = winPtr.second - winPtr.first;
       winPtr.second =
           min<int>((winSize.second - winSize.second) / 2 + theCursor.first,

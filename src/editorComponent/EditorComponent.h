@@ -1,9 +1,34 @@
 #ifndef EDITOR_COMPONENT_H
 #define EDITOR_COMPONENT_H
 
+#include "StatusLine.h"
+#include "Cursor.h"
+#include <vector>
+#include <initializer_list>
+#include <memory>
+
+using std::unique_ptr;
+using std::initializer_list;
+using std::vector;
+
 namespace CS246E {
 class EditorComponent {
-  // virtual ~Editor() = 0;
+    pair<int, int> & winSize;
+    pair<int, int> & winPtr;
+    Cursor & vcursor;
+    vector<string> & theText;
+    int & state;
+    vector<pair<int, unique_ptr<StatusLine>>> components;
+    public:
+      EditorComponent(pair<int, int> & winSize, pair<int, int> & winPtr, Cursor & vcursor, vector<string> & text, int & state);
+      void reset();
+      void addelement(initializer_list<int> types);
+      pair<int, int> getLocation(int type);
+      string getContents(int type);
+      bool updateContents();
+      bool updateLocation();
+      void update();
+      void print();
 };
 }  // namespace CS246E
 #endif

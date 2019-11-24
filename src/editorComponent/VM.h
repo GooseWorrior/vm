@@ -8,7 +8,7 @@
 #include "../view/PlainView.h"
 
 #include "Commandline.h"
-#include "Cursor.h"
+//#include "Cursor.h"
 #include "EditorComponent.h"
 #include "StatusLine.h"
 
@@ -19,7 +19,9 @@ using std::vector;
 
 namespace CS246E {
 class VM : public Model {
+  int state;  // 0 - command/readonly, 1 - insert, 2 - commandline
   Cursor vcursor;
+  EditorComponent theComponents;
   pair<int, int> WindowSize;
   pair<int, int> WindowPointer;
   vector<string> text;
@@ -43,7 +45,7 @@ class VM : public Model {
   void printTextLine(int input, pair<int, int> prevCursor,
                      int prevChar);  // temporary
   void printTextChar(int input, int prevChar);
-
+  void printPlaceholder();
   friend class PlainView;
 };
 }  // namespace CS246E

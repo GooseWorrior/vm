@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-#include "EditorComponent.h"
 
 using std::pair;
 using std::string;

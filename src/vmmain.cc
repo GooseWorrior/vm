@@ -22,8 +22,9 @@ int main(int argc, char *argv[]) {
   noecho();
   keypad(stdscr, true);  // fech all
   cbreak();              // fetch all
-
-  shared_ptr<CS246E::VM> model = std::make_shared<CS246E::VM>(filename);
+  start_color();         // enable color
+  init_pair(1, COLOR_BLUE, COLOR_BLACK);
+  unique_ptr<CS246E::VM> model = std::make_unique<CS246E::VM>(filename);
   unique_ptr<CS246E::Keyboard> controller =
       std::make_unique<CS246E::Keyboard>();
   unique_ptr<CS246E::View> view =
