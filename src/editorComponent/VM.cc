@@ -130,19 +130,17 @@ void VM::process() {
         break;
     }
     vcursor.updatePointer(0);
-    if (state == 1) {
-      if (updateWindowSize() ||
-          (prevPointer.first != WindowPointer.first &&
-           prevPointer.second != WindowPointer.second &&
-           WindowPointer.second - WindowPointer.first + 1 < text.size())) {
-        printTextAll();
-      } else if (text.size() != prevSize) {
-        printTextAfterward(input, prevCursor);
-      } else if (edit && vcursor.getCol() != text[vcursor.getRow()].size()) {
-        printTextLine(input, prevCursor, prevChar);
-      } else if (edit) {
-        printTextChar(input, prevChar);
-      }
+    if (updateWindowSize() ||
+        (prevPointer.first != WindowPointer.first &&
+         prevPointer.second != WindowPointer.second &&
+         WindowPointer.second - WindowPointer.first + 1 < text.size())) {
+      printTextAll();
+    } else if (text.size() != prevSize) {
+      printTextAfterward(input, prevCursor);
+    } else if (edit && vcursor.getCol() != text[vcursor.getRow()].size()) {
+      printTextLine(input, prevCursor, prevChar);
+    } else if (edit) {
+      printTextChar(input, prevChar);
     }
 
     std::ofstream f;
