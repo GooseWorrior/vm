@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "../Model.h"
+#include "../view/PlainView.h"
 
 #include "Commandline.h"
 #include "Cursor.h"
@@ -26,6 +27,7 @@ class VM : public Model {
 
   int checkLineLength(int x, int lineLength);
   void findPairedBracket();
+  int handleMotion(int input, int state);
 
  public:
   VM(string filename);
@@ -37,6 +39,8 @@ class VM : public Model {
   void printTextLine(int input, pair<int, int> prevCursor,
                      int prevChar);  // temporary
   void printTextChar(int input, int prevChar);
+
+  friend class PlainView;
 };
 }  // namespace CS246E
 #endif

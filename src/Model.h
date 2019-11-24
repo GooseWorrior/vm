@@ -25,7 +25,6 @@ class Model {
  public:
   Model();
   ~Model();
-  //  protected:
   void addController(unique_ptr<Keyboard> controller);
   void addView(unique_ptr<View> view);
 };
