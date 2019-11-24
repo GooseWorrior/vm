@@ -1,7 +1,6 @@
 #include <ncurses.h>
 #include <fstream>
 #include <iostream>  // remove after debugging
-#include <stack>
 
 #include "../Model.h"
 #include "../controller/Keyboard.h"
@@ -11,8 +10,6 @@
 #include "Cursor.h"
 #include "EditorComponent.h"
 #include "StatusLine.h"
-
-using std::stack;
 
 namespace CS246E {
 VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
@@ -135,11 +132,12 @@ void VM::process() {
     }
     std::ofstream f;
     f.open("debug.txt");
-    for(auto &i : text) {
-     f << i << "\n";
-   }
-    f << vcursor.getRow() << " " << vcursor.getCol() << " " << WindowPointer.first << " " << WindowPointer.second << " " <<
-    text.size() << " " << WindowSize.first << "\n";
+    for (auto &i : text) {
+      f << i << "\n";
+    }
+    f << vcursor.getRow() << " " << vcursor.getCol() << " "
+      << WindowPointer.first << " " << WindowPointer.second << " "
+      << text.size() << " " << WindowSize.first << "\n";
     pair<int, int> loc = updateLoc();
     move(loc.first, loc.second);
   }
