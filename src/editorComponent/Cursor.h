@@ -25,8 +25,8 @@ class Cursor {
   int getRow();
   int getCol();
   void setCursor(int x, int y);
-  private:
   void updatePointer(int mode);
+  int calculateLine();
 };
 }  // namespace CS246E
 #endif
