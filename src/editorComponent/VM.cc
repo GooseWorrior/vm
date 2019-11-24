@@ -36,6 +36,7 @@ VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
   vcursor.setCursor(text.size() - 1, text.back().length());
   updateWindowSize();
   WindowPointer = pair<int, int>(0, text.size() - 1);
+  vcursor.updatePointer(1);
 }
 
 void VM::process() {
@@ -44,8 +45,10 @@ void VM::process() {
   pair<int, int> prevPointer;
   int prevSize = 0;
   int input = 0;
+  printTextAll();
   while (input != 'q') {
     input = controller->getChar();
+    vcursor.updatePointer(1);
     int prevChar = 0;
     bool edit = false;  // could be omitted
     prevSize = text.size();
@@ -130,7 +133,13 @@ void VM::process() {
     } else if (edit) {
       printTextChar(input, prevChar);
     }
-
+    std::ofstream f;
+    f.open("debug.txt");
+    for(auto &i : text) {
+     f << i << "\n";
+   }
+    f << vcursor.getRow() << " " << vcursor.getCol() << " " << WindowPointer.first << " " << WindowPointer.second << " " <<
+    text.size() << " " << WindowSize.first << "\n";
     pair<int, int> loc = updateLoc();
     move(loc.first, loc.second);
   }

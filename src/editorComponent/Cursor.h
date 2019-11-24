@@ -39,6 +39,7 @@ class Cursor {
   void handleSemiColon();
   private:
   void updatePointer(int mode);
+  int calculateLine();
 };
 }  // namespace CS246E
 #endif
