@@ -18,6 +18,7 @@ class Cursor {
   void moveToCloseBracket(char openBracket, char closeBracket);
   void moveToOpenBracket(char openBracket, char closeBracket);
   void findPairedBracket();
+  int checkClosest(vector<pair<int, int>>& stack, int& closest, int i, int j);
 
   pair<int, int>& winPtr;
   pair<int, int>& winSize;

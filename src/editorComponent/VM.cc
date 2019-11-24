@@ -29,16 +29,20 @@ VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
     }
   }
   text.push_back(line);  // pushes last line
-  printTextAll();
-  vcursor.setCursor(text.size() - 1, text.back().length());
-  move(text.size() - 1, text.back().length());
-  updateWindowSize();
   WindowPointer = pair<int, int>(0, text.size() - 1);
+
+  printTextAll();
+
+  vcursor.setCursor(text.size() - 1, text.back().length());
+  updateWindowSize();
+  pair<int, int> loc = updateLoc();
+
+  move(loc.first, loc.second);
   vcursor.updatePointer(1);
 }
 
 void VM::process() {
-  int state = 0;  // 0 - readonly, 1 - insert, 2 - command
+  int state = 0;  // 0 - command/readonly, 1 - insert, 2 - commandline
   pair<int, int> prevCursor;
   pair<int, int> prevPointer;
   int prevSize = 0;
@@ -111,6 +115,13 @@ void VM::process() {
           vcursor.handleSemiColon();
         }
         break;
+      case 27:  // escape
+        state = 1;
+        break;
+      case 58:  // colon
+        if (state == 0) {
+          state = 3;
+        }
       default:
         if (state == 1) {
           edit = true;
