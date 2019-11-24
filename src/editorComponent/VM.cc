@@ -27,10 +27,11 @@ VM::VM(string filename) : vcursor(0, 0, text, WindowPointer, WindowSize) {
     } else {
       line += c;
     }
-    addch(c);
   }
   text.push_back(line);  // pushes last line
+  printTextAll();
   vcursor.setCursor(text.size() - 1, text.back().length());
+  move(text.size() - 1, text.back().length());
   updateWindowSize();
   WindowPointer = pair<int, int>(0, text.size() - 1);
   vcursor.updatePointer(1);
@@ -42,7 +43,6 @@ void VM::process() {
   pair<int, int> prevPointer;
   int prevSize = 0;
   int input = 0;
-  printTextAll();
   while (input != 'q') {
     input = controller->getChar();
     vcursor.updatePointer(1);
