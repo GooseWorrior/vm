@@ -137,13 +137,13 @@ void VM::process() {
         }
         break;
     }
+    //WindowPointer.second - WindowPointer.first + 1 < text.size() ??? code
     updateWindowSize();
     vcursor.updatePointer(1);
     if (!edit) vcursor.updatePointer(0);
     if (prevWindowSize != WindowSize ||
-        (prevPointer.first != WindowPointer.first &&
-         prevPointer.second != WindowPointer.second &&
-         WindowPointer.second - WindowPointer.first + 1 < text.size())) {
+        prevPointer.first < WindowPointer.first ||
+        prevPointer.second > WindowPointer.second) {
       printTextAll();
     } else if (text.size() != prevSize) {
       printTextAfterward(input, prevCursor);

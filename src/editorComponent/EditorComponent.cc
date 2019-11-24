@@ -13,6 +13,7 @@ namespace CS246E {
     const int PERCENTAGE = 1;
     const int MODE = 2;
     const int LINENUMBER = 3;
+    const int COMMANDLINE = 4;
    EditorComponent::EditorComponent(pair<int, int> & winSize, pair<int, int> & winPtr, Cursor & vcursor,
     vector<string> & theText, int & state):
    winSize{winSize}, winPtr{winPtr}, vcursor{vcursor}, theText{theText}, state{state} {}

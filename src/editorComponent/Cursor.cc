@@ -80,7 +80,6 @@ int Cursor::erase() {
   if (theCursor.second == 0 && theCursor.first == 0) {
     return prevChar;
   } else if (theCursor.second == 0) {
-    theCursor.second = theText[theCursor.first - 1].size();
     theText[theCursor.first - 1] += theText[theCursor.first];
     theText.erase(theText.begin() + theCursor.first);
     if ((theCursor.first - winPtr.first) <=
@@ -88,11 +87,11 @@ int Cursor::erase() {
         winPtr.first > 0) {
       winPtr.first--;
       updatePointer(1);
-      if (winPtr.first == theCursor.first) theCursor.first++;
     } else if (calculateLine() < winSize.first) {
       updatePointer(1);
     }
     theCursor.first--;
+    theCursor.second = theText[theCursor.first].size();
   } else {
     prevChar = theText[theCursor.first][theCursor.second - 1];
     theText[theCursor.first].erase(theCursor.second - 1, 1);
@@ -112,7 +111,6 @@ void Cursor::updatePointer(int mode) {
       tempLine += tempChar / winSize.second + 1;
       if (tempLine >= winSize.first) {
         winPtr.second = i;
-        theCursor.first = min(winPtr.second, theCursor.first);
         return;
       }
     }
@@ -139,6 +137,7 @@ void Cursor::updatePointer(int mode) {
                    theText.size() - 1);
       winPtr.first = winPtr.second - offset;
     }
+    //theCursor.first = min(winPtr.second, theCursor.first);
   }
 }
 
