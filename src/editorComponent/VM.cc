@@ -116,7 +116,7 @@ void VM::process() {
         }
         break;
       case 27:  // escape
-        state = 1;
+        state = 0;
         break;
       case 58:  // colon
         if (state == 0) {
@@ -130,17 +130,21 @@ void VM::process() {
         break;
     }
     vcursor.updatePointer(0);
-    if (updateWindowSize() || 
-    (prevPointer.first != WindowPointer.first &&
-    prevPointer.second != WindowPointer.second && WindowPointer.second - WindowPointer.first + 1 < text.size())) {
-      printTextAll();
-    } else if (text.size() != prevSize) {
-      printTextAfterward(input, prevCursor);
-    } else if (edit && vcursor.getCol() != text[vcursor.getRow()].size()) {
-      printTextLine(input, prevCursor, prevChar);
-    } else if (edit) {
-      printTextChar(input, prevChar);
+    if (state == 1) {
+      if (updateWindowSize() ||
+          (prevPointer.first != WindowPointer.first &&
+           prevPointer.second != WindowPointer.second &&
+           WindowPointer.second - WindowPointer.first + 1 < text.size())) {
+        printTextAll();
+      } else if (text.size() != prevSize) {
+        printTextAfterward(input, prevCursor);
+      } else if (edit && vcursor.getCol() != text[vcursor.getRow()].size()) {
+        printTextLine(input, prevCursor, prevChar);
+      } else if (edit) {
+        printTextChar(input, prevChar);
+      }
     }
+
     std::ofstream f;
     f.open("debug.txt");
     for (auto &i : text) {
@@ -180,7 +184,6 @@ pair<int, int> VM::updateLoc() {
   col = temp1 % WindowSize.second;
   return pair<int, int>(row, col);
 }
-
 
 void VM::printTextAll() {
   clear();
