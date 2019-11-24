@@ -10,10 +10,10 @@ using std::shared_ptr;
 namespace CS246E {
 class VM;
 class PlainView : public View {
-  shared_ptr<VM> vm;
+  VM* vm;
 
  public:
-  PlainView(shared_ptr<VM> vm);
+  PlainView(VM* vm);
   void update() override;
   void display(pair<int, int> prevPointer, int input, pair<int, int> prevCursor,
                int prevChar, int prevSize, bool edit) override;

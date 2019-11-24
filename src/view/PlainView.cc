@@ -1,7 +1,7 @@
 #include "PlainView.h"
 
 namespace CS246E {
-PlainView::PlainView(shared_ptr<VM> vm) : View{} { this->vm = vm; }
+PlainView::PlainView(VM* vm) : View{} { this->vm = vm; }
 
 void PlainView::display(pair<int, int> prevPointer, int input,
                         pair<int, int> prevCursor, int prevChar, int prevSize,

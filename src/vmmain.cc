@@ -26,7 +26,8 @@ int main(int argc, char *argv[]) {
   shared_ptr<CS246E::VM> model = std::make_shared<CS246E::VM>(filename);
   unique_ptr<CS246E::Keyboard> controller =
       std::make_unique<CS246E::Keyboard>();
-  unique_ptr<CS246E::View> view = std::make_unique<CS246E::PlainView>(model);
+  unique_ptr<CS246E::View> view =
+      std::make_unique<CS246E::PlainView>(model.get());
   model->addController(std::move(controller));
   model->addView(std::move(view));
   model->process();
