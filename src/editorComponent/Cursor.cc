@@ -109,7 +109,7 @@ void Cursor::updatePointer(int mode) {
             }
         }
         winPtr.second = theText.size() - 1;
-    } else if (mode = -1) {
+    } else if (mode == -1) {
         size_t tempLine = 0;
         for (int i = winPtr.second; i >= 0; --i) {
             size_t tempChar = 0;
@@ -123,6 +123,12 @@ void Cursor::updatePointer(int mode) {
             }
         }
         winPtr.second = 0;
+    } else if (mode == 0) {
+       if (winPtr.first > theCursor.first || winPtr.second + 1 < theCursor.first) {
+           int offset = winPtr.second - winPtr.first;
+           winPtr.second = min<int>((winSize.second - winSize.second) / 2 + theCursor.first, theText.size() - 1);
+           winPtr.first = winPtr.second - offset;
+       }
     }
 }
 
