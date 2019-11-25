@@ -12,6 +12,9 @@ VM::VM(string filename)
       theComponents{WindowSize, WindowPointer,  vcursor,      text,
                     state,      vmStatusString, bufferCommand} {
   loadFile(filename);
+  if (text.size()) {
+    vmStatusString = filename;
+  }
 }
 
 void VM::loadFile(string filename) {
@@ -183,6 +186,9 @@ void VM::handleCommands(int input) {
       vcursor.setCursor(vcursor.getRow(), vcursor.getCol() + 1);
       state = 1;
       vcursor.updateStateOffset(0);
+      break;
+    case 98:
+      vcursor.handleb();
       break;
     case 105:  // i
       state = 1;

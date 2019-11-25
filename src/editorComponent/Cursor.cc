@@ -283,7 +283,7 @@ void Cursor::handleCaret() {
 }
 
 void Cursor::handlef(int toFind) {
-  lastFind.first = 'F';
+  lastFind.first = 'f';
   lastFind.second = toFind;
   size_t index;
   for (index = theCursor.second + 1; index < theText[theCursor.first].length();
@@ -316,4 +316,20 @@ void Cursor::handleSemiColon() {
 }
 
 void Cursor::updateStateOffset(int offset) { stateOffset = offset; }
+
+void Cursor::handleb() {
+  for (size_t i = theCursor.first; i < theText.size(); ++i) {
+    for (size_t j = theCursor.first == i ? theCursor.second + 1 : 0;
+         j < theText[i].length(); ++j) {
+      if (theText[i][j] == closeBracket && stack.size() == 0) {
+        setCursor(i, j);
+        return;
+      } else if (theText[i][j] == closeBracket) {
+        stack.pop_back();
+      } else if (theText[i][j] == openBracket) {
+        stack.push_back(true);
+      }
+    }
+  }
+}
 }  // namespace CS246E
