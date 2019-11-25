@@ -18,8 +18,8 @@ class EditorComponent {
     Cursor & vcursor;
     vector<string> & theText;
     int & state;
-    string VMCommandLine; // should be string &, change later 
-    string VMStatusLine; //should be string &, change later
+    string & VMCommandLine; // should be string &, change later 
+    string & VMStatusLine; //should be string &, change later
     vector<pair<int, unique_ptr<StatusLine>>> components;
     public:
       EditorComponent(pair<int, int> & winSize, pair<int, int> & winPtr, Cursor & vcursor, vector<string> & text, int & state,
