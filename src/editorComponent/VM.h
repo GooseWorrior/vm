@@ -39,12 +39,12 @@ class VM : public Model {
   int checkLineLength(int x, int lineLength);
   void findPairedBracket();
   void handleCommands(int input);
-  void handleBufferCommands(int input, pair<int, int> prevCommand);
+  void handleBufferCommands(int input, pair<int, int> prevCommand, int & prevUndoSize);
   void loadFile(string filename);
   void saveText();
   void loadUndo();
   void loadCursor();
-  void exeBufferCommand();
+  void exeBufferCommand(int & prevUndoSize);
 
  public:
   VM(string filename);

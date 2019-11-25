@@ -17,9 +17,6 @@ VM::VM(string filename)
       theComponents{WindowSize, WindowPointer,  vcursor,      text,
                     state,      vmStatusString, bufferCommand} {
   loadFile(filename);
-  if (text.size()) {
-    vmStatusString = filename;
-  }
 }
 
 int ifNegativeThenZero(int x);
@@ -51,7 +48,9 @@ void VM::loadFile(string filename) {
   //   f1 << i << '\n';
   // }
   // f1.close();
-
+  if (text.size()) {
+    vmStatusString = filename;
+  }
   vcursor.setCursor(text.size() - 1, ifNegativeThenZero(text.back().length()));
   updateWindowSize();
 
@@ -69,6 +68,7 @@ void VM::process() {
   pair<int, int> prevWindowSize;
   pair<int, int> prevCursor;
   pair<int, int> prevPointer;
+  int prevUndoSize = 0;
   int prevState = 0;
   int prevSize = 0;
   int input = 0;
@@ -78,15 +78,18 @@ void VM::process() {
     input = controller->getChar();
     int prevChar = 0;
     bool edit = false;  // could be omitted
-    prevSize = text.size();
+    if (state == 0 || state == 1 || state == 2)
+      prevUndoSize = undoStack.size(); // add code to support saving file guard
     if (state == 1 || state == 2 || state == 0)
       prevCursor = pair<int, int>(vcursor.getRow(), vcursor.getCol());
     // only keep track of the last cursor location in insert or replace mode
+    prevSize = text.size();
     prevPointer = WindowPointer;
     prevWindowSize = WindowSize;
     prevState = state;
+    consistent = prevUndoSize == undoStack.size();
     if (state == 3) {
-      handleBufferCommands(input, prevCursor);
+      handleBufferCommands(input, prevCursor, prevUndoSize);
     } else
       switch (input) {
         case KEY_LEFT:
@@ -162,7 +165,8 @@ void VM::process() {
       } else if (prevState == 3) {
         theComponents.deleteElement({4});
       } else if (prevState == 0) {
-        theComponents.deleteElement({3, 1});
+        theComponents.deleteElement({5, 3, 1});
+        vmStatusString.clear();
       }
       if (state == 1 || state == 2) {
         // theComponents.reset();
@@ -173,7 +177,7 @@ void VM::process() {
         // theComponents.addelement({3, 1});
         theComponents.addElement({4});
       } else if (state == 0) {
-        theComponents.addElement({3, 1});
+        theComponents.addElement({5, 3, 1});
       }
     }
 
@@ -190,11 +194,13 @@ void VM::process() {
   }
 }
 
-void VM::exeBufferCommand() {
+void VM::exeBufferCommand(int & prevUndoSize) {
   stringstream source{bufferCommand.substr(1)};
   string cmd;
   if (source >> cmd) {
     if (cmd == "w") {
+       prevUndoSize = undoStack.size();
+
     } else if (cmd == "q") {
     } else if (cmd == "wq") {
     } else if (cmd == "q!") {
@@ -202,7 +208,7 @@ void VM::exeBufferCommand() {
   }
 }
 
-void VM::handleBufferCommands(int input, pair<int, int> prevCursor) {
+void VM::handleBufferCommands(int input, pair<int, int> prevCursor, int & prevUndoSize) {
   switch (input) {
     case KEY_LEFT:
       if (commandCursor > 1) commandCursor--;
@@ -220,7 +226,7 @@ void VM::handleBufferCommands(int input, pair<int, int> prevCursor) {
       }
       break;
     case '\n':
-      exeBufferCommand();
+      exeBufferCommand(prevUndoSize);
       bufferCommand.clear();
       state = 0;
       commandCursor = 0;
