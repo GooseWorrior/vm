@@ -1,6 +1,8 @@
 #ifndef VM_H
 #define VM_H
 
+#include <stdio.h>
+#include <time.h>
 #include <string>
 #include <vector>
 
@@ -27,7 +29,8 @@ class VM : public Model {
   vector<string> text;
   vector<unique_ptr<EditorComponent>> components;
   vector<string> undoStack;
-  vector<pair<int, int>> cursorStack;
+  vector<pair<pair<int, int>, time_t>> cursorStack;
+  pair<int, int> undoCount;
   string vmStatusString;
 
   int checkLineLength(int x, int lineLength);

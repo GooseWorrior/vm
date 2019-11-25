@@ -2,14 +2,8 @@
 #include <fstream>
 #include <iostream>  // remove after debugging
 
-#include "../Model.h"
 #include "../controller/Keyboard.h"
 #include "VM.h"
-
-#include "Commandline.h"
-#include "Cursor.h"
-#include "EditorComponent.h"
-#include "StatusLine.h"
 
 namespace CS246E {
 VM::VM(string filename)
@@ -203,6 +197,7 @@ void VM::handleCommands(int input) {
       break;
     case 58:  // colon
       state = 3;
+      break;
     case 117:
       loadUndo();
       loadCursor();
@@ -228,7 +223,11 @@ void VM::saveText() {
   }
   tempFile.close();
   undoStack.push_back(tempDir);
-  cursorStack.push_back(std::make_pair(vcursor.getRow(), vcursor.getCol()));
+
+  time_t timer;
+  time(&timer);
+  cursorStack.push_back(std::make_pair(
+      std::make_pair(vcursor.getRow(), vcursor.getCol()), timer));
 }
 
 void VM::loadUndo() {
@@ -236,15 +235,28 @@ void VM::loadUndo() {
     text.clear();
     loadFile(undoStack.back());
     undoStack.pop_back();
+    // undoCount = std::make_pair(undoCount.second, );
+    vmStatusString = "1 change; ";
+  } else {
+    vmStatusString = "Already at oldest change";
   }
 }
 
 void VM::loadCursor() {
   if (cursorStack.size()) {
-    int row = cursorStack.back().first;
-    int col = cursorStack.back().second;
+    int row = cursorStack.back().first.first;
+    int col = cursorStack.back().first.second;
     vcursor.setCursor(
         row, text[row].length() == col && text[row] != "" ? col - 1 : col);
+    time_t currentTime;
+    time(&currentTime);
+
+    vmStatusString +=
+        std::to_string((int)difftime(currentTime, cursorStack.back().second)) +
+        " seconds ago";
+    // std::ofstream f;
+    // f.open("debug.txt");
+    // f << vmStatusString;
     cursorStack.pop_back();
   }
 }
