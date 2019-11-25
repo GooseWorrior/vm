@@ -21,14 +21,14 @@ const int STATUS = 5;
 EditorComponent::EditorComponent(pair<int, int> &winSize,
                                  pair<int, int> &winPtr, Cursor &vcursor,
                                  vector<string> &theText, int &state,
-                                 string &VMCommandLine, string &VMStatusLine)
+                                 string &VMStatusLine, string &VMCommandLine)
     : winSize{winSize},
       winPtr{winPtr},
       vcursor{vcursor},
       theText{theText},
       state{state},
       VMCommandLine{VMCommandLine},
-      VMStatusLine{VMCommandLine} {}
+      VMStatusLine{VMStatusLine} {}
 void EditorComponent::reset() { components.clear(); }
 void EditorComponent::deleteElement(initializer_list<int> types) {
   for (auto i : types) {
