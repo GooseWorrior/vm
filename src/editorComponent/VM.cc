@@ -17,6 +17,8 @@ VM::VM(string filename)
   }
 }
 
+int ifNegativeThenZero(int x);
+
 void VM::loadFile(string filename) {
   // load files
   std::ifstream file{filename};
@@ -43,12 +45,13 @@ void VM::loadFile(string filename) {
   // for (auto i : text) {
   //   f1 << i << '\n';
   // }
+  // f1.close();
 
-  vcursor.setCursor(text.size() - 1, text.back().length() - 1);
+  vcursor.setCursor(text.size() - 1, ifNegativeThenZero(text.back().length()));
   updateWindowSize();
 
   printPlaceholder();
- 
+
   theComponents.addElement({5, 3, 1});
   theComponents.print();
 
@@ -188,7 +191,7 @@ void VM::handleCommands(int input) {
       state = 1;
       vcursor.updateStateOffset(0);
       break;
-    case 98:
+    case 98:  // b
       vcursor.handleb();
       break;
     case 105:  // i
@@ -222,6 +225,7 @@ void VM::handleCommands(int input) {
       break;
     case 82:  // R
       state = 2;
+      vcursor.updateStateOffset(0);
       break;
     case 117:
       loadUndo();

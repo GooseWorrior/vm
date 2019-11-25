@@ -1,6 +1,7 @@
 #include "Cursor.h"
 #include <ncurses.h>
 #include <algorithm>
+#include <fstream>
 using std::min;
 using std::pair;
 using std::string;
@@ -27,6 +28,9 @@ Cursor& Cursor::operator--() {
   }
   return *this;
 }
+
+int ifNegativeThenZero(int x) { return x >= 0 ? x : 0; }
+
 Cursor& Cursor::nextLine() {
   if (theCursor.first == theText.size() - 1) {
     return *this;
@@ -38,8 +42,9 @@ Cursor& Cursor::nextLine() {
     // int shift = calculateShift();
     // theCursor.first += calculateShift();
   }
-  theCursor.second = min<int>(theCursor.second,
-                              theText[++theCursor.first].size() + stateOffset);
+  theCursor.second = min<int>(
+      theCursor.second,
+      ifNegativeThenZero(theText[++theCursor.first].size() + stateOffset));
   return *this;
 }
 Cursor& Cursor::prevLine() {
@@ -53,10 +58,12 @@ Cursor& Cursor::prevLine() {
     // int shift = calculateShift();
     // theCursor.first += calculateShift();
   }
-  theCursor.second = min<int>(theCursor.second,
-                              theText[--theCursor.first].size() + stateOffset);
+  theCursor.second = min<int>(
+      theCursor.second,
+      ifNegativeThenZero(theText[--theCursor.first].size() + stateOffset));
   return *this;
 }
+
 int Cursor::getRow() { return theCursor.first; }
 int Cursor::getCol() { return theCursor.second; }
 Cursor& Cursor::insert(wchar_t c) {
@@ -318,18 +325,31 @@ void Cursor::handleSemiColon() {
 void Cursor::updateStateOffset(int offset) { stateOffset = offset; }
 
 void Cursor::handleb() {
-  for (size_t i = theCursor.first; i < theText.size(); ++i) {
-    for (size_t j = theCursor.first == i ? theCursor.second + 1 : 0;
-         j < theText[i].length(); ++j) {
-      if (theText[i][j] == closeBracket && stack.size() == 0) {
-        setCursor(i, j);
-        return;
-      } else if (theText[i][j] == closeBracket) {
-        stack.pop_back();
-      } else if (theText[i][j] == openBracket) {
-        stack.push_back(true);
-      }
+  std::fstream f;
+  f.open("debug.txt");
+  if (!theCursor.first && !theCursor.second) return;
+  int row = theCursor.first;
+  int col = theCursor.second;
+  if (!col) {
+    --row;
+    if (!theText[row].length()) {
+      setCursor(row, 0);
+      return;
     }
+    col = theText[row].length() - 1;
   }
-}
+  f << "(" << row << ", " << col << ")";
+  // for (int i = col - 1; i >= 0; --i) {
+  //   if (!isalnum(theText[row][i]) && spaceBuffer && theText[row][i] == ' ' &&
+  //       theText[row][i] != '_') {
+  //     if (i == col - 1) {
+  //       setCursor(row, i);
+  //     } else {
+  //       setCursor(row, i + 1);
+  //     }
+  //     return;
+  //   }
+  // }
+  setCursor(row, 0);
+}  // namespace CS246E
 }  // namespace CS246E

@@ -1,6 +1,8 @@
 #ifndef CRUSH_H
 #define CRUSH_H
 
+#include <ctype.h>
+#include <stdio.h>
 #include <string>
 #include <vector>
 
