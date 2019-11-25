@@ -9,6 +9,7 @@ using std::string;
 using std::vector;
 namespace CS246E {
 class Cursor {
+  int stateOffset;
   pair<int, int> theCursor;
   pair<char, char> lastFind;  // first is f/F, second is any char
   vector<string>& theText;
@@ -41,6 +42,7 @@ class Cursor {
   void handleSemiColon();
   void updatePointer(int mode);
   int calculateLine();
+  void updateStateOffset(int offset);
 };
 }  // namespace CS246E
 #endif

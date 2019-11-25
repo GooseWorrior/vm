@@ -28,6 +28,7 @@ class VM : public Model {
   vector<unique_ptr<EditorComponent>> components;
   vector<string> undoStack;
   vector<pair<int, int>> cursorStack;
+  string vmStatusString;
 
   int checkLineLength(int x, int lineLength);
   void findPairedBracket();

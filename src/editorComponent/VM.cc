@@ -40,8 +40,12 @@ void VM::loadFile(string filename) {
   clear();
   refresh();
   printTextAll();
-
-  vcursor.setCursor(text.size() - 1, text.back().length());
+  // std::ofstream f1;
+  // f1.open("debug.txt");
+  // for (auto i : text) {
+  //   f1 << i << '\n';
+  // }
+  vcursor.setCursor(text.size() - 1, text.back().length() - 1);
   updateWindowSize();
 
   printPlaceholder();
@@ -63,8 +67,6 @@ void VM::process() {
   int input = 0;
   bool shouldSave = true;
 
-  std::ofstream f;
-  f.open("debug.txt");
   while (input != 'q') {
     input = controller->getChar();
     int prevChar = 0;
@@ -102,12 +104,14 @@ void VM::process() {
       case 410:  // special resize character
         break;
       case 27:  // escape
+        if (state == 1 && vcursor.getCol() > 0) {
+          vcursor.setCursor(vcursor.getRow(), vcursor.getCol() - 1);
+        }
         state = 0;
+        vcursor.updateStateOffset(-1);
         break;
       default:
         if (state == 0) {
-          f << input;
-          f.close();
           handleCommands(input);
         } else if (state == 1) {
           edit = true;
@@ -118,7 +122,7 @@ void VM::process() {
           vcursor.insert(input);
         }
     }
-    //WindowPointer.second - WindowPointer.first + 1 < text.size() ??? code
+    // WindowPointer.second - WindowPointer.first + 1 < text.size() ??? code
     updateWindowSize();
     vcursor.updatePointer(1);
     if (!edit) vcursor.updatePointer(0);
@@ -157,9 +161,14 @@ void VM::process() {
 void VM::handleCommands(int input) {
   switch (input) {
     case 97:  // a
-              // insert mode
+      vcursor.setCursor(vcursor.getRow(), vcursor.getCol() + 1);
+      // insert mode
       state = 1;
+      vcursor.updateStateOffset(0);
       break;
+    case 105:  // i
+      state = 1;
+      vcursor.updateStateOffset(0);
     case 36:  // dollar $
       // set to end of line
       vcursor.setCursor(vcursor.getRow(), text[vcursor.getRow()].length() - 1);
@@ -183,8 +192,8 @@ void VM::handleCommands(int input) {
     case 59:  // semi colon ;
       vcursor.handleSemiColon();
       break;
-    case 58:      // colon
-      state = 3;  // commandline state
+    case 58:  // colon
+      state = 3;
     case 117:
       loadUndo();
       loadCursor();
@@ -223,7 +232,10 @@ void VM::loadUndo() {
 
 void VM::loadCursor() {
   if (cursorStack.size()) {
-    vcursor.setCursor(cursorStack.back().first, cursorStack.back().second);
+    int row = cursorStack.back().first;
+    int col = cursorStack.back().second;
+    vcursor.setCursor(
+        row, text[row].length() == col && text[row] != "" ? col - 1 : col);
     cursorStack.pop_back();
   }
 }

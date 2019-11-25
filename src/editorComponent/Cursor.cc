@@ -9,9 +9,13 @@ using std::vector;
 namespace CS246E {
 Cursor::Cursor(int row, int col, vector<string>& theText,
                pair<int, int>& winPtr, pair<int, int>& winSize)
-    : theCursor{row, col}, theText{theText}, winPtr{winPtr}, winSize{winSize} {}
+    : theCursor{row, col},
+      theText{theText},
+      winPtr{winPtr},
+      winSize{winSize},
+      stateOffset{-1} {}
 Cursor& Cursor::operator++() {
-  if (theCursor.second < theText[theCursor.first].size()) {
+  if (theCursor.second < theText[theCursor.first].size() + stateOffset) {
     theCursor.second++;
   }
   return *this;
@@ -33,8 +37,8 @@ Cursor& Cursor::nextLine() {
     // int shift = calculateShift();
     // theCursor.first += calculateShift();
   }
-  theCursor.second =
-      min<int>(theCursor.second, theText[++theCursor.first].size());
+  theCursor.second = min<int>(theCursor.second,
+                              theText[++theCursor.first].size() + stateOffset);
   return *this;
 }
 Cursor& Cursor::prevLine() {
@@ -48,8 +52,8 @@ Cursor& Cursor::prevLine() {
     // int shift = calculateShift();
     // theCursor.first += calculateShift();
   }
-  theCursor.second =
-      min<int>(theCursor.second, theText[--theCursor.first].size());
+  theCursor.second = min<int>(theCursor.second,
+                              theText[--theCursor.first].size() + stateOffset);
   return *this;
 }
 int Cursor::getRow() { return theCursor.first; }
@@ -82,8 +86,7 @@ int Cursor::erase() {
   } else if (theCursor.second == 0) {
     theText[theCursor.first - 1] += theText[theCursor.first];
     theText.erase(theText.begin() + theCursor.first);
-    if ((theCursor.first - winPtr.first) <=
-            (winPtr.second - winPtr.first)  &&
+    if ((theCursor.first - winPtr.first) <= (winPtr.second - winPtr.first) &&
         winPtr.first > 0) {
       winPtr.first--;
       updatePointer(1);
@@ -137,7 +140,7 @@ void Cursor::updatePointer(int mode) {
                    theText.size() - 1);
       winPtr.first = winPtr.second - offset;
     }
-    //theCursor.first = min(winPtr.second, theCursor.first);
+    // theCursor.first = min(winPtr.second, theCursor.first);
   }
 }
 
@@ -301,4 +304,6 @@ void Cursor::handleSemiColon() {
     handleF(lastFind.second);
   }
 }
+
+void Cursor::updateStateOffset(int offset) { stateOffset = offset; }
 }  // namespace CS246E
