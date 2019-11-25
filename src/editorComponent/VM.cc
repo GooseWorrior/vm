@@ -136,6 +136,7 @@ void VM::process() {
       }
     // WindowPointer.second - WindowPointer.first + 1 < text.size() ??? code
     updateWindowSize();
+    vcursor.updatePointer(-1);
     vcursor.updatePointer(1);
     if (!edit) vcursor.updatePointer(0);
     if (prevWindowSize != WindowSize ||
@@ -151,7 +152,7 @@ void VM::process() {
     }
 
     if (vcursor.calculateLine() < WindowSize.first &&
-        prevPointer != WindowPointer) {
+        prevPointer != WindowPointer || prevWindowSize != WindowSize) {
       printPlaceholder();
     }
 
