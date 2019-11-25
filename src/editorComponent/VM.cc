@@ -4,10 +4,13 @@
 
 #include "../controller/Keyboard.h"
 #include "VM.h"
+#include <sstream>
+
+using std::stringstream;
 
 namespace CS246E {
 VM::VM(string filename)
-    : state{0},
+    : state{0}, commandCursor{0}, consistent{1},
       vcursor(0, 0, text, WindowPointer, WindowSize, state),
       theComponents{WindowSize, WindowPointer,  vcursor,      text,
                     state,      vmStatusString, bufferCommand} {
@@ -74,14 +77,14 @@ void VM::process() {
     int prevChar = 0;
     bool edit = false;  // could be omitted
     prevSize = text.size();
-    if (state == 1 || state == 2)
+    if (state == 1 || state == 2 || state == 0)
       prevCursor = pair<int, int>(vcursor.getRow(), vcursor.getCol());
     // only keep track of the last cursor location in insert or replace mode
     prevPointer = WindowPointer;
     prevWindowSize = WindowSize;
     prevState = state;
     if (state == 3) {
-      handleBufferCommands(input);
+      handleBufferCommands(input, prevCursor);
     } else
       switch (input) {
         case KEY_LEFT:
@@ -144,35 +147,90 @@ void VM::process() {
     } else if (edit) {
       printTextChar(input, prevChar);
     }
-
-    printPlaceholder();
+    
+    if (vcursor.calculateLine() < WindowSize.first && prevPointer != WindowPointer) {
+        printPlaceholder();
+    }
 
     if (prevState != state) {
       if (prevState == 1 || prevState == 2) {
-        theComponents.deleteElement({2});
+        theComponents.deleteElement({2, 3, 1});
       } else if (prevState == 3) {
         theComponents.deleteElement({4});
+      } else if (prevState == 0) {
+        theComponents.deleteElement({3, 1});
       }
       if (state == 1 || state == 2) {
         // theComponents.reset();
         // theComponents.addelement({2, 3, 1});
-        theComponents.addElement({2});
+        theComponents.addElement({2, 3, 1});
       } else if (state == 3) {
         // theComponents.reset();
         // theComponents.addelement({3, 1});
         theComponents.addElement({4});
+      } else if (state == 0) {
+        theComponents.addElement({3, 1});
       }
     }
+
     theComponents.updateContents();
     theComponents.updateLocation();
     theComponents.print();
     // theComponents.update();
-    pair<int, int> loc = updateLoc();
-    move(loc.first, loc.second);
+    if (state == 3) {
+      move(WindowSize.first, commandCursor);
+    } else {
+      pair<int, int> loc = updateLoc();
+      move(loc.first, loc.second);
+    }
   }
 }
 
-void VM::handleBufferCommands(int input) {}
+void VM::exeBufferCommand() {
+    stringstream source{bufferCommand.substr(1)};
+    string cmd;
+    if (source >> cmd) {
+       if (cmd == "w") {
+
+       } else if (cmd == "q") {
+
+       } else if (cmd == "wq") {
+
+       } else if (cmd == "q!") {
+
+       }
+    }
+}
+
+void VM::handleBufferCommands(int input, pair<int, int> prevCursor) {
+    switch (input) {
+        case KEY_LEFT:
+          if (commandCursor > 1) commandCursor--;
+          break;
+        case KEY_RIGHT:
+          if (commandCursor < bufferCommand.size()) commandCursor++;
+          break;
+        case KEY_BACKSPACE:
+          if (bufferCommand.size() == 1) {
+             state = 0;
+             vcursor.setCursor(prevCursor.first, prevCursor.second);
+          } else if (commandCursor > 1) {
+            bufferCommand.erase(commandCursor - 1, 1);
+            commandCursor--;
+          } 
+          break;
+        case '\n':
+           exeBufferCommand();
+           bufferCommand.clear();
+           state = 0;
+           commandCursor = 0;
+           break;
+        default:
+           bufferCommand.insert(commandCursor, 1, input);
+           commandCursor++;
+    }
+}
+
 
 void VM::handleCommands(int input) {
   switch (input) {
@@ -222,6 +280,8 @@ void VM::handleCommands(int input) {
       break;
     case 58:      // colon
       state = 3;  // commandline state
+      commandCursor = 1;
+      bufferCommand = ":";
       break;
     case 82:  // R
       state = 2;
