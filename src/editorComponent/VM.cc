@@ -43,11 +43,12 @@ void VM::loadFile(string filename) {
   // for (auto i : text) {
   //   f1 << i << '\n';
   // }
+
   vcursor.setCursor(text.size() - 1, text.back().length() - 1);
   updateWindowSize();
 
   printPlaceholder();
-
+ 
   theComponents.addElement({5, 3, 1});
   theComponents.print();
 
