@@ -113,12 +113,15 @@ int Cursor::erase() {
       updatePointer(1);
     }
     theCursor.first--;
-    theCursor.second = theText[theCursor.first].size();
+    //theCursor.second = theText[theCursor.first].size();
+    theCursor.second = ifNegativeThenZero(theText[theCursor.first].size() + stateOffset);
   } else if (state == 1) {
     prevChar = theText[theCursor.first][theCursor.second - 1];
     theText[theCursor.first].erase(theCursor.second - 1, 1);
+    --(*this);
+  } else {
+    --(*this);
   }
-  --(*this);
   return prevChar;
 }
 
