@@ -8,7 +8,7 @@ using std::vector;
 
 namespace CS246E {
 Cursor::Cursor(int row, int col, vector<string>& theText,
-               pair<int, int>& winPtr, pair<int, int>& winSize)
+               pair<int, int>& winPtr, pair<int, int>& winSize, int& state)
     : theCursor{row, col},
       theText{theText},
       winPtr{winPtr},

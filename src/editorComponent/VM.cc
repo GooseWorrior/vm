@@ -9,8 +9,8 @@ namespace CS246E {
 VM::VM(string filename)
     : state{0},
       vcursor(0, 0, text, WindowPointer, WindowSize, state),
-      theComponents{WindowSize, WindowPointer, vcursor,      text,
-                    state,      vmStatusLine,  bufferCommand} {
+      theComponents{WindowSize, WindowPointer,  vcursor,      text,
+                    state,      vmStatusString, bufferCommand} {
   loadFile(filename);
 }
 
