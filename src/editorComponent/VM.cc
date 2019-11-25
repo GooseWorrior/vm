@@ -160,9 +160,18 @@ void VM::process() {
 
 void VM::handleCommands(int input) {
   switch (input) {
+    case 65:  // A
+      vcursor.setCursor(vcursor.getRow(), text[vcursor.getRow()].length());
+      state = 1;
+      vcursor.updateStateOffset(0);
+      break;
+    case 73:  // I
+      vcursor.setCursor(vcursor.getRow(), 0);
+      state = 1;
+      vcursor.updateStateOffset(0);
+      break;
     case 97:  // a
       vcursor.setCursor(vcursor.getRow(), vcursor.getCol() + 1);
-      // insert mode
       state = 1;
       vcursor.updateStateOffset(0);
       break;
