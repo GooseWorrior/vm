@@ -22,6 +22,8 @@ using std::vector;
 namespace CS246E {
 class VM : public Model {
   int state;  // 0 - command/readonly, 1 - insert, 2 - commandline
+  string bufferCommand;
+  string vmStatusLine;
   Cursor vcursor;
   EditorComponent theComponents;
   pair<int, int> WindowSize;
@@ -36,6 +38,7 @@ class VM : public Model {
   int checkLineLength(int x, int lineLength);
   void findPairedBracket();
   void handleCommands(int input);
+  void handleBufferCommands(int input);
   void loadFile(string filename);
   void saveText();
   void loadUndo();

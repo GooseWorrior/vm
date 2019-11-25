@@ -18,11 +18,15 @@ class EditorComponent {
     Cursor & vcursor;
     vector<string> & theText;
     int & state;
+    string VMCommandLine; // should be string &, change later 
+    string VMStatusLine; //should be string &, change later
     vector<pair<int, unique_ptr<StatusLine>>> components;
     public:
-      EditorComponent(pair<int, int> & winSize, pair<int, int> & winPtr, Cursor & vcursor, vector<string> & text, int & state);
+      EditorComponent(pair<int, int> & winSize, pair<int, int> & winPtr, Cursor & vcursor, vector<string> & text, int & state,
+      string & VMCommandLine, string & VMStatusLine);
       void reset();
-      void addelement(initializer_list<int> types);
+      void addElement(initializer_list<int> types);
+      void deleteElement(initializer_list<int> types);
       pair<int, int> getLocation(int type);
       string getContents(int type);
       bool updateContents();

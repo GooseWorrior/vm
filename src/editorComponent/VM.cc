@@ -8,8 +8,9 @@
 namespace CS246E {
 VM::VM(string filename)
     : state{0},
-      vcursor(0, 0, text, WindowPointer, WindowSize),
-      theComponents{WindowSize, WindowPointer, vcursor, text, state} {
+      vcursor(0, 0, text, WindowPointer, WindowSize, state),
+      theComponents{WindowSize, WindowPointer, vcursor,      text,
+                    state,      vmStatusLine,  bufferCommand} {
   loadFile(filename);
 }
 
@@ -44,7 +45,7 @@ void VM::loadFile(string filename) {
 
   printPlaceholder();
 
-  theComponents.addelement({3, 1});
+  theComponents.addElement({5, 3, 1});
   theComponents.print();
 
   pair<int, int> loc = updateLoc();
@@ -66,56 +67,61 @@ void VM::process() {
     int prevChar = 0;
     bool edit = false;  // could be omitted
     prevSize = text.size();
-    prevCursor = pair<int, int>(vcursor.getRow(), vcursor.getCol());
+    if (state == 1 || state == 2)
+      prevCursor = pair<int, int>(vcursor.getRow(), vcursor.getCol());
+    // only keep track of the last cursor location in insert or replace mode
     prevPointer = WindowPointer;
     prevWindowSize = WindowSize;
     prevState = state;
-    switch (input) {
-      case KEY_LEFT:
-        if (vcursor.getCol() != (--vcursor).getCol()) {
-          shouldSave = true;
-        }
-        break;
-      case KEY_RIGHT:
-        if (vcursor.getCol() != (++vcursor).getCol()) {
-          shouldSave = true;
-        }
-        break;
-      case KEY_UP:
-        if (vcursor.getRow() != vcursor.prevLine().getRow()) {
-          shouldSave = true;
-        }
-        break;
-      case KEY_DOWN:
-        if (vcursor.getRow() != vcursor.nextLine().getRow()) {
-          shouldSave = true;
-        }
-        break;
-      case KEY_BACKSPACE:
-        edit = true;
-        prevChar = vcursor.erase();
-        break;
-      case 410:  // special resize character
-        break;
-      case 27:  // escape
-        if (state == 1 && vcursor.getCol() > 0) {
-          vcursor.setCursor(vcursor.getRow(), vcursor.getCol() - 1);
-        }
-        state = 0;
-        vcursor.updateStateOffset(-1);
-        break;
-      default:
-        if (state == 0) {
-          handleCommands(input);
-        } else if (state == 1) {
-          edit = true;
-          if (shouldSave) {
-            saveText();
-            shouldSave = false;
+    if (state == 3) {
+      handleBufferCommands(input);
+    } else
+      switch (input) {
+        case KEY_LEFT:
+          if (vcursor.getCol() != (--vcursor).getCol()) {
+            shouldSave = true;
           }
-          vcursor.insert(input);
-        }
-    }
+          break;
+        case KEY_RIGHT:
+          if (vcursor.getCol() != (++vcursor).getCol()) {
+            shouldSave = true;
+          }
+          break;
+        case KEY_UP:
+          if (vcursor.getRow() != vcursor.prevLine().getRow()) {
+            shouldSave = true;
+          }
+          break;
+        case KEY_DOWN:
+          if (vcursor.getRow() != vcursor.nextLine().getRow()) {
+            shouldSave = true;
+          }
+          break;
+        case KEY_BACKSPACE:
+          edit = true;
+          prevChar = vcursor.erase();
+          break;
+        case 410:  // special resize character
+          break;
+        case 27:  // escape
+          if (state == 1 && vcursor.getCol() > 0) {
+            vcursor.setCursor(vcursor.getRow(), vcursor.getCol() - 1);
+          }
+          state = 0;
+          vcursor.updateStateOffset(-1);
+          break;
+        default:
+          if (state == 0) {
+            handleCommands(input);
+          } else if (state == 1 || state == 2) {
+            edit = true;
+            if (shouldSave) {
+              saveText();
+              shouldSave = false;
+            }
+            vcursor.insert(input);
+          }
+      }
     // WindowPointer.second - WindowPointer.first + 1 < text.size() ??? code
     updateWindowSize();
     vcursor.updatePointer(1);
@@ -135,12 +141,19 @@ void VM::process() {
     printPlaceholder();
 
     if (prevState != state) {
-      if (state == 1) {
-        theComponents.reset();
-        theComponents.addelement({2, 3, 1});
-      } else if (state == 0) {
-        theComponents.reset();
-        theComponents.addelement({3, 1});
+      if (prevState == 1 || prevState == 2) {
+        theComponents.deleteElement({2});
+      } else if (prevState == 3) {
+        theComponents.deleteElement({4});
+      }
+      if (state == 1 || state == 2) {
+        // theComponents.reset();
+        // theComponents.addelement({2, 3, 1});
+        theComponents.addElement({2});
+      } else if (state == 3) {
+        // theComponents.reset();
+        // theComponents.addelement({3, 1});
+        theComponents.addElement({4});
       }
     }
     theComponents.updateContents();
@@ -151,6 +164,8 @@ void VM::process() {
     move(loc.first, loc.second);
   }
 }
+
+void VM::handleBufferCommands(int input) {}
 
 void VM::handleCommands(int input) {
   switch (input) {
@@ -195,8 +210,11 @@ void VM::handleCommands(int input) {
     case 59:  // semi colon ;
       vcursor.handleSemiColon();
       break;
-    case 58:  // colon
-      state = 3;
+    case 58:      // colon
+      state = 3;  // commandline state
+      break;
+    case 82:  // R
+      state = 2;
       break;
     case 117:
       loadUndo();
@@ -335,8 +353,14 @@ void VM::printTextLine(int input, pair<int, int> prevCursor, int prevChar) {
     for (size_t i = vcursor.getCol(); i < text[vcursor.getRow()].size(); ++i) {
       addch(text[vcursor.getRow()][i]);
     }
-  } else {
-    insch(input);
+  } else if (state == 1) {
+    if (input == '\t') {
+      insstr("        ");
+    } else {
+      insch(input);
+    }
+  } else if (state == 2) {
+    addch(input);
   }
   refresh();
 }

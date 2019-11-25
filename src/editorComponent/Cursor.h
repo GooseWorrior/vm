@@ -13,7 +13,7 @@ class Cursor {
   pair<int, int> theCursor;
   pair<char, char> lastFind;  // first is f/F, second is any char
   vector<string>& theText;
-
+  
   // helpers for handlePercentage
   void moveToCloseBracket(char openBracket, char closeBracket);
   void moveToOpenBracket(char openBracket, char closeBracket);
@@ -22,10 +22,11 @@ class Cursor {
 
   pair<int, int>& winPtr;
   pair<int, int>& winSize;
+  int & state;
 
  public:
   Cursor(int row, int col, vector<string>& theText, pair<int, int>& winPtr,
-         pair<int, int>& winSize);
+         pair<int, int>& winSize, int & state);
   Cursor& operator++();
   Cursor& operator--();
   Cursor& nextLine();

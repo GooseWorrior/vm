@@ -13,7 +13,8 @@ Cursor::Cursor(int row, int col, vector<string>& theText,
       theText{theText},
       winPtr{winPtr},
       winSize{winSize},
-      stateOffset{-1} {}
+      stateOffset{-1},
+      state{state} {}
 Cursor& Cursor::operator++() {
   if (theCursor.second < theText[theCursor.first].size() + stateOffset) {
     theCursor.second++;
@@ -73,8 +74,15 @@ Cursor& Cursor::insert(wchar_t c) {
     }
     theCursor.second = 0;
     theCursor.first++;
-  } else {
+  } else if (state == 1) {
     theText[theCursor.first].insert(theCursor.second, 1, c);
+    ++(*this);
+  } else if (state == 2) {
+    if (theCursor.second == theText[theCursor.first].size()) {
+      theText[theCursor.first].insert(theCursor.second, 1, c);
+    } else {
+      theText[theCursor.first][theCursor.second] = c;
+    }
     ++(*this);
   }
   return *this;
@@ -84,8 +92,10 @@ int Cursor::erase() {
   if (theCursor.second == 0 && theCursor.first == 0) {
     return prevChar;
   } else if (theCursor.second == 0) {
-    theText[theCursor.first - 1] += theText[theCursor.first];
-    theText.erase(theText.begin() + theCursor.first);
+    if (state == 1) {
+      theText[theCursor.first - 1] += theText[theCursor.first];
+      theText.erase(theText.begin() + theCursor.first);
+    }
     if ((theCursor.first - winPtr.first) <= (winPtr.second - winPtr.first) &&
         winPtr.first > 0) {
       winPtr.first--;
@@ -95,11 +105,11 @@ int Cursor::erase() {
     }
     theCursor.first--;
     theCursor.second = theText[theCursor.first].size();
-  } else {
+  } else if (state == 1) {
     prevChar = theText[theCursor.first][theCursor.second - 1];
     theText[theCursor.first].erase(theCursor.second - 1, 1);
-    --(*this);
   }
+  --(*this);
   return prevChar;
 }
 
