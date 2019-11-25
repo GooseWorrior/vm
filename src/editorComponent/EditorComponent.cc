@@ -97,8 +97,10 @@ string EditorComponent::getContents(int type) {
       break;
     case STATUS:
       ret = VMStatusLine;
+      break;
     case COMMANDLINE:
       ret = VMCommandLine;
+      break;
     default:
       break;
   }
