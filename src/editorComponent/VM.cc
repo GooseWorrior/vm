@@ -364,9 +364,11 @@ bool VM::updateWindowSize() {
 
 void VM::printPlaceholder() {
   attron(COLOR_PAIR(1));
+  string placeholderString = "";
   for (int i = vcursor.calculateLine(); i < WindowSize.first; i++) {
-    mvaddch(i, 0, '~');
+    placeholderString += "~\n";
   }
+  printw("%s", placeholderString.c_str());
   refresh();
   attroff(COLOR_PAIR(1));
 }
