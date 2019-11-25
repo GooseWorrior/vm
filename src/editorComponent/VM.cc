@@ -79,7 +79,7 @@ void VM::process() {
     int prevChar = 0;
     bool edit = false;  // could be omitted
     if (state == 0 || state == 1 || state == 2)
-      prevUndoSize = undoStack.size(); // add code to support saving file guard
+      prevUndoSize = undoStack.size();  // add code to support saving file guard
     if (state == 1 || state == 2 || state == 0)
       prevCursor = pair<int, int>(vcursor.getRow(), vcursor.getCol());
     // only keep track of the last cursor location in insert or replace mode
@@ -155,7 +155,8 @@ void VM::process() {
     }
 
     if (vcursor.calculateLine() < WindowSize.first &&
-        prevPointer != WindowPointer || prevWindowSize != WindowSize) {
+            prevPointer != WindowPointer ||
+        prevWindowSize != WindowSize) {
       printPlaceholder();
     }
 
@@ -194,12 +195,12 @@ void VM::process() {
   }
 }
 
-void VM::exeBufferCommand(int & prevUndoSize) {
+void VM::exeBufferCommand(int &prevUndoSize) {
   stringstream source{bufferCommand.substr(1)};
   string cmd;
   if (source >> cmd) {
     if (cmd == "w") {
-       prevUndoSize = undoStack.size();
+      prevUndoSize = undoStack.size();
 
     } else if (cmd == "q") {
     } else if (cmd == "wq") {
@@ -208,7 +209,8 @@ void VM::exeBufferCommand(int & prevUndoSize) {
   }
 }
 
-void VM::handleBufferCommands(int input, pair<int, int> prevCursor, int & prevUndoSize) {
+void VM::handleBufferCommands(int input, pair<int, int> prevCursor,
+                              int &prevUndoSize) {
   switch (input) {
     case KEY_LEFT:
       if (commandCursor > 1) commandCursor--;
@@ -263,7 +265,9 @@ void VM::handleCommands(int input) {
       vcursor.updateStateOffset(0);
     case 36:  // dollar $
       // set to end of line
-      vcursor.setCursor(vcursor.getRow(), text[vcursor.getRow()].length() - 1);
+      vcursor.setCursor(
+          vcursor.getRow(),
+          ifNegativeThenZero(text[vcursor.getRow()].length() - 1));
       break;
     case 48:
       // set to start of line
@@ -372,9 +376,10 @@ bool VM::updateWindowSize() {
 void VM::printPlaceholder() {
   attron(COLOR_PAIR(1));
   string placeholderString = "";
-  for (int i = vcursor.calculateLine(); i < WindowSize.first; i++) {
+  for (int i = vcursor.calculateLine(); i < WindowSize.first - 1; i++) {
     placeholderString += "~\n";
   }
+  placeholderString += "~";
   printw("%s", placeholderString.c_str());
   refresh();
   attroff(COLOR_PAIR(1));
