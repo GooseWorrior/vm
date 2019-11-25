@@ -234,9 +234,15 @@ void VM::loadUndo() {
   if (undoStack.size()) {
     text.clear();
     loadFile(undoStack.back());
+    if (undoStack.size() >= undoCount.second) {
+      undoCount = std::make_pair(undoCount.first, undoStack.size());
+    }
+    vmStatusString = "1 change; before #" +
+                     std::to_string(undoCount.first + undoStack.size()) + "  ";
     undoStack.pop_back();
-    // undoCount = std::make_pair(undoCount.second, );
-    vmStatusString = "1 change; ";
+    if (!undoStack.size()) {
+      undoCount = std::make_pair(undoCount.first + undoCount.second, 0);
+    }
   } else {
     vmStatusString = "Already at oldest change";
   }
@@ -254,9 +260,9 @@ void VM::loadCursor() {
     vmStatusString +=
         std::to_string((int)difftime(currentTime, cursorStack.back().second)) +
         " seconds ago";
-    // std::ofstream f;
-    // f.open("debug.txt");
-    // f << vmStatusString;
+    std::ofstream f;
+    f.open("debug.txt");
+    f << vmStatusString;
     cursorStack.pop_back();
   }
 }
