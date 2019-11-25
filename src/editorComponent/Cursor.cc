@@ -16,8 +16,12 @@ Cursor::Cursor(int row, int col, vector<string>& theText,
       winSize{winSize},
       stateOffset{-1},
       state{state} {}
+
+int ifNegativeThenZero(int x) { return x >= 0 ? x : 0; }
+
 Cursor& Cursor::operator++() {
-  if (theCursor.second < theText[theCursor.first].size() + stateOffset) {
+  if (theCursor.second <
+      ifNegativeThenZero(theText[theCursor.first].size() + stateOffset)) {
     theCursor.second++;
   }
   return *this;
@@ -28,8 +32,6 @@ Cursor& Cursor::operator--() {
   }
   return *this;
 }
-
-int ifNegativeThenZero(int x) { return x >= 0 ? x : 0; }
 
 Cursor& Cursor::nextLine() {
   if (theCursor.first == theText.size() - 1) {
@@ -339,17 +341,41 @@ void Cursor::handleb() {
     col = theText[row].length() - 1;
   }
   f << "(" << row << ", " << col << ")";
-  // for (int i = col - 1; i >= 0; --i) {
-  //   if (!isalnum(theText[row][i]) && spaceBuffer && theText[row][i] == ' ' &&
-  //       theText[row][i] != '_') {
-  //     if (i == col - 1) {
-  //       setCursor(row, i);
-  //     } else {
-  //       setCursor(row, i + 1);
-  //     }
-  //     return;
-  //   }
-  // }
+  for (int i = col - 1; i >= 0; --i) {
+    if (!isalnum(theText[row][i]) && theText[row][i] != '_') {
+      if (i == col - 1) {
+        if (theText[row][i] == ' ') {
+          while (theText[row][i - 1] == ' ' && i > 0) {
+            --i;
+          }
+        } else {
+          setCursor(row, i);
+          return;
+        }
+      } else {
+        setCursor(row, i + 1);
+        return;
+      }
+    }
+    // if(theText[row][i] == ' ' && i == col - 1) {
+
+    // }
+
+    // if (theText[row][i] == ' ') {
+    //   while (theText[row][i - 1] == ' ' && i > 0) {
+    //     --i;
+    //   }
+    //   if (i == 1) {
+    //     --row;
+    //     if (!theText[row].length()) {
+    //       setCursor(row, 0);
+    //       return;
+    //     }
+    //     col = theText[row].length() - 1;
+    //     i = col - 1;
+    //   }
+    // }
+  }
   setCursor(row, 0);
 }  // namespace CS246E
 }  // namespace CS246E
