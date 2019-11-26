@@ -21,14 +21,16 @@ const int STATUS = 5;
 EditorComponent::EditorComponent(pair<int, int> &winSize,
                                  pair<int, int> &winPtr, Cursor &vcursor,
                                  vector<string> &theText, int &state,
-                                 string &VMStatusLine, string &VMCommandLine)
+                                 string &VMStatusLine, string &VMCommandLine,
+                                 string &VMErrorMessage)
     : winSize{winSize},
       winPtr{winPtr},
       vcursor{vcursor},
       theText{theText},
       state{state},
       VMCommandLine{VMCommandLine},
-      VMStatusLine{VMStatusLine} {}
+      VMStatusLine{VMStatusLine},
+      VMErrorMessage{VMErrorMessage} {}
 void EditorComponent::reset() { components.clear(); }
 void EditorComponent::deleteElement(initializer_list<int> types) {
   for (auto i : types) {
@@ -36,7 +38,7 @@ void EditorComponent::deleteElement(initializer_list<int> types) {
                         [&i](pair<int, unique_ptr<StatusLine>> &ref) {
                           return ref.first == i;
                         });
-    components.erase(iter);
+    if (iter != components.end()) components.erase(iter);
   }
 }
 void EditorComponent::addElement(initializer_list<int> types) {
@@ -64,6 +66,9 @@ pair<int, int> EditorComponent::getLocation(int type) {
       break;
     case COMMANDLINE:
       col = 0;
+      break;
+    case WARNING:
+      col = 1;
       break;
     default:
       break;
@@ -100,6 +105,9 @@ string EditorComponent::getContents(int type) {
       break;
     case COMMANDLINE:
       ret = VMCommandLine;
+      break;
+    case WARNING:
+      ret = VMErrorMessage;
       break;
     default:
       break;
@@ -145,8 +153,13 @@ void EditorComponent::print() {
       attron(A_BOLD);
       i.second->print();
       attroff(A_BOLD);
+    } else if (i.first == WARNING) {
+      attron(COLOR_PAIR(2));
+      i.second->print();
+      attroff(COLOR_PAIR(2));
+    } else {
+      i.second->print();
     }
-    i.second->print();
   }
   refresh();
 };

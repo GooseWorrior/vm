@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
   cbreak();              // fetch all
   start_color();         // enable color
   init_pair(1, COLOR_BLUE, COLOR_BLACK);
+  init_pair(2, COLOR_WHITE, COLOR_RED);
   unique_ptr<CS246E::VM> model = std::make_unique<CS246E::VM>(filename);
   unique_ptr<CS246E::Keyboard> controller =
       std::make_unique<CS246E::Keyboard>();

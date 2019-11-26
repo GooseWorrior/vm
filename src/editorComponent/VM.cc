@@ -5,17 +5,27 @@
 #include <sstream>
 #include "../controller/Keyboard.h"
 #include "VM.h"
+#include <cstdlib>
+#include <algorithm>
+#include <cctype>
 
+
+using std::find_if;
+using std::atoi;
+using std::isdigit;
 using std::stringstream;
+using std::to_string;
 
 namespace CS246E {
 VM::VM(string filename)
     : state{0},
       commandCursor{0},
-      consistent{1},
+      savedSize{0},
+      fileName{filename},
+      exitCode{1},
       vcursor(0, 0, text, WindowPointer, WindowSize, state),
       theComponents{WindowSize, WindowPointer,  vcursor,      text,
-                    state,      vmStatusString, bufferCommand} {
+                    state,      vmStatusString, bufferCommand, errorMessage} {
   loadFile(filename);
 }
 
@@ -23,6 +33,7 @@ int ifNegativeThenZero(int x);
 
 void VM::loadFile(string filename) {
   // load files
+  fileName = filename; // in case we change file
   std::ifstream file{filename};
   file >> std::noskipws;
 
@@ -48,10 +59,15 @@ void VM::loadFile(string filename) {
   //   f1 << i << '\n';
   // }
   // f1.close();
-  if (text.size()) {
-    vmStatusString = filename;
+  if (checkExists(filename)) {
+    int count = 0;
+    for (auto i : text) count += i.size();
+    vmStatusString = "\"" + filename + "\" " + to_string(text.size()) + "L, " + to_string(count) + "C";
+  } else {
+    vmStatusString = "\"" + filename + "\" " + "[New File]";
   }
-  vcursor.setCursor(text.size() - 1, ifNegativeThenZero(text.back().length()));
+
+  vcursor.setCursor(text.size() - 1, ifNegativeThenZero(text.back().length() - 1));
   updateWindowSize();
 
   printPlaceholder();
@@ -68,18 +84,15 @@ void VM::process() {
   pair<int, int> prevWindowSize;
   pair<int, int> prevCursor;
   pair<int, int> prevPointer;
-  int prevUndoSize = 0;
   int prevState = 0;
   int prevSize = 0;
   int input = 0;
   bool shouldSave = true;
 
-  while (input != 'q') {
+  while (exitCode || input == '|') {
     input = controller->getChar();
     int prevChar = 0;
     bool edit = false;  // could be omitted
-    if (state == 0 || state == 1 || state == 2)
-      prevUndoSize = undoStack.size(); // add code to support saving file guard
     if (state == 1 || state == 2 || state == 0)
       prevCursor = pair<int, int>(vcursor.getRow(), vcursor.getCol());
     // only keep track of the last cursor location in insert or replace mode
@@ -87,9 +100,8 @@ void VM::process() {
     prevPointer = WindowPointer;
     prevWindowSize = WindowSize;
     prevState = state;
-    consistent = prevUndoSize == undoStack.size();
     if (state == 3) {
-      handleBufferCommands(input, prevCursor, prevUndoSize);
+      handleBufferCommands(input);
     } else
       switch (input) {
         case KEY_LEFT:
@@ -165,8 +177,9 @@ void VM::process() {
       } else if (prevState == 3) {
         theComponents.deleteElement({4});
       } else if (prevState == 0) {
-        theComponents.deleteElement({5, 3, 1});
+        theComponents.deleteElement({0, 5, 3, 1});
         vmStatusString.clear();
+        errorMessage.clear();
       }
       if (state == 1 || state == 2) {
         // theComponents.reset();
@@ -181,9 +194,11 @@ void VM::process() {
       }
     }
 
+    if (!vmStatusString.empty()) errorMessage.clear(); // errorMessage guard
     theComponents.updateContents();
     theComponents.updateLocation();
     theComponents.print();
+    // theComponents.deleteElement({0});
     // theComponents.update();
     if (state == 3) {
       move(WindowSize.first, commandCursor);
@@ -194,21 +209,100 @@ void VM::process() {
   }
 }
 
-void VM::exeBufferCommand(int & prevUndoSize) {
+bool VM::checkExists(string file) {
+    std::ifstream file_to_check(file.c_str());
+    if(file_to_check.is_open()) {
+      file_to_check.close();
+      return true;
+    }
+    file_to_check.close();
+    return false;
+}
+
+void VM::writeFile(string file) {
+  std::fstream output;
+  output.open(file, std::fstream::out);
+  for (int i = 0; i < text.size(); ++i) {
+    output << text[i];
+    if (i != text.size() - 1) output << '\n';
+  }
+  output.close();
+}
+
+void VM::copyFile(string filename) {
+  int Row = vcursor.getRow() + 1;
+  int curRow = Row;
+  std::ifstream file{filename};
+  file >> std::noskipws;
+  char c;
+  string line;
+  while (file >> c) {
+    if (c == '\n') {
+      text.insert(text.begin() + Row, line);
+      line.clear();
+      curRow++;
+    } else {
+      line += c;
+    }
+  }
+  text.insert(text.begin() + curRow, line);
+  vcursor.setCursor(Row, 0);
+}
+ 
+bool VM::isNumber(const string& s) {
+    return !s.empty() && std::find_if(s.begin(), 
+        s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
+}
+
+void VM::exeBufferCommand() {
   stringstream source{bufferCommand.substr(1)};
   string cmd;
   if (source >> cmd) {
     if (cmd == "w") {
-       prevUndoSize = undoStack.size();
-
+       savedSize = undoStack.size();
+       writeFile(fileName);
+       int count = 0;
+       for (auto i : text) count += i.size();
+       vmStatusString = "\"" + fileName + "\" " + to_string(text.size()) + "L, " + to_string(count) + "C" + " written";
     } else if (cmd == "q") {
+       if (savedSize != undoStack.size()) {
+           //std::fstream f{"debug.txt"};
+           //f << savedSize << " " << undoStack.size();
+           theComponents.addElement({0});
+           errorMessage = "E37: No write since last change (add ! to override)";
+       } else {
+           exitCode = 0;
+       }
     } else if (cmd == "wq") {
+      writeFile(fileName);
+      exitCode = 0;
     } else if (cmd == "q!") {
+      exitCode = 0;
+    } else if (cmd == "$") {
+      vcursor.setCursor(text.size() - 1, 0); 
+    } else if (cmd == "r") {
+      source >> cmd;
+      if (checkExists(cmd)) {
+        copyFile(cmd);
+        saveText();
+      } else {
+        theComponents.addElement({0});
+        errorMessage = "E484: Can't open file " + cmd;
+      }
+    } else if (isNumber(cmd)) {
+      int row = atoi(cmd.c_str());
+      row = (row < 1) ? 1 : row;
+      row = (row > text.size()) ? text.size() : row;
+      vcursor.setCursor(row - 1, 0);
+    } else {
+      theComponents.addElement({0});
+      errorMessage = "E492: Not an editor command: " + cmd;
     }
   }
+  state = 0;
 }
 
-void VM::handleBufferCommands(int input, pair<int, int> prevCursor, int & prevUndoSize) {
+void VM::handleBufferCommands(int input) {
   switch (input) {
     case KEY_LEFT:
       if (commandCursor > 1) commandCursor--;
@@ -219,14 +313,13 @@ void VM::handleBufferCommands(int input, pair<int, int> prevCursor, int & prevUn
     case KEY_BACKSPACE:
       if (bufferCommand.size() == 1) {
         state = 0;
-        vcursor.setCursor(prevCursor.first, prevCursor.second);
       } else if (commandCursor > 1) {
         bufferCommand.erase(commandCursor - 1, 1);
         commandCursor--;
       }
       break;
     case '\n':
-      exeBufferCommand(prevUndoSize);
+      exeBufferCommand();
       bufferCommand.clear();
       state = 0;
       commandCursor = 0;

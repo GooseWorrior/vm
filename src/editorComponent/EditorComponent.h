@@ -20,10 +20,11 @@ class EditorComponent {
     int & state;
     string & VMCommandLine; // should be string &, change later 
     string & VMStatusLine; //should be string &, change later
+    string & VMErrorMessage;
     vector<pair<int, unique_ptr<StatusLine>>> components;
     public:
       EditorComponent(pair<int, int> & winSize, pair<int, int> & winPtr, Cursor & vcursor, vector<string> & text, int & state,
-      string & VMStatusLine, string & VMCommandLine);
+      string & VMStatusLine, string & VMCommandLine, string & errorMessage);
       void reset();
       void addElement(initializer_list<int> types);
       void deleteElement(initializer_list<int> types);

@@ -40,7 +40,8 @@
     "vector": "cpp",
     "algorithm": "cpp",
     "stack": "cpp",
-    "deque": "cpp"
+    "deque": "cpp",
+    "*.tcc": "cpp"
   },
   "files.eol": "\n",
   "C_Cpp.errorSquiggles": "Disabled"

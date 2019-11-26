@@ -153,14 +153,19 @@ void Cursor::updatePointer(int mode) {
         return;
       }
     }
-    winPtr.second = 0;
+    winPtr.first = 0;
   } else if (mode == 0) {
-    if (winPtr.first > theCursor.first || winPtr.second < theCursor.first) {
-      int offset = winPtr.second - winPtr.first;
-      winPtr.second =
-          min<int>((winSize.second - winSize.second) / 2 + theCursor.first,
-                   theText.size() - 1);
-      winPtr.first = winPtr.second - offset;
+    if (winPtr.first > theCursor.first) {
+      winPtr.first = theCursor.first;
+      updatePointer(1);
+    } else if  (winPtr.second < theCursor.first) {
+      winPtr.second = theCursor.first;
+      updatePointer(-1); 
+      //int offset = winPtr.second - winPtr.first;
+      //winPtr.second =
+      //    min<int>((winSize.second - winSize.second) / 2 + theCursor.first,
+      //             theText.size() - 1);
+      //winPtr.first = winPtr.second - offset;
     }
     // theCursor.first = min(winPtr.second, theCursor.first);
   }

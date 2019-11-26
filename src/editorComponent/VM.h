@@ -23,8 +23,11 @@ namespace CS246E {
 class VM : public Model {
   int state;  // 0 - command/readonly, 1 - insert, 2 - commandline
   int commandCursor;
-  bool consistent;
+  int savedSize;
+  bool exitCode;
+  string fileName;
   string bufferCommand;
+  string errorMessage;
   Cursor vcursor;
   EditorComponent theComponents;
   pair<int, int> WindowSize;
@@ -37,14 +40,18 @@ class VM : public Model {
   string vmStatusString;
 
   int checkLineLength(int x, int lineLength);
+  bool checkExists(string file);
+  bool isNumber(const string & str);
+  void writeFile(string file);
+  void copyFile(string file);
   void findPairedBracket();
   void handleCommands(int input);
-  void handleBufferCommands(int input, pair<int, int> prevCommand, int & prevUndoSize);
+  void handleBufferCommands(int input);
   void loadFile(string filename);
   void saveText();
   void loadUndo();
   void loadCursor();
-  void exeBufferCommand(int & prevUndoSize);
+  void exeBufferCommand();
 
  public:
   VM(string filename);
