@@ -301,6 +301,18 @@ void VM::handleCommands(int input) {
       loadUndo();
       loadCursor();
       break;
+    case 104:  // h
+      --vcursor;
+      break;
+    case 106:  // j
+      vcursor.nextLine();
+      break;
+    case 107:  // k
+      vcursor.prevLine();
+      break;
+    case 108:  // l
+      ++vcursor;
+      break;
   }
 }
 
