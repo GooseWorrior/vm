@@ -89,7 +89,7 @@ void VM::process() {
   int input = 0;
   bool shouldSave = true;
 
-  while (exitCode || input == '|') {
+  while (exitCode && input != '|') {
     input = controller->getChar();
     int prevChar = 0;
     bool edit = false;  // could be omitted
