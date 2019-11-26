@@ -115,6 +115,8 @@ void VM::process() {
       handleBufferCommands(input);
     } else
       switch (input) {
+        case 'q':  // remove later
+          return;
         case KEY_LEFT:
           if (vcursor.getCol() != (--vcursor).getCol()) {
             shouldSave = true;

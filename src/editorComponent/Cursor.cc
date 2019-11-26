@@ -338,6 +338,7 @@ void Cursor::updateStateOffset(int offset) { stateOffset = offset; }
 void Cursor::handleb() {
   std::fstream f;
   f.open("debug.txt");
+label:
   if (!theCursor.first && !theCursor.second) return;
   int row = theCursor.first;
   int col = theCursor.second;
@@ -349,46 +350,65 @@ void Cursor::handleb() {
     }
     col = theText[row].length() - 1;
   }
-  // f << "(" << row << ", " << col << ")";
   bool firstChar = true;
-  for (int i = col - 1; i >= 0; --i) {
-    if (firstChar) {
-      firstChar = false;
-      if (!isalnum(theText[row][i]) && theText[row][i] != '_') {
-        if (i == col - 1) {
-          if (theText[row][i] == ' ') {
-            while (theText[row][i - 1] == ' ' && i > 0) {
-              --i;
-            }
-          } else {
-            setCursor(row, i);
-            return;
-          }
-        } else {
+  f << "(" << row << ", " << col << ")";
+
+  vector<int> tracker;
+  for (int i = 0; i <= col; ++i) {
+    if (theText[row][i] == ' ') {
+      tracker.push_back(0);
+    } else if (!isalnum(theText[row][i]) && theText[row][i] != '_') {
+      tracker.push_back(1);
+    } else {
+      tracker.push_back(-1);
+    }
+  }
+  bool foundNonZero = false;
+  if (tracker[col - 1] == 0 || tracker[col] == 0) {
+    for (int i = col - 1; i >= 0; --i) {  // go to end of block of zero
+      if (tracker[i] != 0) {
+        col = i;
+        foundNonZero = true;
+        break;
+      }
+    }
+    if (!foundNonZero) {
+      --row;
+      setCursor(row, ifNegativeThenZero(theText[row].length() - 1));
+      goto label;
+    }
+    if (tracker[col] == tracker[col - 1]) {  // go to end of block of 1/-1
+      for (int i = col - 1; i >= 0; --i) {
+        if (tracker[col] != tracker[i]) {
           setCursor(row, i + 1);
           return;
         }
       }
+      setCursor(row, 0);
+    } else {
+      setCursor(row, col);
     }
-    // if(theText[row][i] == ' ' && i == col - 1) {
-
-    // }
-
-    // if (theText[row][i] == ' ') {
-    //   while (theText[row][i - 1] == ' ' && i > 0) {
-    //     --i;
-    //   }
-    //   if (i == 1) {
-    //     --row;
-    //     if (!theText[row].length()) {
-    //       setCursor(row, 0);
-    //       return;
-    //     }
-    //     col = theText[row].length() - 1;
-    //     i = col - 1;
-    //   }
-    // }
+    return;
   }
-  setCursor(row, 0);
-}  // namespace CS246E
+  if (tracker[col] == tracker[col - 1]) {
+    for (int i = col - 1; i >= 0; --i) {
+      f << "(" << tracker[col] << ", " << tracker[i] << ")";
+      if (tracker[col] != tracker[i]) {
+        setCursor(row, i + 1);
+        return;
+      }
+    }
+    setCursor(row, 0);
+  } else {
+    for (int i = col - 1; i >= 0; --i) {
+      f << "(" << tracker[col] << ", " << tracker[i] << ")";
+      if (tracker[col - 1] != tracker[i]) {
+        setCursor(row, i + 1);
+        return;
+      }
+    }
+    setCursor(row, 0);
+  }
+}
+
 }  // namespace CS246E
