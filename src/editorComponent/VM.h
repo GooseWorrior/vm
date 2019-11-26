@@ -41,7 +41,7 @@ class VM : public Model {
 
   int checkLineLength(int x, int lineLength);
   bool checkExists(string file);
-  bool isNumber(const string & str);
+  bool isNumber(const string& str);
   void writeFile(string file);
   void copyFile(string file);
   void findPairedBracket();
@@ -55,6 +55,7 @@ class VM : public Model {
 
  public:
   VM(string filename);
+  ~VM();
   void process();
   bool updateWindowSize();
   pair<int, int> updateLoc();
