@@ -113,8 +113,9 @@ int Cursor::erase() {
       updatePointer(1);
     }
     theCursor.first--;
-    //theCursor.second = theText[theCursor.first].size();
-    theCursor.second = ifNegativeThenZero(theText[theCursor.first].size() + stateOffset);
+    // theCursor.second = theText[theCursor.first].size();
+    theCursor.second =
+        ifNegativeThenZero(theText[theCursor.first].size() + stateOffset);
   } else if (state == 1) {
     prevChar = theText[theCursor.first][theCursor.second - 1];
     theText[theCursor.first].erase(theCursor.second - 1, 1);
@@ -158,14 +159,14 @@ void Cursor::updatePointer(int mode) {
     if (winPtr.first > theCursor.first) {
       winPtr.first = theCursor.first;
       updatePointer(1);
-    } else if  (winPtr.second < theCursor.first) {
+    } else if (winPtr.second < theCursor.first) {
       winPtr.second = theCursor.first;
-      updatePointer(-1); 
-      //int offset = winPtr.second - winPtr.first;
-      //winPtr.second =
+      updatePointer(-1);
+      // int offset = winPtr.second - winPtr.first;
+      // winPtr.second =
       //    min<int>((winSize.second - winSize.second) / 2 + theCursor.first,
       //             theText.size() - 1);
-      //winPtr.first = winPtr.second - offset;
+      // winPtr.first = winPtr.second - offset;
     }
     // theCursor.first = min(winPtr.second, theCursor.first);
   }
@@ -348,21 +349,25 @@ void Cursor::handleb() {
     }
     col = theText[row].length() - 1;
   }
-  f << "(" << row << ", " << col << ")";
+  // f << "(" << row << ", " << col << ")";
+  bool firstChar = true;
   for (int i = col - 1; i >= 0; --i) {
-    if (!isalnum(theText[row][i]) && theText[row][i] != '_') {
-      if (i == col - 1) {
-        if (theText[row][i] == ' ') {
-          while (theText[row][i - 1] == ' ' && i > 0) {
-            --i;
+    if (firstChar) {
+      firstChar = false;
+      if (!isalnum(theText[row][i]) && theText[row][i] != '_') {
+        if (i == col - 1) {
+          if (theText[row][i] == ' ') {
+            while (theText[row][i - 1] == ' ' && i > 0) {
+              --i;
+            }
+          } else {
+            setCursor(row, i);
+            return;
           }
         } else {
-          setCursor(row, i);
+          setCursor(row, i + 1);
           return;
         }
-      } else {
-        setCursor(row, i + 1);
-        return;
       }
     }
     // if(theText[row][i] == ' ' && i == col - 1) {
