@@ -101,7 +101,6 @@ void VM::process() {
     prevPointer = WindowPointer;
     prevWindowSize = WindowSize;
     prevState = state;
-    consistent = prevUndoSize == undoStack.size();
     if (state == 3) {
       handleBufferCommands(input);
     } else
@@ -322,7 +321,7 @@ void VM::handleBufferCommands(int input) {
       }
       break;
     case '\n':
-      exeBufferCommand(prevUndoSize);
+      exeBufferCommand();
       bufferCommand.clear();
       state = 0;
       commandCursor = 0;
