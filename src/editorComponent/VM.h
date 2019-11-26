@@ -51,7 +51,7 @@ class VM : public Model {
   void saveText();
   void loadUndo();
   void loadCursor();
-  void exeBufferCommand();
+  void exeBufferCommand(int & prevUndoSize);
 
  public:
   VM(string filename);

@@ -84,6 +84,7 @@ void VM::process() {
   pair<int, int> prevWindowSize;
   pair<int, int> prevCursor;
   pair<int, int> prevPointer;
+  int prevUndoSize = 0;
   int prevState = 0;
   int prevSize = 0;
   int input = 0;
@@ -100,6 +101,7 @@ void VM::process() {
     prevPointer = WindowPointer;
     prevWindowSize = WindowSize;
     prevState = state;
+    consistent = prevUndoSize == undoStack.size();
     if (state == 3) {
       handleBufferCommands(input);
     } else
@@ -167,7 +169,8 @@ void VM::process() {
     }
 
     if (vcursor.calculateLine() < WindowSize.first &&
-        prevPointer != WindowPointer || prevWindowSize != WindowSize) {
+            prevPointer != WindowPointer ||
+        prevWindowSize != WindowSize) {
       printPlaceholder();
     }
 
@@ -319,7 +322,7 @@ void VM::handleBufferCommands(int input) {
       }
       break;
     case '\n':
-      exeBufferCommand();
+      exeBufferCommand(prevUndoSize);
       bufferCommand.clear();
       state = 0;
       commandCursor = 0;
@@ -356,7 +359,9 @@ void VM::handleCommands(int input) {
       vcursor.updateStateOffset(0);
     case 36:  // dollar $
       // set to end of line
-      vcursor.setCursor(vcursor.getRow(), text[vcursor.getRow()].length() - 1);
+      vcursor.setCursor(
+          vcursor.getRow(),
+          ifNegativeThenZero(text[vcursor.getRow()].length() - 1));
       break;
     case 48:
       // set to start of line
@@ -389,6 +394,18 @@ void VM::handleCommands(int input) {
     case 117:
       loadUndo();
       loadCursor();
+      break;
+    case 104:  // h
+      --vcursor;
+      break;
+    case 106:  // j
+      vcursor.nextLine();
+      break;
+    case 107:  // k
+      vcursor.prevLine();
+      break;
+    case 108:  // l
+      ++vcursor;
       break;
   }
 }
@@ -465,9 +482,10 @@ bool VM::updateWindowSize() {
 void VM::printPlaceholder() {
   attron(COLOR_PAIR(1));
   string placeholderString = "";
-  for (int i = vcursor.calculateLine(); i < WindowSize.first; i++) {
+  for (int i = vcursor.calculateLine(); i < WindowSize.first - 1; i++) {
     placeholderString += "~\n";
   }
+  placeholderString += "~";
   printw("%s", placeholderString.c_str());
   refresh();
   attroff(COLOR_PAIR(1));
