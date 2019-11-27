@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>  // remove after debugging
 
+#include <stdio.h>
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
@@ -30,9 +31,11 @@ VM::VM(string filename)
 
 VM::~VM() {
   if (undoStack.size()) {
+    std::ofstream f;
+    f.open("debug.txt");
     for (string filename : undoStack) {
-      string removeCommand = "rm " + filename;
-      system(removeCommand.c_str());
+      f << filename;
+      remove(filename.c_str());
     }
   }
 }
@@ -420,18 +423,16 @@ void VM::handleCommands(int input) {
     case 108:  // l
       ++vcursor;
       break;
+    case 119:  // w
+      vcursor.handlew();
+      break;
   }
 }
 
 void VM::saveText() {
-  string command = "mktemp";
-  FILE* f = popen(command.c_str(), "r");
-  string tempDir;
-  for (char c = fgetc(f); c != EOF; c = fgetc(f)) {
-    tempDir += c;
-  }
-  std::ofstream tempFile;
-  tempFile.open(tempDir);
+  char filename[L_tmpnam];
+  std::tmpnam(filename);  // generates temp name
+  std::ofstream tempFile(filename);
   for (int i = 0; i < text.size(); ++i) {
     if (i != text.size() - 1) {
       tempFile << text[i] << "\n";
@@ -440,7 +441,7 @@ void VM::saveText() {
     }
   }
   tempFile.close();
-  undoStack.push_back(tempDir);
+  undoStack.push_back(filename);
 
   time_t timer;
   time(&timer);
@@ -457,8 +458,7 @@ void VM::loadUndo() {
     }
     vmStatusString = "1 change; before #" +
                      std::to_string(undoCount.first + undoStack.size()) + "  ";
-    string removeCommand = "rm " + undoStack.back();
-    system(removeCommand.c_str());
+    remove(undoStack.back().c_str());
     undoStack.pop_back();
     if (!undoStack.size()) {
       undoCount = std::make_pair(undoCount.first + undoCount.second, 0);
@@ -480,9 +480,6 @@ void VM::loadCursor() {
     vmStatusString +=
         std::to_string((int)difftime(currentTime, cursorStack.back().second)) +
         " seconds ago";
-    std::ofstream f;
-    f.open("debug.txt");
-    f << vmStatusString;
     cursorStack.pop_back();
   }
 }

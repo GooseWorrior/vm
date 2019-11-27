@@ -44,6 +44,7 @@ class Cursor {
   void handleF(int toFind);
   void handleSemiColon();
   void handleb();
+  void handlew();
   void updatePointer(int mode);
   int calculateLine();
   void updateStateOffset(int offset);
