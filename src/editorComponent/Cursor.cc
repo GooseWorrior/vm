@@ -351,7 +351,7 @@ label:
     col = theText[row].length() - 1;
   }
   bool firstChar = true;
-  f << "(" << row << ", " << col << ")";
+  // f << "(" << row << ", " << col << ")";
 
   vector<int> tracker;
   for (int i = 0; i <= col; ++i) {
@@ -392,7 +392,7 @@ label:
   }
   if (tracker[col] == tracker[col - 1]) {
     for (int i = col - 1; i >= 0; --i) {
-      f << "(" << tracker[col] << ", " << tracker[i] << ")";
+      // f << "(" << tracker[col] << ", " << tracker[i] << ")";
       if (tracker[col] != tracker[i]) {
         setCursor(row, i + 1);
         return;
@@ -401,7 +401,7 @@ label:
     setCursor(row, 0);
   } else {
     for (int i = col - 1; i >= 0; --i) {
-      f << "(" << tracker[col] << ", " << tracker[i] << ")";
+      // f << "(" << tracker[col] << ", " << tracker[i] << ")";
       if (tracker[col - 1] != tracker[i]) {
         setCursor(row, i + 1);
         return;
@@ -411,4 +411,65 @@ label:
   }
 }
 
+void Cursor::handlew() {
+  // cursor is already at the end
+  if (theCursor.first == ifNegativeThenZero(theText.size() - 1) &&
+      theCursor.second == ifNegativeThenZero(theText.back().length() - 1)) {
+    return;
+  }
+  int row = theCursor.first;
+  int col = theCursor.second;
+  string temp;
+  if (theCursor.first != ifNegativeThenZero(theText.size() - 1)) {
+    temp = theText[row] + theText[row + 1];
+  } else {
+    temp = theText[row];
+  }
+  bool prevWord = false;
+  bool firstTime = true;
+  bool space = false;
+
+  int i;
+  for (i = col; i < temp.length(); ++i) {
+    if (i > ifNegativeThenZero(theText[row].length() - 1) && temp[i] != ' ') {
+      break;
+    }
+    if (space && temp[i] != ' ') {
+      break;
+    } else {
+      if (isalnum(temp[i]) || temp[i] == '_') {
+        if (!prevWord && !firstTime) {
+          break;
+        }
+        prevWord = true;
+      } else {
+        if (prevWord && temp[i] != ' ' && !firstTime) {
+          break;
+        }
+        if (temp[i] == ' ') space = true;
+        prevWord = false;
+      }
+    }
+    firstTime = false;
+  }
+
+  if (i >= theText[row].length()) {
+    int newCol = i - theText[row].length();
+    if (row == theText.size() - 1) {
+      while (theText[row][i] == ' ' && i < theText[row].length()) {
+        ++i;
+      }
+      setCursor(row, i - 1);
+      return;
+    } else if (theText[row + 1][newCol] == ' ') {
+      while (theText[row + 1][newCol] == ' ' && i < theText[row + 1].length()) {
+        ++newCol;
+      }
+    }
+    setCursor(row + 1, newCol);
+  } else {
+    setCursor(row, i);
+    return;
+  }
+}
 }  // namespace CS246E
