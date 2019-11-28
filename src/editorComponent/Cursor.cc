@@ -431,9 +431,9 @@ void Cursor::handlew() {
 
   int i;
   for (i = col; i < temp.length(); ++i) {
-    std::ofstream f;
-    f.open("debug.txt");
-
+    if (i > ifNegativeThenZero(theText[row].length() - 1) && temp[i] != ' ') {
+      break;
+    }
     if (space && temp[i] != ' ') {
       break;
     } else {
@@ -443,7 +443,6 @@ void Cursor::handlew() {
         }
         prevWord = true;
       } else {
-        f << 'h';
         if (prevWord && temp[i] != ' ' && !firstTime) {
           break;
         }
@@ -474,20 +473,5 @@ void Cursor::handlew() {
     setCursor(row, i);
     return;
   }
-  // if (col == theText[row].len) {
-  //   --row;
-  //   if (!theText[row].length()) {
-  //     setCursor(row, 0);
-  //     return;
-  //   }
-  //   col = theText[row].length() - 1;
-  // }
-  // for (int i = col; i < theText[row].length(); ++i) {
-  //   if (!isalnum(theText[row][i]) && theText[row][i] != '_') {
-  //     setCursor(row, i);
-  //     return;
-  //   }
-  // }
 }
-// void Cursor::recursivew(int row, int col, bool first) {}
 }  // namespace CS246E
