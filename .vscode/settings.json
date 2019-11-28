@@ -41,7 +41,9 @@
     "algorithm": "cpp",
     "stack": "cpp",
     "deque": "cpp",
-    "*.tcc": "cpp"
+    "*.tcc": "cpp",
+    "cctype": "cpp",
+    "sstream": "cpp"
   },
   "files.eol": "\n",
   "C_Cpp.errorSquiggles": "Disabled"

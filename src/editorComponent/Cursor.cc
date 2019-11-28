@@ -338,84 +338,70 @@ void Cursor::updateStateOffset(int offset) { stateOffset = offset; }
 void Cursor::handleb() {
   std::fstream f;
   f.open("debug.txt");
-label:
+  // cursor is at the beginning
   if (!theCursor.first && !theCursor.second) return;
   int row = theCursor.first;
   int col = theCursor.second;
-  if (!col) {
-    --row;
-    if (!theText[row].length()) {
-      setCursor(row, 0);
-      return;
-    }
-    col = theText[row].length() - 1;
-  }
-  bool firstChar = true;
-  // f << "(" << row << ", " << col << ")";
 
-  vector<int> tracker;
-  for (int i = 0; i <= col; ++i) {
-    if (theText[row][i] == ' ') {
-      tracker.push_back(0);
-    } else if (!isalnum(theText[row][i]) && theText[row][i] != '_') {
-      tracker.push_back(1);
-    } else {
-      tracker.push_back(-1);
-    }
+  string temp;
+  // not the first row
+  if (theCursor.first) {
+    temp = theText[row - 1] + theText[row];
+  } else {
+    temp = theText[row];
   }
-  bool foundNonZero = false;
-  if (tracker[col - 1] == 0 || tracker[col] == 0) {
-    for (int i = col - 1; i >= 0; --i) {  // go to end of block of zero
-      if (tracker[i] != 0) {
-        col = i;
-        foundNonZero = true;
+  bool prevWord = false;
+  bool firstTime = true;
+  bool space = false;
+
+  int i;
+  for (i = col + theText[row - 1].length(); i >= 0; --i) {
+    f << i << "\n" << prevWord << " " << space << "\n";
+
+    if (i < ifNegativeThenZero(theText[row - 1].length()) && temp[i] != ' ') {
+      ++i;
+      break;
+    }
+    if (isalnum(temp[i]) || temp[i] == '_') {
+      if (!prevWord && !firstTime) {
         break;
       }
-    }
-    if (!foundNonZero) {
-      --row;
-      setCursor(row, ifNegativeThenZero(theText[row].length() - 1));
-      goto label;
-    }
-    if (tracker[col] == tracker[col - 1]) {  // go to end of block of 1/-1
-      for (int i = col - 1; i >= 0; --i) {
-        if (tracker[col] != tracker[i]) {
-          setCursor(row, i + 1);
-          return;
-        }
-      }
-      setCursor(row, 0);
+      prevWord = true;
     } else {
-      setCursor(row, col);
+      if (prevWord && temp[i] != ' ' && !firstTime) {
+        break;
+      }
+      if (temp[i] == ' ') space = true;
+      prevWord = false;
     }
-    return;
+
+    firstTime = false;
   }
-  if (tracker[col] == tracker[col - 1]) {
-    for (int i = col - 1; i >= 0; --i) {
-      if (tracker[col] != tracker[i]) {
-        setCursor(row, i + 1);
-        return;
-      }
-    }
-    setCursor(row, 0);
+  if (i >= theText[row - 1].length()) {  // stay on same row
+    int newCol = i - theText[row - 1].length();
+    setCursor(row, newCol);
   } else {
-    for (int i = col - 1; i >= 0; --i) {
-      // f << "(" << tracker[col] << ", " << tracker[i] << ")";
-      if (tracker[col - 1] != tracker[i]) {
-        setCursor(row, i + 1);
-        return;
+    if (row == theText.size() - 1) {
+      while (theText[row][i] == ' ' && i > 0) {
+        --i;
+      }
+      setCursor(row, i - 1);
+      return;
+    } else if (theText[row + 1][i] == ' ') {
+      while (theText[row + 1][i] == ' ' && i < theText[row + 1].length()) {
+        ++i;
       }
     }
-    setCursor(row, 0);
+    setCursor(row + 1, i);
   }
 }
 
 void Cursor::handlew() {
   // cursor is already at the end
   if (theCursor.first == ifNegativeThenZero(theText.size() - 1) &&
-      theCursor.second == ifNegativeThenZero(theText.back().length() - 1)) {
+      theCursor.second == ifNegativeThenZero(theText.back().length() - 1))
     return;
-  }
+
   int row = theCursor.first;
   int col = theCursor.second;
   string temp;
