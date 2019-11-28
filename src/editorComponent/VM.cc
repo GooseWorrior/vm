@@ -30,14 +30,14 @@ VM::VM(string filename)
 }
 
 VM::~VM() {
-  if (undoStack.size()) {
-    std::ofstream f;
-    f.open("debug.txt");
-    for (string filename : undoStack) {
-      f << filename;
-      remove(filename.c_str());
-    }
-  }
+  // if (undoStack.size()) {
+  //   std::ofstream f;
+  //   f.open("debug.txt");
+  //   for (string filename : undoStack) {
+  //     f << filename;
+  //     remove(filename.c_str());
+  //   }
+  // }
 }
 
 int ifNegativeThenZero(int x);
@@ -430,18 +430,7 @@ void VM::handleCommands(int input) {
 }
 
 void VM::saveText() {
-  char filename[L_tmpnam];
-  std::tmpnam(filename);  // generates temp name
-  std::ofstream tempFile(filename);
-  for (int i = 0; i < text.size(); ++i) {
-    if (i != text.size() - 1) {
-      tempFile << text[i] << "\n";
-    } else {
-      tempFile << text[i];
-    }
-  }
-  tempFile.close();
-  undoStack.push_back(filename);
+  undoStack.push_back(std::make_pair(text[vcursor.getRow()], vcursor.getRow()));
 
   time_t timer;
   time(&timer);
@@ -451,14 +440,17 @@ void VM::saveText() {
 
 void VM::loadUndo() {
   if (undoStack.size()) {
-    text.clear();
-    loadFile(undoStack.back());
+    string undoContent = undoStack.back().first;
+    int undoRow = undoStack.back().second;
+    move(undoRow, 0);
+    text[undoRow] = undoContent;
+    clrtoeol();
+    printw("%s", undoContent.c_str());
     if (undoStack.size() >= undoCount.second) {
       undoCount = std::make_pair(undoCount.first, undoStack.size());
     }
     vmStatusString = "1 change; before #" +
                      std::to_string(undoCount.first + undoStack.size()) + "  ";
-    remove(undoStack.back().c_str());
     undoStack.pop_back();
     if (!undoStack.size()) {
       undoCount = std::make_pair(undoCount.first + undoCount.second, 0);
