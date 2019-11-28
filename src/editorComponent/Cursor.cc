@@ -392,7 +392,6 @@ label:
   }
   if (tracker[col] == tracker[col - 1]) {
     for (int i = col - 1; i >= 0; --i) {
-      // f << "(" << tracker[col] << ", " << tracker[i] << ")";
       if (tracker[col] != tracker[i]) {
         setCursor(row, i + 1);
         return;
@@ -469,7 +468,6 @@ void Cursor::handlew() {
     setCursor(row + 1, newCol);
   } else {
     setCursor(row, i);
-    return;
   }
 }
 }  // namespace CS246E
