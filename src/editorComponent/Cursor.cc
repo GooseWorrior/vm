@@ -465,8 +465,6 @@ void Cursor::handlew() {
       while (theText[row + 1][newCol] == ' ' && i < theText[row + 1].length()) {
         ++newCol;
       }
-      // setCursor(row + 1, i);
-      // return;
     }
     setCursor(row + 1, newCol);
   } else {

@@ -29,17 +29,6 @@ VM::VM(string filename)
   loadFile(filename);
 }
 
-VM::~VM() {
-  // if (undoStack.size()) {
-  //   std::ofstream f;
-  //   f.open("debug.txt");
-  //   for (string filename : undoStack) {
-  //     f << filename;
-  //     remove(filename.c_str());
-  //   }
-  // }
-}
-
 int ifNegativeThenZero(int x);
 
 void VM::loadFile(string filename) {
