@@ -350,12 +350,13 @@ void Cursor::handleb() {
   } else {
     temp = theText[row];
   }
-  bool prevWord = false;
+  bool prevWord = isalnum(temp[col + theText[row - 1].length()]) ||
+                  temp[col + theText[row - 1].length()] == '_';
   bool firstTime = true;
   bool space = false;
 
   int i;
-  for (i = col + theText[row - 1].length(); i >= 0; --i) {
+  for (i = col + theText[row - 1].length() - 1; i >= 0; --i) {
     f << i << "\n" << prevWord << " " << space << "\n";
 
     if (i < ifNegativeThenZero(theText[row - 1].length()) && temp[i] != ' ') {
@@ -363,12 +364,14 @@ void Cursor::handleb() {
       break;
     }
     if (isalnum(temp[i]) || temp[i] == '_') {
-      if (!prevWord && !firstTime) {
+      if (!prevWord) {
+        // ++i;
         break;
       }
       prevWord = true;
     } else {
-      if (prevWord && temp[i] != ' ' && !firstTime) {
+      if (prevWord && temp[i] != ' ') {
+        ++i;
         break;
       }
       if (temp[i] == ' ') space = true;
@@ -377,22 +380,13 @@ void Cursor::handleb() {
 
     firstTime = false;
   }
-  if (i >= theText[row - 1].length()) {  // stay on same row
+  if (theCursor.first && i >= theText[row - 1].length()) {  // stay on same row
+    f << i;
+
     int newCol = i - theText[row - 1].length();
     setCursor(row, newCol);
   } else {
-    if (row == theText.size() - 1) {
-      while (theText[row][i] == ' ' && i > 0) {
-        --i;
-      }
-      setCursor(row, i - 1);
-      return;
-    } else if (theText[row + 1][i] == ' ') {
-      while (theText[row + 1][i] == ' ' && i < theText[row + 1].length()) {
-        ++i;
-      }
-    }
-    setCursor(row + 1, i);
+    setCursor(row, i + 1);
   }
 }
 
