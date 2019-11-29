@@ -274,18 +274,13 @@ void Cursor::findPairedBracket() {
       }
     }
   }
-  // switch (first) {
-  //   case '[':
-  //     if (squareStack.size()) return;
-  //     break;
-  //   case '{':
-  //     if (curlyStack.size()) return;
-  //     break;
-  //   case '(':
-  //     if (roundStack.size()) return;
-  //     break;
-  // }
   if (closest != theText[theCursor.first].length() + 1) {
+    for (size_t i = theCursor.second; i < closest; ++i) {
+      if (theText[theCursor.first][i] == '{' ||
+          theText[theCursor.first][i] == '[' ||
+          theText[theCursor.first][i] == '(')
+        return;
+    }
     setCursor(theCursor.first, closest);
   }
 }
