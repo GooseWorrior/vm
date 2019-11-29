@@ -42,8 +42,11 @@
     "stack": "cpp",
     "deque": "cpp",
     "*.tcc": "cpp",
-    "cctype": "cpp",
-    "sstream": "cpp"
+    "bitset": "cpp",
+    "ctime": "cpp",
+    "iterator": "cpp",
+    "map": "cpp",
+    "regex": "cpp"
   },
   "files.eol": "\n",
   "C_Cpp.errorSquiggles": "Disabled"

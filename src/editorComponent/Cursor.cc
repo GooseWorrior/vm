@@ -353,8 +353,7 @@ void Cursor::handleb() {
     temp = theText[row];
     offset = 0;
   }
-  bool prevWord = isalnum(temp[col + theText[row - 1].length()]) ||
-                  temp[col + theText[row - 1].length()] == '_';
+  bool prevWord = isalnum(temp[col + offset]) || temp[col + offset] == '_';
   bool firstTime = true;
   bool space = false;
   int i;
@@ -386,33 +385,41 @@ void Cursor::handleb() {
               break;
             }
           }
-          ++i;
-          break;
         }
+        ++i;
+        break;
       } else if (isalnum(temp[i]) || temp[i] == '_') {  // is a "word"
         if (!prevWord) {
           if (firstTime) {
+            bool partition = false;
             prevWord = isalnum(temp[i]) || temp[i] == '_';
             while (i >= 0) {
+              if (i >= offset) {
+                partition = true;
+              }
               --i;
               if ((isalnum(temp[i]) || temp[i] == '_') != prevWord ||
-                  temp[i] == ' ') {
+                  temp[i] == ' ' || (i < offset && partition)) {
                 break;
               }
             }
-            ++i;
-            break;
           }
+          ++i;
+          break;
         }
         prevWord = true;
       } else {
         if (prevWord && temp[i] != ' ' && !space) {
           if (firstTime) {
+            bool partition = false;
             prevWord = isalnum(temp[i]) || temp[i] == '_';
             while (i > 0) {
+              if (i >= offset) {
+                partition = true;
+              }
               --i;
               if ((isalnum(temp[i]) || temp[i] == '_') != prevWord ||
-                  temp[i] == ' ') {
+                  temp[i] == ' ' || (i < offset && partition)) {
                 break;
               }
             }

@@ -8,16 +8,19 @@
 
 #include "../Model.h"
 #include "../view/PlainView.h"
+#include "../view/SyntaxView.h"
 
 #include "Commandline.h"
 //#include "Cursor.h"
 #include "EditorComponent.h"
 #include "StatusLine.h"
+#include <regex>
 
 using std::pair;
 using std::string;
 using std::unique_ptr;
 using std::vector;
+using std::regex;
 
 namespace CS246E {
 class VM : public Model {
@@ -25,6 +28,7 @@ class VM : public Model {
   int commandCursor;
   int savedSize;
   bool exitCode;
+  bool CFile;
   string fileName;
   string bufferCommand;
   string errorMessage;
@@ -39,9 +43,11 @@ class VM : public Model {
   pair<int, int> undoCount;
   string vmStatusString;
 
+  
   int checkLineLength(int x, int lineLength);
   bool checkExists(string file);
-  bool isNumber(const string& str);
+  bool isNumber(const string & str);
+  bool isCFile();
   void writeFile(string file);
   void copyFile(string file);
   void findPairedBracket();
@@ -52,18 +58,14 @@ class VM : public Model {
   void loadUndo();
   void loadCursor();
   void exeBufferCommand();
+  
 
  public:
   VM(string filename);
   void process();
   bool updateWindowSize();
   pair<int, int> updateLoc();
-  void printTextAll();  // temporary
-  void printTextAfterward(int input, pair<int, int> prevCursor);
-  void printTextLine(int input, pair<int, int> prevCursor,
-                     int prevChar);  // temporary
-  void printTextChar(int input, int prevChar);
-  void printPlaceholder();
+  friend class SyntaxView;
   friend class PlainView;
 };
 }  // namespace CS246E

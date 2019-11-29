@@ -23,17 +23,25 @@ int main(int argc, char *argv[]) {
   keypad(stdscr, true);  // fech all
   cbreak();              // fetch all
   start_color();         // enable color
+  init_pair(0, COLOR_WHITE, COLOR_BLACK);
   init_pair(1, COLOR_BLUE, COLOR_BLACK);
   init_pair(2, COLOR_WHITE, COLOR_RED);
   set_escdelay(0);
 
+  init_pair(3, COLOR_MAGENTA, COLOR_BLACK);
+  init_pair(4, COLOR_GREEN, COLOR_BLACK);
+  init_pair(5, COLOR_YELLOW, COLOR_BLACK);
+  init_pair(6, COLOR_RED, COLOR_BLACK);
+  init_pair(7, COLOR_CYAN, COLOR_BLACK);
+  init_pair(8, COLOR_WHITE, COLOR_CYAN);
+  init_pair(9, COLOR_YELLOW, COLOR_BLACK);
   unique_ptr<CS246E::VM> model = std::make_unique<CS246E::VM>(filename);
   unique_ptr<CS246E::Keyboard> controller =
       std::make_unique<CS246E::Keyboard>();
-  unique_ptr<CS246E::View> view =
-      std::make_unique<CS246E::PlainView>(model.get());
+  //unique_ptr<CS246E::View> view =
+  //    std::make_unique<CS246E::PlainView>(model.get());
   model->addController(std::move(controller));
-  model->addView(std::move(view));
+  //model->addView(std::move(view));
   model->process();
 
   endwin();  // remove after quit command is written
