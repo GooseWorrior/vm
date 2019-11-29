@@ -344,49 +344,113 @@ void Cursor::handleb() {
   int col = theCursor.second;
 
   string temp;
+  int offset;
   // not the first row
   if (theCursor.first) {
     temp = theText[row - 1] + theText[row];
+    offset = theText[row - 1].length();
   } else {
     temp = theText[row];
+    offset = 0;
   }
   bool prevWord = isalnum(temp[col + theText[row - 1].length()]) ||
                   temp[col + theText[row - 1].length()] == '_';
   bool firstTime = true;
   bool space = false;
-
   int i;
-  for (i = col + theText[row - 1].length() - 1; i >= 0; --i) {
-    f << i << "\n" << prevWord << " " << space << "\n";
-
-    if (i < ifNegativeThenZero(theText[row - 1].length()) && temp[i] != ' ') {
+  for (i = col + offset - 1; i >= 0; --i) {
+    if (space && temp[i] != ' ') {
+      prevWord = isalnum(temp[i]) || temp[i] == '_';
+      while (i > 0) {
+        --i;
+        if ((isalnum(temp[i]) || temp[i] == '_') != prevWord ||
+            temp[i] == ' ') {
+          break;
+        }
+      }
       ++i;
       break;
-    }
-    if (isalnum(temp[i]) || temp[i] == '_') {
-      if (!prevWord) {
-        // ++i;
-        break;
-      }
-      prevWord = true;
     } else {
-      if (prevWord && temp[i] != ' ') {
-        ++i;
-        break;
+      // next row and not a space case
+      if (i < offset && temp[i] != ' ') {
+        if (firstTime) {
+          prevWord = isalnum(temp[i]) || temp[i] == '_';
+          while (i > 0) {
+            --i;
+            if ((isalnum(temp[i]) || temp[i] == '_') != prevWord ||
+                temp[i] == ' ') {
+              break;
+            }
+          }
+          ++i;
+          break;
+        } else {  // not the first time
+          ++i;
+          break;
+        }
+      } else if (isalnum(temp[i]) || temp[i] == '_') {
+        if (!prevWord) {
+          if (firstTime) {
+            prevWord = isalnum(temp[i]) || temp[i] == '_';
+            while (i > 0) {
+              --i;
+              if ((isalnum(temp[i]) || temp[i] == '_') != prevWord ||
+                  temp[i] == ' ') {
+                break;
+              }
+            }
+            ++i;
+            break;
+          } else {  // not the first time
+            ++i;
+            break;
+          }
+        }
+        prevWord = true;
+      } else {
+        if (prevWord && temp[i] != ' ' && !space) {
+          if (firstTime) {
+            prevWord = isalnum(temp[i]) || temp[i] == '_';
+            while (i > 0) {
+              --i;
+              if ((isalnum(temp[i]) || temp[i] == '_') != prevWord ||
+                  temp[i] == ' ') {
+                break;
+              }
+            }
+            if (i != 0) {
+              ++i;
+            }
+            break;
+          } else {  // not the first time
+            ++i;
+            break;
+          }
+        } else if (!space && temp[i] == ' ') {
+          // hit a space and it's not the first time
+          if (!firstTime) {
+            ++i;
+            break;
+          }
+          space = true;
+        }
+        prevWord = false;
       }
-      if (temp[i] == ' ') space = true;
-      prevWord = false;
     }
-
     firstTime = false;
   }
   if (theCursor.first && i >= theText[row - 1].length()) {  // stay on same row
-    f << i;
-
     int newCol = i - theText[row - 1].length();
     setCursor(row, newCol);
+  } else if (!theCursor.first) {
+    if (i < 0) {
+      setCursor(row, 0);
+    } else {
+      setCursor(row, i);
+    }
   } else {
-    setCursor(row, i + 1);
+    --row;
+    setCursor(row, i);
   }
 }
 
