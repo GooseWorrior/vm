@@ -338,77 +338,176 @@ void Cursor::updateStateOffset(int offset) { stateOffset = offset; }
 void Cursor::handleb() {
   std::fstream f;
   f.open("debug.txt");
-label:
+  // cursor is at the beginning
   if (!theCursor.first && !theCursor.second) return;
   int row = theCursor.first;
   int col = theCursor.second;
-  if (!col) {
-    --row;
-    if (!theText[row].length()) {
-      setCursor(row, 0);
-      return;
-    }
-    col = theText[row].length() - 1;
-  }
-  bool firstChar = true;
-  f << "(" << row << ", " << col << ")";
 
-  vector<int> tracker;
-  for (int i = 0; i <= col; ++i) {
-    if (theText[row][i] == ' ') {
-      tracker.push_back(0);
-    } else if (!isalnum(theText[row][i]) && theText[row][i] != '_') {
-      tracker.push_back(1);
-    } else {
-      tracker.push_back(-1);
-    }
+  string temp;
+  int offset;
+  // not the first row
+  if (theCursor.first) {
+    temp = theText[row - 1] + theText[row];
+    offset = theText[row - 1].length();
+  } else {
+    temp = theText[row];
+    offset = 0;
   }
-  bool foundNonZero = false;
-  if (tracker[col - 1] == 0 || tracker[col] == 0) {
-    for (int i = col - 1; i >= 0; --i) {  // go to end of block of zero
-      if (tracker[i] != 0) {
-        col = i;
-        foundNonZero = true;
-        break;
-      }
-    }
-    if (!foundNonZero) {
-      --row;
-      setCursor(row, ifNegativeThenZero(theText[row].length() - 1));
-      goto label;
-    }
-    if (tracker[col] == tracker[col - 1]) {  // go to end of block of 1/-1
-      for (int i = col - 1; i >= 0; --i) {
-        if (tracker[col] != tracker[i]) {
-          setCursor(row, i + 1);
-          return;
+  bool prevWord = isalnum(temp[col + offset]) || temp[col + offset] == '_';
+  bool firstTime = true;
+  bool space = false;
+  int i;
+  for (i = col + offset - 1; i >= 0; --i) {
+    if (space && temp[i] != ' ') {
+      bool partition = false;
+      prevWord = isalnum(temp[i]) || temp[i] == '_';
+      while (i >= 0) {
+        if (i >= offset) {
+          partition = true;
+        }
+        --i;
+        if ((isalnum(temp[i]) || temp[i] == '_') != prevWord ||
+            temp[i] == ' ' || (i < offset && partition)) {
+          break;
         }
       }
-      setCursor(row, 0);
+      ++i;
+      break;
     } else {
-      setCursor(row, col);
+      // next row and not a space case
+      if (i < offset && temp[i] != ' ') {
+        if (firstTime) {
+          prevWord = isalnum(temp[i]) || temp[i] == '_';
+          while (i >= 0) {
+            --i;
+            if ((isalnum(temp[i]) || temp[i] == '_') != prevWord ||
+                temp[i] == ' ') {
+              break;
+            }
+          }
+        }
+        ++i;
+        break;
+      } else if (isalnum(temp[i]) || temp[i] == '_') {  // is a "word"
+        if (!prevWord) {
+          if (firstTime) {
+            bool partition = false;
+            prevWord = isalnum(temp[i]) || temp[i] == '_';
+            while (i >= 0) {
+              if (i >= offset) {
+                partition = true;
+              }
+              --i;
+              if ((isalnum(temp[i]) || temp[i] == '_') != prevWord ||
+                  temp[i] == ' ' || (i < offset && partition)) {
+                break;
+              }
+            }
+          }
+          ++i;
+          break;
+        }
+        prevWord = true;
+      } else {
+        if (prevWord && temp[i] != ' ' && !space) {
+          if (firstTime) {
+            bool partition = false;
+            prevWord = isalnum(temp[i]) || temp[i] == '_';
+            while (i > 0) {
+              if (i >= offset) {
+                partition = true;
+              }
+              --i;
+              if ((isalnum(temp[i]) || temp[i] == '_') != prevWord ||
+                  temp[i] == ' ' || (i < offset && partition)) {
+                break;
+              }
+            }
+          }
+          ++i;
+          break;
+        } else if (!space && temp[i] == ' ') {
+          // hit a space and it's not the first time
+          if (!firstTime) {
+            ++i;
+            break;
+          }
+          space = true;
+        }
+        prevWord = false;
+      }
     }
-    return;
+    firstTime = false;
   }
-  if (tracker[col] == tracker[col - 1]) {
-    for (int i = col - 1; i >= 0; --i) {
-      f << "(" << tracker[col] << ", " << tracker[i] << ")";
-      if (tracker[col] != tracker[i]) {
-        setCursor(row, i + 1);
-        return;
-      }
-    }
-    setCursor(row, 0);
+  if (theCursor.first && i >= theText[row - 1].length()) {  // stay on same row
+    int newCol = i - theText[row - 1].length();
+    setCursor(row, newCol);
+  } else if (!theCursor.first) {
+    setCursor(row, ifNegativeThenZero(i));
   } else {
-    for (int i = col - 1; i >= 0; --i) {
-      f << "(" << tracker[col] << ", " << tracker[i] << ")";
-      if (tracker[col - 1] != tracker[i]) {
-        setCursor(row, i + 1);
-        return;
-      }
-    }
-    setCursor(row, 0);
+    --row;
+    setCursor(row, i);
   }
 }
 
+void Cursor::handlew() {
+  // cursor is already at the end
+  if (theCursor.first == ifNegativeThenZero(theText.size() - 1) &&
+      theCursor.second == ifNegativeThenZero(theText.back().length() - 1))
+    return;
+
+  int row = theCursor.first;
+  int col = theCursor.second;
+  string temp;
+  if (theCursor.first != ifNegativeThenZero(theText.size() - 1)) {
+    temp = theText[row] + theText[row + 1];
+  } else {
+    temp = theText[row];
+  }
+  bool prevWord = false;
+  bool firstTime = true;
+  bool space = false;
+
+  int i;
+  for (i = col; i < temp.length(); ++i) {
+    if (i > ifNegativeThenZero(theText[row].length() - 1) && temp[i] != ' ') {
+      break;
+    }
+    if (space && temp[i] != ' ') {
+      break;
+    } else {
+      if (isalnum(temp[i]) || temp[i] == '_') {
+        if (!prevWord && !firstTime) {
+          break;
+        }
+        prevWord = true;
+      } else {
+        if (prevWord && temp[i] != ' ' && !firstTime) {
+          break;
+        }
+        if (temp[i] == ' ') space = true;
+        prevWord = false;
+      }
+    }
+    firstTime = false;
+  }
+
+  if (i >= theText[row].length()) {
+    int newCol = i - theText[row].length();
+    if (row == theText.size() - 1) {
+      while (theText[row][i] == ' ' && i < theText[row].length()) {
+        ++i;
+      }
+      setCursor(row, i - 1);
+      return;
+    } else if (theText[row + 1][newCol] == ' ') {
+      while (theText[row + 1][newCol] == ' ' && i < theText[row + 1].length()) {
+        ++newCol;
+      }
+    }
+    setCursor(row + 1, newCol);
+  } else {
+    setCursor(row, i);
+  }
+}
 }  // namespace CS246E

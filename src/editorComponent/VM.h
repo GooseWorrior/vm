@@ -38,8 +38,8 @@ class VM : public Model {
   pair<int, int> WindowPointer;
   vector<string> text;
   vector<unique_ptr<EditorComponent>> components;
-  vector<string> undoStack;
-  vector<pair<pair<int, int>, time_t>> cursorStack;
+  vector<pair<string, int>> undoStack;               // row text and which row
+  vector<pair<pair<int, int>, time_t>> cursorStack;  // cursor position and time
   pair<int, int> undoCount;
   string vmStatusString;
 
@@ -62,7 +62,6 @@ class VM : public Model {
 
  public:
   VM(string filename);
-  ~VM();
   void process();
   bool updateWindowSize();
   pair<int, int> updateLoc();

@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>  // remove after debugging
 
+#include <stdio.h>
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
@@ -42,15 +43,6 @@ VM::VM(string filename)
     view->initialize();
   }
   loadFile(filename);
-}
-
-VM::~VM() {
-  if (undoStack.size()) {
-    for (string filename : undoStack) {
-      string removeCommand = "rm " + filename;
-      system(removeCommand.c_str());
-    }
-  }
 }
 
 int ifNegativeThenZero(int x);
@@ -448,27 +440,14 @@ void VM::handleCommands(int input) {
     case 108:  // l
       ++vcursor;
       break;
+    case 119:  // w
+      vcursor.handlew();
+      break;
   }
 }
 
 void VM::saveText() {
-  string command = "mktemp";
-  FILE* f = popen(command.c_str(), "r");
-  string tempDir;
-  for (char c = fgetc(f); c != EOF; c = fgetc(f)) {
-    tempDir += c;
-  }
-  std::ofstream tempFile;
-  tempFile.open(tempDir);
-  for (int i = 0; i < text.size(); ++i) {
-    if (i != text.size() - 1) {
-      tempFile << text[i] << "\n";
-    } else {
-      tempFile << text[i];
-    }
-  }
-  tempFile.close();
-  undoStack.push_back(tempDir);
+  undoStack.push_back(std::make_pair(text[vcursor.getRow()], vcursor.getRow()));
 
   time_t timer;
   time(&timer);
@@ -478,15 +457,17 @@ void VM::saveText() {
 
 void VM::loadUndo() {
   if (undoStack.size()) {
-    text.clear();
-    loadFile(undoStack.back());
+    string undoContent = undoStack.back().first;
+    int undoRow = undoStack.back().second;
+    move(undoRow, 0);
+    text[undoRow] = undoContent;
+    clrtoeol();
+    printw("%s", undoContent.c_str());
     if (undoStack.size() >= undoCount.second) {
       undoCount = std::make_pair(undoCount.first, undoStack.size());
     }
     vmStatusString = "1 change; before #" +
                      std::to_string(undoCount.first + undoStack.size()) + "  ";
-    string removeCommand = "rm " + undoStack.back();
-    system(removeCommand.c_str());
     undoStack.pop_back();
     if (!undoStack.size()) {
       undoCount = std::make_pair(undoCount.first + undoCount.second, 0);
@@ -508,9 +489,6 @@ void VM::loadCursor() {
     vmStatusString +=
         std::to_string((int)difftime(currentTime, cursorStack.back().second)) +
         " seconds ago";
-    std::ofstream f;
-    f.open("debug.txt");
-    f << vmStatusString;
     cursorStack.pop_back();
   }
 }
