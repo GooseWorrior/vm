@@ -2,6 +2,9 @@
 #include <fstream>
 #include <iostream>  // remove after debugging
 
+#include <algorithm>
+#include <cctype>
+#include <cstdlib>
 #include <sstream>
 #include "../controller/Keyboard.h"
 #include "VM.h"
@@ -13,7 +16,6 @@
 
 using std::make_unique;
 using std::find_if;
-using std::atoi;
 using std::isdigit;
 using std::stringstream;
 using std::to_string;
@@ -30,7 +32,7 @@ VM::VM(string filename)
       exitCode{1},
       CFile{0},
       vcursor(0, 0, text, WindowPointer, WindowSize, state),
-      theComponents{WindowSize, WindowPointer,  vcursor,      text,
+      theComponents{WindowSize, WindowPointer,  vcursor,       text,
                     state,      vmStatusString, bufferCommand, errorMessage} {
   CFile = isCFile();
     if (!CFile) {
@@ -40,6 +42,15 @@ VM::VM(string filename)
     view->initialize();
   }
   loadFile(filename);
+}
+
+VM::~VM() {
+  if (undoStack.size()) {
+    for (string filename : undoStack) {
+      string removeCommand = "rm " + filename;
+      system(removeCommand.c_str());
+    }
+  }
 }
 
 int ifNegativeThenZero(int x);
@@ -77,14 +88,16 @@ void VM::loadFile(string filename) {
   if (checkExists(filename)) {
     int count = 0;
     for (auto i : text) count += i.size();
-    vmStatusString = "\"" + filename + "\" " + to_string(text.size()) + "L, " + to_string(count) + "C";
+    vmStatusString = "\"" + filename + "\" " + to_string(text.size()) + "L, " +
+                     to_string(count) + "C";
   } else {
     vmStatusString = "\"" + filename + "\" " + "[New File]";
   }
   
   if (CFile) vmStatusString += " [CFile]";
 
-  vcursor.setCursor(text.size() - 1, ifNegativeThenZero(text.back().length() - 1));
+  vcursor.setCursor(text.size() - 1,
+                    ifNegativeThenZero(text.back().length() - 1));
   updateWindowSize();
   
   WindowPointer = pair<int, int>(0, std::min<int>(text.size(), WindowSize.first) - 1);
@@ -128,6 +141,8 @@ void VM::process() {
       handleBufferCommands(input);
     } else
       switch (input) {
+        case 'q':  // remove later
+          return;
         case KEY_LEFT:
           if (vcursor.getCol() != (--vcursor).getCol()) {
             shouldSave = true;
@@ -224,13 +239,13 @@ void VM::process() {
 
 
 bool VM::checkExists(string file) {
-    std::ifstream file_to_check(file.c_str());
-    if(file_to_check.is_open()) {
-      file_to_check.close();
-      return true;
-    }
+  std::ifstream file_to_check(file.c_str());
+  if (file_to_check.is_open()) {
     file_to_check.close();
-    return false;
+    return true;
+  }
+  file_to_check.close();
+  return false;
 }
 
 void VM::writeFile(string file) {
@@ -262,10 +277,11 @@ void VM::copyFile(string filename) {
   text.insert(text.begin() + curRow, line);
   vcursor.setCursor(Row, 0);
 }
- 
+
 bool VM::isNumber(const string& s) {
-    return !s.empty() && std::find_if(s.begin(), 
-        s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
+  return !s.empty() && std::find_if(s.begin(), s.end(), [](char c) {
+                         return !std::isdigit(c);
+                       }) == s.end();
 }
 
 bool VM::isCFile() {
@@ -286,27 +302,28 @@ void VM::exeBufferCommand() {
   string cmd;
   if (source >> cmd) {
     if (cmd == "w") {
-       savedSize = undoStack.size();
-       writeFile(fileName);
-       int count = 0;
-       for (auto i : text) count += i.size();
-       vmStatusString = "\"" + fileName + "\" " + to_string(text.size()) + "L, " + to_string(count) + "C" + " written";
+      savedSize = undoStack.size();
+      writeFile(fileName);
+      int count = 0;
+      for (auto i : text) count += i.size();
+      vmStatusString = "\"" + fileName + "\" " + to_string(text.size()) +
+                       "L, " + to_string(count) + "C" + " written";
     } else if (cmd == "q") {
-       if (savedSize != undoStack.size()) {
-           //std::fstream f{"debug.txt"};
-           //f << savedSize << " " << undoStack.size();
-           theComponents.addElement({0});
-           errorMessage = "E37: No write since last change (add ! to override)";
-       } else {
-           exitCode = 0;
-       }
+      if (savedSize != undoStack.size()) {
+        // std::fstream f{"debug.txt"};
+        // f << savedSize << " " << undoStack.size();
+        theComponents.addElement({0});
+        errorMessage = "E37: No write since last change (add ! to override)";
+      } else {
+        exitCode = 0;
+      }
     } else if (cmd == "wq") {
       writeFile(fileName);
       exitCode = 0;
     } else if (cmd == "q!") {
       exitCode = 0;
     } else if (cmd == "$") {
-      vcursor.setCursor(text.size() - 1, 0); 
+      vcursor.setCursor(text.size() - 1, 0);
     } else if (cmd == "r") {
       source >> cmd;
       if (checkExists(cmd)) {
@@ -436,7 +453,7 @@ void VM::handleCommands(int input) {
 
 void VM::saveText() {
   string command = "mktemp";
-  FILE *f = popen(command.c_str(), "r");
+  FILE* f = popen(command.c_str(), "r");
   string tempDir;
   for (char c = fgetc(f); c != EOF; c = fgetc(f)) {
     tempDir += c;
@@ -468,6 +485,8 @@ void VM::loadUndo() {
     }
     vmStatusString = "1 change; before #" +
                      std::to_string(undoCount.first + undoStack.size()) + "  ";
+    string removeCommand = "rm " + undoStack.back();
+    system(removeCommand.c_str());
     undoStack.pop_back();
     if (!undoStack.size()) {
       undoCount = std::make_pair(undoCount.first + undoCount.second, 0);

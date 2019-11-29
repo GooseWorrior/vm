@@ -113,8 +113,9 @@ int Cursor::erase() {
       updatePointer(1);
     }
     theCursor.first--;
-    //theCursor.second = theText[theCursor.first].size();
-    theCursor.second = ifNegativeThenZero(theText[theCursor.first].size() + stateOffset);
+    // theCursor.second = theText[theCursor.first].size();
+    theCursor.second =
+        ifNegativeThenZero(theText[theCursor.first].size() + stateOffset);
   } else if (state == 1) {
     prevChar = theText[theCursor.first][theCursor.second - 1];
     theText[theCursor.first].erase(theCursor.second - 1, 1);
@@ -158,14 +159,14 @@ void Cursor::updatePointer(int mode) {
     if (winPtr.first > theCursor.first) {
       winPtr.first = theCursor.first;
       updatePointer(1);
-    } else if  (winPtr.second < theCursor.first) {
+    } else if (winPtr.second < theCursor.first) {
       winPtr.second = theCursor.first;
-      updatePointer(-1); 
-      //int offset = winPtr.second - winPtr.first;
-      //winPtr.second =
+      updatePointer(-1);
+      // int offset = winPtr.second - winPtr.first;
+      // winPtr.second =
       //    min<int>((winSize.second - winSize.second) / 2 + theCursor.first,
       //             theText.size() - 1);
-      //winPtr.first = winPtr.second - offset;
+      // winPtr.first = winPtr.second - offset;
     }
     // theCursor.first = min(winPtr.second, theCursor.first);
   }
@@ -337,6 +338,7 @@ void Cursor::updateStateOffset(int offset) { stateOffset = offset; }
 void Cursor::handleb() {
   std::fstream f;
   f.open("debug.txt");
+label:
   if (!theCursor.first && !theCursor.second) return;
   int row = theCursor.first;
   int col = theCursor.second;
@@ -348,42 +350,65 @@ void Cursor::handleb() {
     }
     col = theText[row].length() - 1;
   }
+  bool firstChar = true;
   f << "(" << row << ", " << col << ")";
-  for (int i = col - 1; i >= 0; --i) {
-    if (!isalnum(theText[row][i]) && theText[row][i] != '_') {
-      if (i == col - 1) {
-        if (theText[row][i] == ' ') {
-          while (theText[row][i - 1] == ' ' && i > 0) {
-            --i;
-          }
-        } else {
-          setCursor(row, i);
+
+  vector<int> tracker;
+  for (int i = 0; i <= col; ++i) {
+    if (theText[row][i] == ' ') {
+      tracker.push_back(0);
+    } else if (!isalnum(theText[row][i]) && theText[row][i] != '_') {
+      tracker.push_back(1);
+    } else {
+      tracker.push_back(-1);
+    }
+  }
+  bool foundNonZero = false;
+  if (tracker[col - 1] == 0 || tracker[col] == 0) {
+    for (int i = col - 1; i >= 0; --i) {  // go to end of block of zero
+      if (tracker[i] != 0) {
+        col = i;
+        foundNonZero = true;
+        break;
+      }
+    }
+    if (!foundNonZero) {
+      --row;
+      setCursor(row, ifNegativeThenZero(theText[row].length() - 1));
+      goto label;
+    }
+    if (tracker[col] == tracker[col - 1]) {  // go to end of block of 1/-1
+      for (int i = col - 1; i >= 0; --i) {
+        if (tracker[col] != tracker[i]) {
+          setCursor(row, i + 1);
           return;
         }
-      } else {
+      }
+      setCursor(row, 0);
+    } else {
+      setCursor(row, col);
+    }
+    return;
+  }
+  if (tracker[col] == tracker[col - 1]) {
+    for (int i = col - 1; i >= 0; --i) {
+      f << "(" << tracker[col] << ", " << tracker[i] << ")";
+      if (tracker[col] != tracker[i]) {
         setCursor(row, i + 1);
         return;
       }
     }
-    // if(theText[row][i] == ' ' && i == col - 1) {
-
-    // }
-
-    // if (theText[row][i] == ' ') {
-    //   while (theText[row][i - 1] == ' ' && i > 0) {
-    //     --i;
-    //   }
-    //   if (i == 1) {
-    //     --row;
-    //     if (!theText[row].length()) {
-    //       setCursor(row, 0);
-    //       return;
-    //     }
-    //     col = theText[row].length() - 1;
-    //     i = col - 1;
-    //   }
-    // }
+    setCursor(row, 0);
+  } else {
+    for (int i = col - 1; i >= 0; --i) {
+      f << "(" << tracker[col] << ", " << tracker[i] << ")";
+      if (tracker[col - 1] != tracker[i]) {
+        setCursor(row, i + 1);
+        return;
+      }
+    }
+    setCursor(row, 0);
   }
-  setCursor(row, 0);
-}  // namespace CS246E
+}
+
 }  // namespace CS246E

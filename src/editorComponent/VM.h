@@ -62,6 +62,7 @@ class VM : public Model {
 
  public:
   VM(string filename);
+  ~VM();
   void process();
   bool updateWindowSize();
   pair<int, int> updateLoc();
