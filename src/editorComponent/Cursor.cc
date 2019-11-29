@@ -247,6 +247,10 @@ void Cursor::findPairedBracket() {
   vector<pair<int, int>> roundStack;
   vector<pair<int, int>> curlyStack;
   int closest = theText[theCursor.first].length() + 1;
+  int first = 0;
+  for (size_t i = 0; i < theText[theCursor.first].length(); ++i) {
+  }
+
   for (size_t i = 0; i < theText.size(); ++i) {
     for (size_t j = 0; j < theText[i].length(); ++j) {
       if (theText[i][j] == '[') {
@@ -256,14 +260,31 @@ void Cursor::findPairedBracket() {
       } else if (theText[i][j] == '{') {
         curlyStack.push_back(std::make_pair(i, j));
       } else if (theText[i][j] == ']') {
+        if (theCursor.first == i && theCursor.second < j && !squareStack.size())
+          return;
         checkClosest(squareStack, closest, i, j);
       } else if (theText[i][j] == ')') {
+        if (theCursor.first == i && theCursor.second < j && !roundStack.size())
+          return;
         checkClosest(roundStack, closest, i, j);
       } else if (theText[i][j] == '}') {
+        if (theCursor.first == i && theCursor.second < j && !curlyStack.size())
+          return;
         checkClosest(curlyStack, closest, i, j);
       }
     }
   }
+  // switch (first) {
+  //   case '[':
+  //     if (squareStack.size()) return;
+  //     break;
+  //   case '{':
+  //     if (curlyStack.size()) return;
+  //     break;
+  //   case '(':
+  //     if (roundStack.size()) return;
+  //     break;
+  // }
   if (closest != theText[theCursor.first].length() + 1) {
     setCursor(theCursor.first, closest);
   }
