@@ -360,11 +360,15 @@ void Cursor::handleb() {
   int i;
   for (i = col + offset - 1; i >= 0; --i) {
     if (space && temp[i] != ' ') {
+      bool partition = false;
       prevWord = isalnum(temp[i]) || temp[i] == '_';
       while (i >= 0) {
+        if (i >= offset) {
+          partition = true;
+        }
         --i;
         if ((isalnum(temp[i]) || temp[i] == '_') != prevWord ||
-            temp[i] == ' ' || i < offset) {
+            temp[i] == ' ' || (i < offset && partition)) {
           break;
         }
       }
@@ -384,9 +388,6 @@ void Cursor::handleb() {
           }
           ++i;
           break;
-        } else {  // not the first time
-          ++i;
-          break;
         }
       } else if (isalnum(temp[i]) || temp[i] == '_') {  // is a "word"
         if (!prevWord) {
@@ -399,9 +400,6 @@ void Cursor::handleb() {
                 break;
               }
             }
-            ++i;
-            break;
-          } else {  // not the first time
             ++i;
             break;
           }
@@ -418,12 +416,9 @@ void Cursor::handleb() {
                 break;
               }
             }
-            ++i;
-            break;
-          } else {  // not the first time
-            ++i;
-            break;
           }
+          ++i;
+          break;
         } else if (!space && temp[i] == ' ') {
           // hit a space and it's not the first time
           if (!firstTime) {
@@ -441,11 +436,7 @@ void Cursor::handleb() {
     int newCol = i - theText[row - 1].length();
     setCursor(row, newCol);
   } else if (!theCursor.first) {
-    if (i < 0) {
-      setCursor(row, 0);
-    } else {
-      setCursor(row, i);
-    }
+    setCursor(row, ifNegativeThenZero(i));
   } else {
     --row;
     setCursor(row, i);
