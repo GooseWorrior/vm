@@ -44,6 +44,7 @@ class SyntaxView : public View {
   pair<int, int> CloseBracket(char openBracket, char closeBracket, pair<int, int> local);
   pair<int, int> OpenBracket(char openBracket, char closeBracket, pair<int, int> local);
   void highlightBracket();
+  bool inRange(int row);
   pair<int, int> transferLoc(int row, int col);
 
 };

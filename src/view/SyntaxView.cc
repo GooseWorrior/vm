@@ -4,6 +4,9 @@
 #include <string>
 #include <regex>
 #include <cctype>
+#include <algorithm>
+
+
 
 using std::string;
 using std::vector;
@@ -70,9 +73,13 @@ void SyntaxView::loadLibrary() {
     //sequence matters!
 }
 
+bool SyntaxView::inRange(int row) {
+   return row >= vm->WindowPointer.first && row <= vm->WindowPointer.second;
+}
+
 void SyntaxView::render(vector<pair<int, int>> & singleComment, vector<pair<bool, pair<int, int>>> & multiComment) {
     vector<int> quoteLoc; 
-    for (int i = vm->WindowPointer.first; i <= vm->WindowPointer.second; ++i) {
+    for (int i = 0; i < vm->text.size(); ++i) {
         smatch m;
         string tempstr;
         int offset = 0;
@@ -81,6 +88,7 @@ void SyntaxView::render(vector<pair<int, int>> & singleComment, vector<pair<bool
         for (auto it : renderLibrary) {
           tempstr = vm->text[i];
           offset = 0;
+          if (!inRange(i) && it.first != MULTCOMMTELPHA && it.first != MULTCOMMTBETA) continue; 
           while(regex_search(tempstr, m, it.second.first)) {
             if (m.size() > 0) {
                 if (it.first == PREDIRECT) {
@@ -104,14 +112,11 @@ void SyntaxView::render(vector<pair<int, int>> & singleComment, vector<pair<bool
                   mvchgat(loc.first, loc.second, m.length(1), A_NORMAL, it.second.second, NULL);
                   break;
                 } else if (it.first == SINGCOMMT) {
-                  pair<int, int> loc = transferLoc(i, m.position(0));
-                  singleComment.push_back(loc);
+                  singleComment.push_back(pair<int, int>(i, m.position(0) + offset));
                 } else if (it.first == MULTCOMMTELPHA) {
-                  pair<int, int> loc = transferLoc(i, m.position(0));
-                  multiComment.push_back(pair<bool, pair<int, int>>(false, loc));
+                  multiComment.push_back(pair<bool, pair<int, int>>(false, pair<int, int>(i, m.position(0) + offset)));
                 } else if (it.first == MULTCOMMTBETA) {
-                  pair<int, int> loc = transferLoc(i, m.position(0));
-                  multiComment.push_back(pair<bool, pair<int, int>>(true, loc));
+                  multiComment.push_back(pair<bool, pair<int, int>>(true, pair<int, int>(i, m.position(0) + offset)));
                 } else if (it.first == NUMBER) {
                   if (!std::isalpha(vm->text[i][m.position(0) + offset - 1]) && 
                       vm->text[i][m.position(0) + offset - 1] != '_' &&
@@ -163,7 +168,6 @@ void SyntaxView::render(vector<pair<int, int>> & singleComment, vector<pair<bool
              }
           }
     }
-
 }
 
 pair<int, int> SyntaxView::transferLoc(int r, int c) {
@@ -211,7 +215,7 @@ void SyntaxView::highlightBracket() {
   } else if (bracket == '}') {
     target = OpenBracket('{', '}', local);
   }
-  if (target.first < vm->WindowPointer.first || target.first > vm->WindowPointer.second) {
+  if (!inRange(target.first)) {
     return;
   } else {
     pair<int, int> loc1 = transferLoc(local.first, local.second);
@@ -276,13 +280,7 @@ void SyntaxView::display(pair<int, int> prevPointer, int input,
         prevWindowSize != vm->WindowSize) {
       printPlaceholder();
     }
-    vector<pair<int, int>> singleComment;
-    vector<pair<bool, pair<int, int>>> multiComment;
-    render(singleComment, multiComment);
-    highlightBracket();
-    for (auto i : singleComment) {
-      mvchgat(i.first, i.second, -1, A_NORMAL, 1, NULL);
-    }
+    update();
 }
 
 void SyntaxView::printPlaceholder() {
@@ -357,12 +355,60 @@ void SyntaxView::printTextChar(int input, int prevChar) {
 
 void SyntaxView::update() {
   vector<pair<int, int>> singleComment;
-  vector<pair<bool, pair<int, int>>> multiComment;
-  render(singleComment, multiComment);
-  highlightBracket();
-  for (auto i : singleComment) {
-    mvchgat(i.first, i.second, -1, A_NORMAL, 1, NULL);
-  }
+    vector<pair<bool, pair<int, int>>> multiComment;
+    vector<pair<bool, pair<int, int>>> warningList;
+    render(singleComment, multiComment);
+    bool flag = false;
+    pair<int, int> prev;
+    highlightBracket();
+    for (auto i : singleComment) {
+      if (i.first >= vm->WindowPointer.first && i.first <= vm->WindowPointer.second)
+      mvchgat(i.first, i.second, -1, A_NORMAL, 1, NULL);
+    }
+    std::sort(multiComment.begin(), multiComment.end(), 
+    [](pair<bool, pair<int, int>> p1, pair<bool, pair<int, int>> p2) { 
+      return (p1.second.first == p2.second.first) ? p1.second.second < p2.second.second :
+      p1.second.first < p2.second.first;
+    });
+    for (auto i : multiComment) {
+        pair<int, int> loc1 = transferLoc(prev.first, prev.second);
+        pair<int, int> loc2 = transferLoc(i.second.first, i.second.second);
+        if (flag) {
+           if (i.first) {
+                if (inRange(prev.first))
+                mvchgat(loc1.first, loc1.second, (loc1.first == loc2.first) ? loc2.second - loc1.second + 2 : -1, A_NORMAL, 1, NULL);
+                for (int j = std::max<int>(prev.first + 1, vm->WindowPointer.first); j <= std::min<int>(i.second.first - 1, vm->WindowPointer.second); ++j) {
+                   pair<int, int> loc3 = transferLoc(j, 0);
+                   mvchgat(loc3.first, loc3.second, -1, A_NORMAL, 1, NULL);
+                }
+                if (inRange(i.second.first))
+                mvchgat(loc2.first, (loc1.first == loc2.first) ? loc1.second : 0, 
+                (loc1.first == loc2.first) ? loc2.second - loc1.second + 2 : loc2.second + 2, A_NORMAL, 1, NULL);
+                flag = false;
+           } else {
+             warningList.push_back(pair<bool, pair<int, int>>(false, loc2));
+           }
+        } else {
+          if (i.first) {
+             warningList.push_back(pair<bool, pair<int, int>>(true, loc2));
+          } else {
+            flag = true;
+            prev = i.second;
+          }
+        }
+    }
+    if (flag) {
+      pair<int, int> loc = transferLoc(prev.first, prev.second);
+      if (inRange(prev.first))
+      mvchgat(loc.first, loc.second, -1, A_NORMAL, 1, NULL);
+     for (int j = std::max<int>(prev.first + 1, vm->WindowPointer.first); j <= vm->WindowPointer.second; ++j) {
+          pair<int, int> loc3 = transferLoc(j, 0);
+          mvchgat(loc3.first, loc3.second, -1, A_NORMAL, 1, NULL);
+      }
+    }
+    for (auto i : warningList) {
+      mvchgat(i.second.first, i.second.second, i.first + 1, A_NORMAL, 2, NULL);
+    }
 }
 SyntaxView::~SyntaxView() {}
 }  // namespace CS246E
