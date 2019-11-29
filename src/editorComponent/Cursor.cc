@@ -361,10 +361,10 @@ void Cursor::handleb() {
   for (i = col + offset - 1; i >= 0; --i) {
     if (space && temp[i] != ' ') {
       prevWord = isalnum(temp[i]) || temp[i] == '_';
-      while (i > 0) {
+      while (i >= 0) {
         --i;
         if ((isalnum(temp[i]) || temp[i] == '_') != prevWord ||
-            temp[i] == ' ') {
+            temp[i] == ' ' || i < offset) {
           break;
         }
       }
@@ -375,7 +375,7 @@ void Cursor::handleb() {
       if (i < offset && temp[i] != ' ') {
         if (firstTime) {
           prevWord = isalnum(temp[i]) || temp[i] == '_';
-          while (i > 0) {
+          while (i >= 0) {
             --i;
             if ((isalnum(temp[i]) || temp[i] == '_') != prevWord ||
                 temp[i] == ' ') {
@@ -388,11 +388,11 @@ void Cursor::handleb() {
           ++i;
           break;
         }
-      } else if (isalnum(temp[i]) || temp[i] == '_') {
+      } else if (isalnum(temp[i]) || temp[i] == '_') {  // is a "word"
         if (!prevWord) {
           if (firstTime) {
             prevWord = isalnum(temp[i]) || temp[i] == '_';
-            while (i > 0) {
+            while (i >= 0) {
               --i;
               if ((isalnum(temp[i]) || temp[i] == '_') != prevWord ||
                   temp[i] == ' ') {
@@ -418,9 +418,7 @@ void Cursor::handleb() {
                 break;
               }
             }
-            if (i != 0) {
-              ++i;
-            }
+            ++i;
             break;
           } else {  // not the first time
             ++i;
