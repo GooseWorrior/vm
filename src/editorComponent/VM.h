@@ -32,6 +32,7 @@ class VM : public Model {
   string fileName;
   string bufferCommand;
   string errorMessage;
+  string pattern;
   Cursor vcursor;
   EditorComponent theComponents;
   pair<int, int> WindowSize;

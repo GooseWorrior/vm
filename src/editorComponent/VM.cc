@@ -115,10 +115,12 @@ void VM::process() {
   pair<int, int> prevPointer;
   int prevState = 0;
   int prevSize = 0;
+  int prevInput = 0;
   int input = 0;
   bool shouldSave = true;
 
   while (exitCode && input != '|') {
+    prevInput = input;
     input = controller->getChar();
     int prevChar = 0;
     bool edit = false;  // could be omitted
@@ -157,7 +159,7 @@ void VM::process() {
           break;
         case KEY_BACKSPACE:
           edit = true;
-          prevChar = vcursor.erase();
+          prevChar = vcursor.erase(prevInput);
           break;
         case 410:  // special resize character
           break;
