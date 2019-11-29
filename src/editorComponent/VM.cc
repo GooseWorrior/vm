@@ -8,13 +8,18 @@
 #include <cstdlib>
 #include <algorithm>
 #include <cctype>
+#include <regex>
+#include <memory>
 
-
+using std::make_unique;
 using std::find_if;
 using std::atoi;
 using std::isdigit;
 using std::stringstream;
 using std::to_string;
+using std::smatch;
+using std::regex;
+using std::regex_search;
 
 namespace CS246E {
 VM::VM(string filename)
@@ -23,9 +28,17 @@ VM::VM(string filename)
       savedSize{0},
       fileName{filename},
       exitCode{1},
+      CFile{0},
       vcursor(0, 0, text, WindowPointer, WindowSize, state),
       theComponents{WindowSize, WindowPointer,  vcursor,      text,
                     state,      vmStatusString, bufferCommand, errorMessage} {
+  CFile = isCFile();
+    if (!CFile) {
+      addView(make_unique<PlainView>(this));
+    } else {
+    addView(make_unique<SyntaxView>(this));
+    view->initialize();
+  }
   loadFile(filename);
 }
 
@@ -34,6 +47,7 @@ int ifNegativeThenZero(int x);
 void VM::loadFile(string filename) {
   // load files
   fileName = filename; // in case we change file
+  CFile = isCFile();
   std::ifstream file{filename};
   file >> std::noskipws;
 
@@ -48,11 +62,12 @@ void VM::loadFile(string filename) {
     }
   }
   text.push_back(line);  // pushes last line
-  WindowPointer = pair<int, int>(0, text.size() - 1);
-
-  clear();
-  refresh();
-  printTextAll();
+  //WindowPointer = pair<int, int>(0, text.size() - 1);
+  
+  //clear();
+  //refresh();
+  //view->printTextAll();
+  
   // std::ofstream f1;
   // f1.open("debug.txt");
   // for (auto i : text) {
@@ -66,11 +81,20 @@ void VM::loadFile(string filename) {
   } else {
     vmStatusString = "\"" + filename + "\" " + "[New File]";
   }
+  
+  if (CFile) vmStatusString += " [CFile]";
 
   vcursor.setCursor(text.size() - 1, ifNegativeThenZero(text.back().length() - 1));
   updateWindowSize();
+  
+  WindowPointer = pair<int, int>(0, std::min<int>(text.size(), WindowSize.first) - 1);
 
-  printPlaceholder();
+  vcursor.updatePointer(0);
+  clear();
+  refresh();
+  view->printTextAll();
+  view->printPlaceholder();
+  view->update();
 
   theComponents.addElement({5, 3, 1});
   theComponents.print();
@@ -84,7 +108,6 @@ void VM::process() {
   pair<int, int> prevWindowSize;
   pair<int, int> prevCursor;
   pair<int, int> prevPointer;
-  int prevUndoSize = 0;
   int prevState = 0;
   int prevSize = 0;
   int input = 0;
@@ -155,23 +178,7 @@ void VM::process() {
     vcursor.updatePointer(-1);
     vcursor.updatePointer(1);
     if (!edit) vcursor.updatePointer(0);
-    if (prevWindowSize != WindowSize ||
-        prevPointer.first < WindowPointer.first ||
-        prevPointer.second > WindowPointer.second) {
-      printTextAll();
-    } else if (text.size() != prevSize) {
-      printTextAfterward(input, prevCursor);
-    } else if (edit && vcursor.getCol() != text[vcursor.getRow()].size()) {
-      printTextLine(input, prevCursor, prevChar);
-    } else if (edit) {
-      printTextChar(input, prevChar);
-    }
-
-    if (vcursor.calculateLine() < WindowSize.first &&
-            prevPointer != WindowPointer ||
-        prevWindowSize != WindowSize) {
-      printPlaceholder();
-    }
+    view->display(prevPointer, input, prevCursor, prevWindowSize, prevChar, prevSize, edit);
 
     if (prevState != state) {
       if (prevState == 1 || prevState == 2) {
@@ -195,13 +202,16 @@ void VM::process() {
         theComponents.addElement({5, 3, 1});
       }
     }
-
+    
     if (!vmStatusString.empty()) errorMessage.clear(); // errorMessage guard
     theComponents.updateContents();
     theComponents.updateLocation();
     theComponents.print();
     // theComponents.deleteElement({0});
     // theComponents.update();
+
+    //render();
+
     if (state == 3) {
       move(WindowSize.first, commandCursor);
     } else {
@@ -210,6 +220,8 @@ void VM::process() {
     }
   }
 }
+
+
 
 bool VM::checkExists(string file) {
     std::ifstream file_to_check(file.c_str());
@@ -256,8 +268,21 @@ bool VM::isNumber(const string& s) {
         s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
 }
 
+bool VM::isCFile() {
+    smatch m;
+    regex reg[3];
+    reg[0] = regex(".cc$");
+    reg[1] = regex(".c$");
+    reg[2] = regex(".h$");
+    for (int i = 0; i < 3; i++) {
+        regex_search (fileName, m, reg[i]);
+        if (m.size() > 0) return true; 
+    }
+    return false;
+}
 void VM::exeBufferCommand() {
-  stringstream source{bufferCommand.substr(1)};
+  while (bufferCommand[0] == ':') bufferCommand = bufferCommand.substr(1); 
+  stringstream source{bufferCommand};
   string cmd;
   if (source >> cmd) {
     if (cmd == "w") {
@@ -478,17 +503,6 @@ bool VM::updateWindowSize() {
   return prevRow != WindowSize.first || prevCol != WindowSize.second;
 }
 
-void VM::printPlaceholder() {
-  attron(COLOR_PAIR(1));
-  string placeholderString = "";
-  for (int i = vcursor.calculateLine(); i < WindowSize.first - 1; i++) {
-    placeholderString += "~\n";
-  }
-  placeholderString += "~";
-  printw("%s", placeholderString.c_str());
-  refresh();
-  attroff(COLOR_PAIR(1));
-}
 pair<int, int> VM::updateLoc() {
   int row = 0, col = 0, temp1 = 0;
   for (size_t i = WindowPointer.first; i <= vcursor.getRow(); ++i) {
@@ -510,61 +524,4 @@ pair<int, int> VM::updateLoc() {
   return pair<int, int>(row, col);
 }
 
-void VM::printTextAll() {
-  clear();
-  /*for (auto i : text) {
-    printw("%s\n", i.c_str());
-  }*/
-  for (size_t i = WindowPointer.first; i <= WindowPointer.second; ++i) {
-    printw("%s\n", text[i].c_str());
-  }
-  refresh();
-}
-
-void VM::printTextAfterward(int input, pair<int, int> prevCursor) {
-  clrtobot();
-  refresh();
-  pair<int, int> loc = updateLoc();
-  move(loc.first, 0);
-  for (size_t i = vcursor.getRow(); i <= WindowPointer.second; ++i) {
-    clrtoeol();
-    printw("%s\n", text[i].c_str());
-    refresh();
-  }
-}
-
-void VM::printTextLine(int input, pair<int, int> prevCursor, int prevChar) {
-  if (input == KEY_BACKSPACE && prevChar == 0) return;
-  pair<int, int> loc = updateLoc();
-  if (input == KEY_BACKSPACE) {
-    clrtoeol();
-    move(loc.first, loc.second);
-    for (size_t i = vcursor.getCol(); i < text[vcursor.getRow()].size(); ++i) {
-      addch(text[vcursor.getRow()][i]);
-    }
-  } else if (state == 1) {
-    if (input == '\t') {
-      insstr("        ");
-    } else {
-      insch(input);
-    }
-  } else if (state == 2) {
-    addch(input);
-  }
-  refresh();
-}
-
-void VM::printTextChar(int input, int prevChar) {
-  pair<int, int> loc = updateLoc();
-  if (input == KEY_BACKSPACE) {
-    move(loc.first, loc.second);
-    if (prevChar == '\t')
-      addch('\t');
-    else if (prevChar != 0)
-      addch(' ');
-  } else {
-    addch(text[vcursor.getRow()][vcursor.getCol() - 1]);
-  }
-  refresh();
-}
 }  // namespace CS246E
