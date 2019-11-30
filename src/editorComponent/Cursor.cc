@@ -382,7 +382,7 @@ void Cursor::handleCtrlB() {
   } else {
     toMoveRow = winPtr.first - std::floor(winSize.first / 2) + 1;
   }
-  temp << toMoveRow << " " << winSize.first << "\n";
+  int offset = winSize.first / 2 > 5 ? 5 : winSize.first / 2;
 
   if (toMoveRow > winSize.first / 2) {
     int col = 0;
@@ -391,18 +391,17 @@ void Cursor::handleCtrlB() {
         col < theText[toMoveRow].length())
       ++col;
     setCursor(toMoveRow, col);
-    int offset = winSize.first / 2 > 5 ? 5 : winSize.first / 2;
     winPtr.second = theCursor.first + offset;
-    winPtr.first = winPtr.second + winSize.first;
+    winPtr.first = winPtr.second - winSize.first;
   } else if (winPtr.first != 0) {
     int col = 0;
-    while ((theText[winPtr.first + 1][col] == ' ' ||
-            theText[winPtr.first + 1][col] == '\t') &&
-           col < theText[winPtr.first + 1].length())
-      ++col;
-    setCursor(winPtr.first + 1, col);
+
     winPtr.first = 1;
     winPtr.second = winSize.first - 1;
+    while ((theText[offset][col] == ' ' || theText[offset][col] == '\t') &&
+           col < theText[offset].length())
+      ++col;
+    setCursor(winPtr.second - offset, col);
   }
 
   // if (winSize.first / 2 <= 6 && theCursor.first < winSize.first / 2) {
