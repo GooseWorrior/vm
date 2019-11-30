@@ -51,7 +51,7 @@ class VM : public Model {
   void writeFile(string file);
   void copyFile(string file);
   void findPairedBracket();
-  void handleCommands(int input);
+  void handleCommands(int input, bool* shouldSave);
   void handleBufferCommands(int input);
   void loadFile(string filename);
   void saveText();

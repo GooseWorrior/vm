@@ -96,13 +96,15 @@ Cursor& Cursor::insert(wchar_t c) {
   }
   return *this;
 }
-int Cursor::erase(int prevInput) {
+int Cursor::erase(int prevInput, int input) {
   char prevChar = 0;
-  int prevPos = ifNegativeThenZero(theText[theCursor.first - 1].size() + stateOffset);
+  int prevPos =
+      ifNegativeThenZero(theText[theCursor.first - 1].size() + stateOffset);
   if (theCursor.second == 0 && theCursor.first == 0) {
     return prevChar;
   } else if (theCursor.second == 0) {
-    if (state == 1 || prevInput == '\n') {
+    if ((state == 1 && input == KEY_BACKSPACE) ||
+        (state == 0 && input == 120) || prevInput == '\n') {
       theText[theCursor.first - 1] += theText[theCursor.first];
       theText.erase(theText.begin() + theCursor.first);
     }
@@ -116,7 +118,8 @@ int Cursor::erase(int prevInput) {
     theCursor.first--;
     // theCursor.second = theText[theCursor.first].size();
     theCursor.second = prevPos;
-  } else if (state == 1) {
+  } else if ((state == 1 && input == KEY_BACKSPACE) ||
+             (state == 0 && input == 120)) {
     prevChar = theText[theCursor.first][theCursor.second - 1];
     theText[theCursor.first].erase(theCursor.second - 1, 1);
     --(*this);

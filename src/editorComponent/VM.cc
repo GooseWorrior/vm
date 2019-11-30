@@ -116,6 +116,8 @@ void VM::process() {
   int prevInput = 0;
   int input = 0;
   bool shouldSave = true;
+  std::ofstream f1;
+  f1.open("debug.txt");
 
   while (exitCode && input != '|') {
     prevInput = input;
@@ -156,8 +158,12 @@ void VM::process() {
           }
           break;
         case KEY_BACKSPACE:
+          if (shouldSave) {
+            saveText();
+            shouldSave = false;
+          }
           edit = true;
-          prevChar = vcursor.erase(prevInput);
+          prevChar = vcursor.erase(prevInput, KEY_BACKSPACE);
           break;
         case 410:  // special resize character
           break;
@@ -170,16 +176,30 @@ void VM::process() {
           break;
         default:
           if (state == 0) {
-            handleCommands(input);
+            handleCommands(input, &shouldSave);
+            switch (input) {
+              case 120:  // x
+                if (shouldSave) {
+                  saveText();
+                  shouldSave = false;
+                }
+                std::ofstream f1;
+                f1.open("debug.txt");
+                f1 << "save" << undoStack.size() << "\n";
+                edit = true;
+                prevChar = vcursor.erase(prevInput, 120);
+                break;
+            }
           } else if (state == 1 || state == 2) {
+            if (shouldSave) {
+              saveText();
+              shouldSave = false;
+            }
             edit = true;
             vcursor.insert(input);
           }
       }
-    if (shouldSave) {
-      saveText();
-      shouldSave = false;
-    }
+
     // WindowPointer.second - WindowPointer.first + 1 < text.size() ??? code
     updateWindowSize();
     vcursor.updatePointer(-1);
@@ -365,7 +385,7 @@ void VM::handleBufferCommands(int input) {
   }
 }
 
-void VM::handleCommands(int input) {
+void VM::handleCommands(int input, bool* shouldSave) {
   switch (input) {
     case 65:  // A
       vcursor.setCursor(vcursor.getRow(), text[vcursor.getRow()].length());
@@ -424,12 +444,12 @@ void VM::handleCommands(int input) {
       state = 2;
       vcursor.updateStateOffset(0);
       break;
-    case 117:
+    case 117:  // u
       loadUndo();
       loadCursor();
+      *shouldSave = true;
       break;
-    case 104:  // h
-      --vcursor;
+    case 104:  // h --vcursor;
       break;
     case 106:  // j
       vcursor.nextLine();
@@ -449,12 +469,16 @@ void VM::handleCommands(int input) {
 void VM::saveText() {
   FILE* pFile;
   pFile = tmpfile();
-  for (string line : text) {
-    fputs((line + "\n").c_str(), pFile);
+  for (size_t i = 0; i < text.size(); ++i) {
+    if (i != text.size() - 1) {
+      fputs((text[i] + "\n").c_str(), pFile);
+    } else {
+      fputs(text[i].c_str(), pFile);
+    }
   }
-  std::fstream f;
-  f.open("debug.txt");
-  for (auto i : text) f << i << "\n";
+  // std::fstream f;
+  // f.open("debug.txt");
+  // for (auto i : text) f << i << "\n";
   rewind(pFile);
   undoStack.push_back(pFile);
 
@@ -480,11 +504,25 @@ void VM::loadUndo() {
     }
     text.push_back(line);
 
-    // move(0, 0);
-    // clear();
-    view->printTextAll();
-    view->printPlaceholder();
+    vcursor.setCursor(text.size() - 1,
+                      ifNegativeThenZero(text.back().length() - 1));
+    updateWindowSize();
+
+    WindowPointer =
+        pair<int, int>(0, std::min<int>(text.size(), WindowSize.first) - 1);
+
+    vcursor.updatePointer(0);
+    clear();
+    refresh();
+
     view->update();
+
+    theComponents.addElement({5, 3, 1});
+    theComponents.print();
+
+    pair<int, int> loc = updateLoc();
+    move(loc.first, loc.second);
+    vcursor.updatePointer(1);
     if (undoStack.size() >= undoCount.second) {
       undoCount = std::make_pair(undoCount.first, undoStack.size());
     }
