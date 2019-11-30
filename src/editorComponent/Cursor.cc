@@ -395,13 +395,14 @@ void Cursor::handleCtrlB() {
     winPtr.first = winPtr.second - winSize.first;
   } else if (winPtr.first != 0) {
     int col = 0;
-
-    winPtr.first = 1;
-    winPtr.second = winSize.first - 1;
-    while ((theText[offset][col] == ' ' || theText[offset][col] == '\t') &&
-           col < theText[offset].length())
+    while ((theText[winPtr.first + 1][col] == ' ' ||
+            theText[winPtr.first + 1][col] == '\t') &&
+           col < theText[winPtr.first + 1].length())
       ++col;
-    setCursor(winPtr.second - offset, col);
+    setCursor(winPtr.first + 1, col);
+
+    winPtr.first = 0;
+    winPtr.second = winSize.first - 1;
   }
 
   // if (winSize.first / 2 <= 6 && theCursor.first < winSize.first / 2) {
