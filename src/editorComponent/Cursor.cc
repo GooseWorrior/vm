@@ -377,13 +377,14 @@ void Cursor::handleCtrlB() {
   // std::fstream temp;
   // temp.open("debug.txt");
   int toMoveRow = std::max(winPtr.first - 4, 0);
-  winPtr.second = winPtr.first - 4;
-  winPtr.first = winPtr.second + winSize.first;
+
   int col = 0;
   while ((theText[toMoveRow][col] == ' ' || theText[toMoveRow][col] == '\t') &&
          col < theText[toMoveRow].length())
     ++col;
   setCursor(toMoveRow, col);
+  winPtr.second = theCursor.first - 6;
+  winPtr.first = winPtr.second + winSize.first;
   // if (winSize.first / 2 <= 6 && theCursor.first < winSize.first / 2) {
   //   setCursor(winSize.first - 1, col);
   // } else if (theCursor.first < winSize.first / 2) {

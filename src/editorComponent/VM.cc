@@ -12,6 +12,7 @@
 #include "../controller/Keyboard.h"
 #include "VM.h"
 
+using std::abs;
 using std::find_if;
 using std::isdigit;
 using std::make_unique;
@@ -20,10 +21,6 @@ using std::regex_search;
 using std::smatch;
 using std::stringstream;
 using std::to_string;
-using std::smatch;
-using std::regex;
-using std::regex_search;
-using std::abs;
 
 namespace CS246E {
 VM::VM(string filename)
@@ -38,8 +35,9 @@ VM::VM(string filename)
       recordOn{0},
       playOn{0},
       vcursor(0, 0, text, WindowPointer, WindowSize, state),
-      theComponents{WindowSize, WindowPointer,  vcursor,       text,
-                    state,      vmStatusString, bufferCommand, errorMessage, curMacro.first} {
+      theComponents{WindowSize,    WindowPointer, vcursor,
+                    text,          state,         vmStatusString,
+                    bufferCommand, errorMessage,  curMacro.first} {
   CFile = isCFile();
   if (!CFile) {
     addView(make_unique<PlainView>(this));
@@ -155,7 +153,7 @@ void VM::process() {
     } else if (state == 6) {
       handleBCTemplate(input, 6);
     } else if (state == 7) {
-      handleBCTemplate(input, 7); 
+      handleBCTemplate(input, 7);
     } else
       switch (input) {
         case 'Q':  // remove later
@@ -234,7 +232,8 @@ void VM::process() {
     if (prevState != state) {
       if (prevState == 1 || prevState == 2) {
         theComponents.deleteElement({2, 3, 1});
-      } else if (prevState == 3 || prevState == 4 || prevState == 5 || prevState == 6 || prevState == 7) {
+      } else if (prevState == 3 || prevState == 4 || prevState == 5 ||
+                 prevState == 6 || prevState == 7) {
         theComponents.deleteElement({4});
       } else if (prevState == 0) {
         theComponents.deleteElement({0, 5, 3, 1, 6});
@@ -245,7 +244,8 @@ void VM::process() {
         // theComponents.reset();
         // theComponents.addelement({2, 3, 1});
         theComponents.addElement({2, 3, 1});
-      } else if (state == 3 || state == 4 || state == 5 || state == 6 || state == 7) {
+      } else if (state == 3 || state == 4 || state == 5 || state == 6 ||
+                 state == 7) {
         // theComponents.reset();
         // theComponents.addelement({3, 1});
         theComponents.addElement({4});
@@ -271,15 +271,14 @@ void VM::process() {
     }
     if (curPlay.size() > 0) {
       std::ofstream f1;
-    f1.open("debug.txt", std::ios::app);
+      f1.open("debug.txt", std::ios::app);
       for (auto j : curPlay.top().second) f1 << wchar_t(j) << " ";
       f1 << '\n';
-      f1 << macroPointer.top() <<'\n';
-    f1.close();
+      f1 << macroPointer.top() << '\n';
+      f1.close();
     }
   }
 }
-
 
 void VM::loadMacro(int input) {
   if (input != 'q') curMacro.second.push_back(input);
@@ -311,27 +310,27 @@ void VM::handleRecordEnd() {
 void VM::handlePlayMacro() {
   string name = bufferCommand.substr(1);
   if (macroLibrary.find(name) != macroLibrary.end()) {
-     macroPointer.push(0);
-     curPlay.push(pair<string, vector<int>>(name, macroLibrary[name]));
+    macroPointer.push(0);
+    curPlay.push(pair<string, vector<int>>(name, macroLibrary[name]));
   } else {
-     theComponents.addElement({0});
-     errorMessage = "E246: Macro not found: " + name;
+    theComponents.addElement({0});
+    errorMessage = "E246: Macro not found: " + name;
   }
   state = 0;
 }
 
 int VM::macroGets() {
-    int ret = curPlay.top().second[macroPointer.top()];
-    macroPointer.top()++;
-    return ret;
+  int ret = curPlay.top().second[macroPointer.top()];
+  macroPointer.top()++;
+  return ret;
 }
 
 void VM::checkPlayEnd() {
   if (macroPointer.top() == curPlay.top().second.size()) {
-     int shift = macroPointer.top();
-     curPlay.pop();
-     macroPointer.pop();
-     if (!macroPointer.empty())macroPointer.top() += shift;
+    int shift = macroPointer.top();
+    curPlay.pop();
+    macroPointer.pop();
+    if (!macroPointer.empty()) macroPointer.top() += shift;
   }
 }
 bool VM::checkExists(string file) {
@@ -473,17 +472,17 @@ void VM::handleBCTemplate(int input, int mode) {
       break;
     default:
       if (std::isprint(input)) {
-          bufferCommand.insert(commandCursor, 1, input);
-          commandCursor++;
+        bufferCommand.insert(commandCursor, 1, input);
+        commandCursor++;
       }
   }
 }
 
 void VM::handleGeneralBC() {
-    exeBufferCommand();
-    bufferCommand.clear();
-    state = 0;
-    commandCursor = 0;
+  exeBufferCommand();
+  bufferCommand.clear();
+  state = 0;
+  commandCursor = 0;
 }
 
 /*void VM::handleBufferCommands(int input) {
@@ -515,13 +514,13 @@ void VM::handleGeneralBC() {
 } */
 
 void VM::handleSearchForward() {
-    pattern = bufferCommand.substr(1);
-    bufferCommand.clear();
-    state = 0;
-    commandCursor = 0;
-    searchDirection = 1;
-    saveSearch();
-    searchPlusOne();
+  pattern = bufferCommand.substr(1);
+  bufferCommand.clear();
+  state = 0;
+  commandCursor = 0;
+  searchDirection = 1;
+  saveSearch();
+  searchPlusOne();
 }
 
 void VM::handleSearchBackward() {
@@ -535,64 +534,70 @@ void VM::handleSearchBackward() {
 }
 
 void VM::saveSearch() {
-    searchLibrary.clear();
-    if (pattern.size() == 0) return;
-    smatch m;
-    regex exp{pattern};
-    int offset = 0;
-    string tempstr;
-    for (int i = 0; i < text.size(); ++i) {
-        tempstr = text[i];
-        offset = 0;
-        while (regex_search (tempstr, m, exp)) {
-          if (m.size() > 0) {
-            searchLibrary.push_back(pair<int, int>(i, m.position(0) + offset));
-            offset += m.length(0) + m.position(0);
-          }
-          tempstr = m.suffix().str();
-        }
+  searchLibrary.clear();
+  if (pattern.size() == 0) return;
+  smatch m;
+  regex exp{pattern};
+  int offset = 0;
+  string tempstr;
+  for (int i = 0; i < text.size(); ++i) {
+    tempstr = text[i];
+    offset = 0;
+    while (regex_search(tempstr, m, exp)) {
+      if (m.size() > 0) {
+        searchLibrary.push_back(pair<int, int>(i, m.position(0) + offset));
+        offset += m.length(0) + m.position(0);
+      }
+      tempstr = m.suffix().str();
     }
+  }
 }
 
 void VM::findNear() {
   pair<int, int> near{searchLibrary[0]};
-     for (int i = 1; i < searchLibrary.size(); ++i) {
-         if (abs(searchLibrary[i].first - vcursor.getRow()) < abs(near.first - vcursor.getRow())) {
-           near = searchLibrary[i];
-           searchPointer = i;
-         } else if (abs(searchLibrary[i].first - vcursor.getRow()) == abs(near.first - vcursor.getRow())) {
-           if (abs(searchLibrary[i].second - vcursor.getCol()) < abs(near.second - vcursor.getCol())) {
-              near = searchLibrary[i];
-              searchPointer = i;
-           } else if (abs(searchLibrary[i].second - vcursor.getCol()) == abs(near.second - vcursor.getCol())) {
-             continue;
-           } else {
-             break;
-           }
-         } else {
-           break;
-         }
-     }
-     vcursor.setCursor(near.first, near.second);
+  for (int i = 1; i < searchLibrary.size(); ++i) {
+    if (abs(searchLibrary[i].first - vcursor.getRow()) <
+        abs(near.first - vcursor.getRow())) {
+      near = searchLibrary[i];
+      searchPointer = i;
+    } else if (abs(searchLibrary[i].first - vcursor.getRow()) ==
+               abs(near.first - vcursor.getRow())) {
+      if (abs(searchLibrary[i].second - vcursor.getCol()) <
+          abs(near.second - vcursor.getCol())) {
+        near = searchLibrary[i];
+        searchPointer = i;
+      } else if (abs(searchLibrary[i].second - vcursor.getCol()) ==
+                 abs(near.second - vcursor.getCol())) {
+        continue;
+      } else {
+        break;
+      }
+    } else {
+      break;
+    }
+  }
+  vcursor.setCursor(near.first, near.second);
 }
 
 void VM::searchPlusOne() {
   if (searchLibrary.size() == 0) {
-     theComponents.addElement({0});
-     errorMessage = "E486 Pattern not found: " + pattern;
-     return;
+    theComponents.addElement({0});
+    errorMessage = "E486 Pattern not found: " + pattern;
+    return;
   }
   if (searchPointer == -1) {
-      findNear();
+    findNear();
   } else if (searchDirection) {
     if (searchPointer == searchLibrary.size() - 1) {
       theComponents.addElement({6});
       errorMessage = "search hit BOTTOM, continuing at TOP";
       searchPointer = 0;
-      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+      vcursor.setCursor(searchLibrary[searchPointer].first,
+                        searchLibrary[searchPointer].second);
     } else {
       searchPointer++;
-      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+      vcursor.setCursor(searchLibrary[searchPointer].first,
+                        searchLibrary[searchPointer].second);
       theComponents.deleteElement({6});
       errorMessage.clear();
     }
@@ -601,10 +606,12 @@ void VM::searchPlusOne() {
       theComponents.addElement({6});
       errorMessage = "search hit TOP, continuing at BOTTOM";
       searchPointer = searchLibrary.size() - 1;
-      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+      vcursor.setCursor(searchLibrary[searchPointer].first,
+                        searchLibrary[searchPointer].second);
     } else {
       searchPointer--;
-      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+      vcursor.setCursor(searchLibrary[searchPointer].first,
+                        searchLibrary[searchPointer].second);
       theComponents.deleteElement({6});
       errorMessage.clear();
     }
@@ -613,21 +620,23 @@ void VM::searchPlusOne() {
 
 void VM::searchMinusOne() {
   if (searchLibrary.size() == 0) {
-     theComponents.addElement({0});
-     errorMessage = "E486 Pattern not found: " + pattern;
-     return;
+    theComponents.addElement({0});
+    errorMessage = "E486 Pattern not found: " + pattern;
+    return;
   }
   if (searchPointer == -1) {
-      findNear();
+    findNear();
   } else if (searchDirection) {
     if (searchPointer == 0) {
       theComponents.addElement({6});
       errorMessage = "search hit TOP, continuing at BOTTOM";
       searchPointer = searchLibrary.size() - 1;
-      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+      vcursor.setCursor(searchLibrary[searchPointer].first,
+                        searchLibrary[searchPointer].second);
     } else {
       searchPointer--;
-      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+      vcursor.setCursor(searchLibrary[searchPointer].first,
+                        searchLibrary[searchPointer].second);
       theComponents.deleteElement({6});
       errorMessage.clear();
     }
@@ -636,16 +645,18 @@ void VM::searchMinusOne() {
       theComponents.addElement({6});
       errorMessage = "search hit BOTTOM, continuing at TOP";
       searchPointer = 0;
-      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+      vcursor.setCursor(searchLibrary[searchPointer].first,
+                        searchLibrary[searchPointer].second);
     } else {
       searchPointer++;
-      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+      vcursor.setCursor(searchLibrary[searchPointer].first,
+                        searchLibrary[searchPointer].second);
       theComponents.deleteElement({6});
       errorMessage.clear();
     }
   }
 }
-void VM::handleCommands(int input) {
+void VM::handleCommands(int input, bool* shouldSave) {
   switch (input) {
     case 2:  // ^B
       vcursor.handleCtrlB();
@@ -706,25 +717,26 @@ void VM::handleCommands(int input) {
       commandCursor = 1;
       bufferCommand = ":";
       break;
-    case 47: // /
-      state = 4; // search forward state
+    case 47:      // /
+      state = 4;  // search forward state
       commandCursor = 1;
       bufferCommand = "/";
       break;
-    case 63: // ?
-      state = 5; // search back state
+    case 63:      // ?
+      state = 5;  // search back state
       commandCursor = 1;
       bufferCommand = "?";
       break;
-    case 113: // q
-      if (recordOn) handleRecordEnd();
+    case 113:  // q
+      if (recordOn)
+        handleRecordEnd();
       else {
         state = 6;
         commandCursor = 1;
         bufferCommand = "q";
       }
       break;
-    case 64: // @
+    case 64:  // @
       state = 7;
       commandCursor = 1;
       bufferCommand = "@";
@@ -759,7 +771,6 @@ void VM::handleCommands(int input) {
     case 78:
       searchMinusOne();
       break;
-
   }
 }
 

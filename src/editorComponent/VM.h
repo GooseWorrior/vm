@@ -3,9 +3,9 @@
 
 #include <stdio.h>
 #include <time.h>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 #include "../Model.h"
 #include "../view/PlainView.h"
@@ -31,7 +31,7 @@ class VM : public Model {
   int savedSize;
   bool exitCode;
   bool CFile;
-  bool searchDirection; // 0 backwards, 1 forwards
+  bool searchDirection;  // 0 backwards, 1 forwards
   bool recordOn;
   bool playOn;
   string fileName;
@@ -63,8 +63,8 @@ class VM : public Model {
   void writeFile(string file);
   void copyFile(string file);
   void findPairedBracket();
-  void handleCommands(int input);
-  //void handleBufferCommands(int input);
+  void handleCommands(int input, bool* shouldSave);
+  // void handleBufferCommands(int input);
   void handleBCTemplate(int input, int state);
   void handleGeneralBC();
   void handleSearchForward();
