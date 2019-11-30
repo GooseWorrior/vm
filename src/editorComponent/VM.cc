@@ -126,6 +126,7 @@ void VM::process() {
   f1.open("debug.txt");
 
   while (exitCode && input != '|') {
+    // f1 << WindowPointer.first << ", " << WindowPointer.second << "\n";
     if (!macroPointer.empty()) checkPlayEnd();
     prevInput = input;
     if (!macroPointer.empty()) {
