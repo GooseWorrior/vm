@@ -414,6 +414,30 @@ void Cursor::handleCtrlB() {
   // }
 }
 
+char Cursor::handlex() {
+  if (!theText[theCursor.first].length()) return 'a';
+  if (theText[theCursor.first].length() == 1) {
+    char temp = theText[theCursor.first][0];
+    theText[theCursor.first] = "";
+    return temp;
+  } else if (theCursor.second != theText[theCursor.first].length() - 1) {
+    char temp = theText[theCursor.first][theCursor.second];
+    theText[theCursor.first] =
+        theText[theCursor.first].erase(theCursor.second, 1);
+    return temp;
+  } else {  // on the last character of the rows
+    char temp = theText[theCursor.first][theCursor.second];
+    theText[theCursor.first] =
+        theText[theCursor.first].erase(theCursor.second, 1);
+    setCursor(theCursor.first, theCursor.second - 1);
+    return temp;
+  }
+
+  // theText[theCursor.first].substr(0, theCursor.first) +
+  // theText[theCursor.first].substr(theCursor.first + 1,
+  //                                 theText[theCursor.first].length());
+}
+
 void Cursor::handleb() {
   // std::fstream f;
   // f.open("debug.txt");

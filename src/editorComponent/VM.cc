@@ -205,11 +205,9 @@ void VM::process() {
                   saveText();
                   shouldSave = false;
                 }
-                std::ofstream f1;
-                f1.open("debug.txt");
-                f1 << "save" << undoStack.size() << "\n";
+
                 edit = true;
-                prevChar = vcursor.erase(prevInput, 120);
+                prevChar = vcursor.handlex();
                 break;
             }
           } else if (state == 1 || state == 2) {
