@@ -6,18 +6,18 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <memory>
+#include <regex>
 #include <sstream>
 #include "../controller/Keyboard.h"
 #include "VM.h"
-#include <cstdlib>
-#include <algorithm>
-#include <cctype>
-#include <regex>
-#include <memory>
 
-using std::make_unique;
 using std::find_if;
 using std::isdigit;
+using std::make_unique;
+using std::regex;
+using std::regex_search;
+using std::smatch;
 using std::stringstream;
 using std::to_string;
 using std::smatch;
@@ -41,9 +41,9 @@ VM::VM(string filename)
       theComponents{WindowSize, WindowPointer,  vcursor,       text,
                     state,      vmStatusString, bufferCommand, errorMessage, curMacro.first} {
   CFile = isCFile();
-    if (!CFile) {
-      addView(make_unique<PlainView>(this));
-    } else {
+  if (!CFile) {
+    addView(make_unique<PlainView>(this));
+  } else {
     addView(make_unique<SyntaxView>(this));
     view->initialize();
   }
@@ -54,7 +54,7 @@ int ifNegativeThenZero(int x);
 
 void VM::loadFile(string filename) {
   // load files
-  fileName = filename; // in case we change file
+  fileName = filename;  // in case we change file
   CFile = isCFile();
   std::ifstream file{filename};
   file >> std::noskipws;
@@ -70,12 +70,12 @@ void VM::loadFile(string filename) {
     }
   }
   text.push_back(line);  // pushes last line
-  //WindowPointer = pair<int, int>(0, text.size() - 1);
-  
-  //clear();
-  //refresh();
-  //view->printTextAll();
-  
+  // WindowPointer = pair<int, int>(0, text.size() - 1);
+
+  // clear();
+  // refresh();
+  // view->printTextAll();
+
   // std::ofstream f1;
   // f1.open("debug.txt");
   // for (auto i : text) {
@@ -90,14 +90,15 @@ void VM::loadFile(string filename) {
   } else {
     vmStatusString = "\"" + filename + "\" " + "[New File]";
   }
-  
+
   if (CFile) vmStatusString += " [CFile]";
 
   vcursor.setCursor(text.size() - 1,
                     ifNegativeThenZero(text.back().length() - 1));
   updateWindowSize();
-  
-  WindowPointer = pair<int, int>(0, std::min<int>(text.size(), WindowSize.first) - 1);
+
+  WindowPointer =
+      pair<int, int>(0, std::min<int>(text.size(), WindowSize.first) - 1);
 
   vcursor.updatePointer(0);
   clear();
@@ -123,6 +124,8 @@ void VM::process() {
   int prevInput = 0;
   int input = 0;
   bool shouldSave = true;
+  std::ofstream f1;
+  f1.open("debug.txt");
 
   while (exitCode && input != '|') {
     if (!macroPointer.empty()) checkPlayEnd();
@@ -178,8 +181,12 @@ void VM::process() {
           }
           break;
         case KEY_BACKSPACE:
+          if (shouldSave) {
+            saveText();
+            shouldSave = false;
+          }
           edit = true;
-          prevChar = vcursor.erase(prevInput);
+          prevChar = vcursor.erase(prevInput, KEY_BACKSPACE);
           break;
         case 410:  // special resize character
           break;
@@ -192,22 +199,37 @@ void VM::process() {
           break;
         default:
           if (state == 0) {
-            handleCommands(input);
+            handleCommands(input, &shouldSave);
+            switch (input) {
+              case 120:  // x
+                if (shouldSave) {
+                  saveText();
+                  shouldSave = false;
+                }
+                std::ofstream f1;
+                f1.open("debug.txt");
+                f1 << "save" << undoStack.size() << "\n";
+                edit = true;
+                prevChar = vcursor.erase(prevInput, 120);
+                break;
+            }
           } else if (state == 1 || state == 2) {
-            edit = true;
             if (shouldSave) {
               saveText();
               shouldSave = false;
             }
+            edit = true;
             vcursor.insert(input);
           }
       }
+
     // WindowPointer.second - WindowPointer.first + 1 < text.size() ??? code
     updateWindowSize();
     vcursor.updatePointer(-1);
     vcursor.updatePointer(1);
     if (!edit) vcursor.updatePointer(0);
-    view->display(prevPointer, input, prevCursor, prevWindowSize, prevChar, prevSize, edit);
+    view->display(prevPointer, input, prevCursor, prevWindowSize, prevChar,
+                  prevSize, edit);
 
     if (prevState != state) {
       if (prevState == 1 || prevState == 2) {
@@ -231,15 +253,15 @@ void VM::process() {
         theComponents.addElement({5, 3, 1});
       }
     }
-    
-    if (!vmStatusString.empty()) errorMessage.clear(); // errorMessage guard
+
+    if (!vmStatusString.empty()) errorMessage.clear();  // errorMessage guard
     theComponents.updateContents();
     theComponents.updateLocation();
     theComponents.print();
     // theComponents.deleteElement({0});
     // theComponents.update();
 
-    //render();
+    // render();
 
     if (state == 3 || state == 4 || state == 5 || state == 6 || state == 7) {
       move(WindowSize.first, commandCursor);
@@ -359,19 +381,19 @@ bool VM::isNumber(const string& s) {
 }
 
 bool VM::isCFile() {
-    smatch m;
-    regex reg[3];
-    reg[0] = regex(".cc$");
-    reg[1] = regex(".c$");
-    reg[2] = regex(".h$");
-    for (int i = 0; i < 3; i++) {
-        regex_search (fileName, m, reg[i]);
-        if (m.size() > 0) return true; 
-    }
-    return false;
+  smatch m;
+  regex reg[3];
+  reg[0] = regex(".cc$");
+  reg[1] = regex(".c$");
+  reg[2] = regex(".h$");
+  for (int i = 0; i < 3; i++) {
+    regex_search(fileName, m, reg[i]);
+    if (m.size() > 0) return true;
+  }
+  return false;
 }
 void VM::exeBufferCommand() {
-  while (bufferCommand[0] == ':') bufferCommand = bufferCommand.substr(1); 
+  while (bufferCommand[0] == ':') bufferCommand = bufferCommand.substr(1);
   stringstream source{bufferCommand};
   string cmd;
   if (source >> cmd) {
@@ -636,8 +658,9 @@ void VM::handleCommands(int input) {
       vcursor.updateStateOffset(0);
       break;
     case 97:  // a
-      vcursor.setCursor(vcursor.getRow(),
-                        vcursor.getCol() ? vcursor.getCol() + 1 : 0);
+      vcursor.setCursor(vcursor.getRow(), text[vcursor.getRow()].length()
+                                              ? vcursor.getCol() + 1
+                                              : 0);
       state = 1;
       vcursor.updateStateOffset(0);
       break;
@@ -704,12 +727,12 @@ void VM::handleCommands(int input) {
       state = 2;
       vcursor.updateStateOffset(0);
       break;
-    case 117:
+    case 117:  // u
       loadUndo();
       loadCursor();
+      *shouldSave = true;
       break;
-    case 104:  // h
-      --vcursor;
+    case 104:  // h --vcursor;
       break;
     case 106:  // j
       vcursor.nextLine();
@@ -734,7 +757,20 @@ void VM::handleCommands(int input) {
 }
 
 void VM::saveText() {
-  undoStack.push_back(std::make_pair(text[vcursor.getRow()], vcursor.getRow()));
+  FILE* pFile;
+  pFile = tmpfile();
+  for (size_t i = 0; i < text.size(); ++i) {
+    if (i != text.size() - 1) {
+      fputs((text[i] + "\n").c_str(), pFile);
+    } else {
+      fputs(text[i].c_str(), pFile);
+    }
+  }
+  // std::fstream f;
+  // f.open("debug.txt");
+  // for (auto i : text) f << i << "\n";
+  rewind(pFile);
+  undoStack.push_back(pFile);
 
   time_t timer;
   time(&timer);
@@ -744,12 +780,39 @@ void VM::saveText() {
 
 void VM::loadUndo() {
   if (undoStack.size()) {
-    string undoContent = undoStack.back().first;
-    int undoRow = undoStack.back().second;
-    move(undoRow, 0);
-    text[undoRow] = undoContent;
-    clrtoeol();
-    printw("%s", undoContent.c_str());
+    char tempChar;
+    FILE* pFile = undoStack.back();
+    string line;
+    text.clear();
+    while ((tempChar = fgetc(pFile)) != EOF) {
+      if (tempChar == '\n') {
+        text.push_back(line);
+        line.clear();
+      } else {
+        line += tempChar;
+      }
+    }
+    text.push_back(line);
+
+    vcursor.setCursor(text.size() - 1,
+                      ifNegativeThenZero(text.back().length() - 1));
+    updateWindowSize();
+
+    WindowPointer =
+        pair<int, int>(0, std::min<int>(text.size(), WindowSize.first) - 1);
+
+    vcursor.updatePointer(0);
+    clear();
+    refresh();
+
+    view->update();
+
+    theComponents.addElement({5, 3, 1});
+    theComponents.print();
+
+    pair<int, int> loc = updateLoc();
+    move(loc.first, loc.second);
+    vcursor.updatePointer(1);
     if (undoStack.size() >= undoCount.second) {
       undoCount = std::make_pair(undoCount.first, undoStack.size());
     }

@@ -1,42 +1,44 @@
 #include "PlainView.h"
 #include <ncurses.h>
-#include <vector>
 #include <string>
+#include <vector>
 
 using std::string;
 using std::vector;
 
 namespace CS246E {
-PlainView::PlainView(VM * vm) : View{}, vm{vm} {}
+PlainView::PlainView(VM* vm) : View{}, vm{vm} {}
 
 void PlainView::initialize() {}
 
 void PlainView::display(pair<int, int> prevPointer, int input,
-                        pair<int, int> prevCursor, pair<int, int> prevWindowSize, int prevChar, int prevSize,
-                        bool edit) {
-    if (prevWindowSize != vm->WindowSize ||
-        prevPointer.first < vm->WindowPointer.first ||
-        prevPointer.second > vm->WindowPointer.second) {
-      printTextAll();
-    } else if (vm->text.size() != prevSize) {
-      printTextAfterward(input, prevCursor);
-    } else if (edit && vm->vcursor.getCol() != vm->text[vm->vcursor.getRow()].size()) {
-      printTextLine(input, prevCursor, prevChar);
-    } else if (edit) {
-      printTextChar(input, prevChar);
-    }
+                        pair<int, int> prevCursor,
+                        pair<int, int> prevWindowSize, int prevChar,
+                        int prevSize, bool edit) {
+  if (prevWindowSize != vm->WindowSize ||
+      prevPointer.first < vm->WindowPointer.first ||
+      prevPointer.second > vm->WindowPointer.second || input == 'u') {
+    printTextAll();
+  } else if (vm->text.size() != prevSize) {
+    printTextAfterward(input, prevCursor);
+  } else if (edit &&
+             vm->vcursor.getCol() != vm->text[vm->vcursor.getRow()].size()) {
+    printTextLine(input, prevCursor, prevChar);
+  } else if (edit) {
+    printTextChar(input, prevChar);
+  }
 
-    if (vm->vcursor.calculateLine() < vm->WindowSize.first &&
-            prevPointer != vm->WindowPointer ||
-        prevWindowSize != vm->WindowSize) {
-      printPlaceholder();
-    }
+  if (vm->vcursor.calculateLine() < vm->WindowSize.first &&
+          prevPointer != vm->WindowPointer ||
+      prevWindowSize != vm->WindowSize || input == 'u') {
+    printPlaceholder();
+  }
 }
 void PlainView::printPlaceholder() {
   attron(COLOR_PAIR(1));
   string placeholderString = "";
   for (int i = vm->vcursor.calculateLine(); i < vm->WindowSize.first - 1; i++) {
-     placeholderString += "~\n";
+    placeholderString += "~\n";
   }
   placeholderString += "~";
   printw("%s", placeholderString.c_str());
@@ -67,13 +69,15 @@ void PlainView::printTextAfterward(int input, pair<int, int> prevCursor) {
   }
 }
 
-void PlainView::printTextLine(int input, pair<int, int> prevCursor, int prevChar) {
-  if (input == KEY_BACKSPACE && prevChar == 0) return;
+void PlainView::printTextLine(int input, pair<int, int> prevCursor,
+                              int prevChar) {
+  if ((input == KEY_BACKSPACE || input == 'x') && prevChar == 0) return;
   pair<int, int> loc = vm->updateLoc();
-  if (input == KEY_BACKSPACE) {
+  if (input == KEY_BACKSPACE || input == 'x') {
     clrtoeol();
     move(loc.first, loc.second);
-    for (size_t i = vm->vcursor.getCol(); i < vm->text[vm->vcursor.getRow()].size(); ++i) {
+    for (size_t i = vm->vcursor.getCol();
+         i < vm->text[vm->vcursor.getRow()].size(); ++i) {
       addch(vm->text[vm->vcursor.getRow()][i]);
     }
   } else if (vm->state == 1) {
@@ -90,7 +94,7 @@ void PlainView::printTextLine(int input, pair<int, int> prevCursor, int prevChar
 
 void PlainView::printTextChar(int input, int prevChar) {
   pair<int, int> loc = vm->updateLoc();
-  if (input == KEY_BACKSPACE) {
+  if (input == KEY_BACKSPACE || input == 'x') {
     move(loc.first, loc.second);
     if (prevChar == '\t')
       addch('\t');

@@ -34,7 +34,7 @@ class Cursor {
   Cursor& nextLine();
   Cursor& prevLine();
   Cursor& insert(wchar_t c);
-  int erase(int prevInput);
+  int erase(int prevInput, int input);
   int getRow();
   int getCol();
   void setCursor(int x, int y);
