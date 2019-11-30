@@ -61,7 +61,7 @@ void VM::loadFile(string filename) {
       line += c;
     }
   }
-  text.push_back(line);  // pushes last line
+  if (line.length()) text.push_back(line);  // pushes last line
   // WindowPointer = pair<int, int>(0, text.size() - 1);
 
   // clear();
@@ -120,6 +120,7 @@ void VM::process() {
   f1.open("debug.txt");
 
   while (exitCode && input != '|') {
+    f1 << "(" << WindowPointer.first << ", " << WindowPointer.second << ")";
     prevInput = input;
     input = controller->getChar();
     int prevChar = 0;

@@ -373,7 +373,25 @@ void Cursor::handleCtrlD() {
   }
 }
 
-void Cursor::handleCtrlB() {}
+void Cursor::handleCtrlB() {
+  // std::fstream temp;
+  // temp.open("debug.txt");
+  int toMoveRow = std::max(winPtr.first - 4, 0);
+  winPtr.second = winPtr.first - 4;
+  winPtr.first = winPtr.second + winSize.first;
+  int col = 0;
+  while ((theText[toMoveRow][col] == ' ' || theText[toMoveRow][col] == '\t') &&
+         col < theText[toMoveRow].length())
+    ++col;
+  setCursor(toMoveRow, col);
+  // if (winSize.first / 2 <= 6 && theCursor.first < winSize.first / 2) {
+  //   setCursor(winSize.first - 1, col);
+  // } else if (theCursor.first < winSize.first / 2) {
+  //   setCursor((winSize.first) / 2 + 5, col);
+  // } else {
+  //   setCursor(toMoveRow, col);
+  // }
+}
 
 void Cursor::handleb() {
   // std::fstream f;
