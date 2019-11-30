@@ -12,15 +12,15 @@
 
 #include "Commandline.h"
 //#include "Cursor.h"
+#include <regex>
 #include "EditorComponent.h"
 #include "StatusLine.h"
-#include <regex>
 
 using std::pair;
+using std::regex;
 using std::string;
 using std::unique_ptr;
 using std::vector;
-using std::regex;
 
 namespace CS246E {
 class VM : public Model {
@@ -39,15 +39,14 @@ class VM : public Model {
   pair<int, int> WindowPointer;
   vector<string> text;
   vector<unique_ptr<EditorComponent>> components;
-  vector<pair<string, int>> undoStack;               // row text and which row
+  vector<FILE*> undoStack;                           // row text and which row
   vector<pair<pair<int, int>, time_t>> cursorStack;  // cursor position and time
   pair<int, int> undoCount;
   string vmStatusString;
 
-  
   int checkLineLength(int x, int lineLength);
   bool checkExists(string file);
-  bool isNumber(const string & str);
+  bool isNumber(const string& str);
   bool isCFile();
   void writeFile(string file);
   void copyFile(string file);
@@ -56,10 +55,10 @@ class VM : public Model {
   void handleBufferCommands(int input);
   void loadFile(string filename);
   void saveText();
+  void saveRow();
   void loadUndo();
   void loadCursor();
   void exeBufferCommand();
-  
 
  public:
   VM(string filename);
