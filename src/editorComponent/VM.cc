@@ -67,7 +67,7 @@ void VM::loadFile(string filename) {
       line += c;
     }
   }
-  if (line.length()) text.push_back(line);  // pushes last line
+  if (line.length() || !text.size()) text.push_back(line);  // pushes last line
   // WindowPointer = pair<int, int>(0, text.size() - 1);
 
   // clear();
