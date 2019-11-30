@@ -23,6 +23,7 @@ using std::to_string;
 using std::smatch;
 using std::regex;
 using std::regex_search;
+using std::abs;
 
 namespace CS246E {
 VM::VM(string filename)
@@ -32,9 +33,13 @@ VM::VM(string filename)
       fileName{filename},
       exitCode{1},
       CFile{0},
+      searchDirection{1},
+      searchPointer{-1},
+      recordOn{0},
+      playOn{0},
       vcursor(0, 0, text, WindowPointer, WindowSize, state),
       theComponents{WindowSize, WindowPointer,  vcursor,       text,
-                    state,      vmStatusString, bufferCommand, errorMessage} {
+                    state,      vmStatusString, bufferCommand, errorMessage, curMacro.first} {
   CFile = isCFile();
     if (!CFile) {
       addView(make_unique<PlainView>(this));
@@ -120,8 +125,13 @@ void VM::process() {
   bool shouldSave = true;
 
   while (exitCode && input != '|') {
+    if (!macroPointer.empty()) checkPlayEnd();
     prevInput = input;
-    input = controller->getChar();
+    if (!macroPointer.empty()) {
+      input = macroGets();
+    } else {
+      input = controller->getChar();
+    }
     int prevChar = 0;
     bool edit = false;  // could be omitted
     if (state == 1 || state == 2 || state == 0)
@@ -131,11 +141,21 @@ void VM::process() {
     prevPointer = WindowPointer;
     prevWindowSize = WindowSize;
     prevState = state;
+    if (recordOn) loadMacro(input);
+    if (input != 'n' && input != 'N') searchPointer = -1;
     if (state == 3) {
-      handleBufferCommands(input);
+      handleBCTemplate(input, 3);
+    } else if (state == 4) {
+      handleBCTemplate(input, 4);
+    } else if (state == 5) {
+      handleBCTemplate(input, 5);
+    } else if (state == 6) {
+      handleBCTemplate(input, 6);
+    } else if (state == 7) {
+      handleBCTemplate(input, 7); 
     } else
       switch (input) {
-        case 'q':  // remove later
+        case 'Q':  // remove later
           return;
         case KEY_LEFT:
           if (vcursor.getCol() != (--vcursor).getCol()) {
@@ -192,10 +212,10 @@ void VM::process() {
     if (prevState != state) {
       if (prevState == 1 || prevState == 2) {
         theComponents.deleteElement({2, 3, 1});
-      } else if (prevState == 3) {
+      } else if (prevState == 3 || prevState == 4 || prevState == 5 || prevState == 6 || prevState == 7) {
         theComponents.deleteElement({4});
       } else if (prevState == 0) {
-        theComponents.deleteElement({0, 5, 3, 1});
+        theComponents.deleteElement({0, 5, 3, 1, 6});
         vmStatusString.clear();
         errorMessage.clear();
       }
@@ -203,7 +223,7 @@ void VM::process() {
         // theComponents.reset();
         // theComponents.addelement({2, 3, 1});
         theComponents.addElement({2, 3, 1});
-      } else if (state == 3) {
+      } else if (state == 3 || state == 4 || state == 5 || state == 6 || state == 7) {
         // theComponents.reset();
         // theComponents.addelement({3, 1});
         theComponents.addElement({4});
@@ -221,17 +241,77 @@ void VM::process() {
 
     //render();
 
-    if (state == 3) {
+    if (state == 3 || state == 4 || state == 5 || state == 6 || state == 7) {
       move(WindowSize.first, commandCursor);
     } else {
       pair<int, int> loc = updateLoc();
       move(loc.first, loc.second);
     }
+    if (curPlay.size() > 0) {
+      std::ofstream f1;
+    f1.open("debug.txt", std::ios::app);
+      for (auto j : curPlay.top().second) f1 << wchar_t(j) << " ";
+      f1 << '\n';
+      f1 << macroPointer.top() <<'\n';
+    f1.close();
+    }
   }
 }
 
 
+void VM::loadMacro(int input) {
+  if (input != 'q') curMacro.second.push_back(input);
+}
 
+void VM::handleRecordMacro() {
+  if (bufferCommand.size() == 1) {
+    theComponents.addElement({0});
+    errorMessage = "E642: Macro name is empty";
+  } else {
+    curMacro.first = bufferCommand.substr(1);
+    curMacro.second.clear();
+    recordOn = true;
+    theComponents.addElement({7});
+  }
+  bufferCommand.clear();
+  state = 0;
+  commandCursor = 0;
+}
+
+void VM::handleRecordEnd() {
+  macroLibrary[curMacro.first] = curMacro.second;
+  curMacro.first.clear();
+  curMacro.second.clear();
+  recordOn = false;
+  theComponents.deleteElement({7});
+}
+
+void VM::handlePlayMacro() {
+  string name = bufferCommand.substr(1);
+  if (macroLibrary.find(name) != macroLibrary.end()) {
+     macroPointer.push(0);
+     curPlay.push(pair<string, vector<int>>(name, macroLibrary[name]));
+  } else {
+     theComponents.addElement({0});
+     errorMessage = "E246: Macro not found: " + name;
+  }
+  state = 0;
+}
+
+int VM::macroGets() {
+    int ret = curPlay.top().second[macroPointer.top()];
+    macroPointer.top()++;
+    return ret;
+}
+
+void VM::checkPlayEnd() {
+  if (macroPointer.top() == curPlay.top().second.size()) {
+     int shift = macroPointer.top();
+     curPlay.pop();
+     macroPointer.pop();
+     if (!macroPointer.empty())macroPointer.top() += shift;
+  }
+}
 bool VM::checkExists(string file) {
   std::ifstream file_to_check(file.c_str());
   if (file_to_check.is_open()) {
@@ -340,7 +420,51 @@ void VM::exeBufferCommand() {
   state = 0;
 }
 
-void VM::handleBufferCommands(int input) {
+void VM::handleBCTemplate(int input, int mode) {
+  switch (input) {
+    case KEY_LEFT:
+      if (commandCursor > 1) commandCursor--;
+      break;
+    case KEY_RIGHT:
+      if (commandCursor < bufferCommand.size()) commandCursor++;
+      break;
+    case KEY_BACKSPACE:
+      if (bufferCommand.size() == 1) {
+        state = 0;
+      } else if (commandCursor > 1) {
+        bufferCommand.erase(commandCursor - 1, 1);
+        commandCursor--;
+      }
+      break;
+    case '\n':
+      if (mode == 3) {
+        handleGeneralBC();
+      } else if (mode == 4) {
+        handleSearchForward();
+      } else if (mode == 5) {
+        handleSearchBackward();
+      } else if (mode == 6) {
+        handleRecordMacro();
+      } else if (mode == 7) {
+        handlePlayMacro();
+      }
+      break;
+    default:
+      if (std::isprint(input)) {
+          bufferCommand.insert(commandCursor, 1, input);
+          commandCursor++;
+      }
+  }
+}
+
+void VM::handleGeneralBC() {
+    exeBufferCommand();
+    bufferCommand.clear();
+    state = 0;
+    commandCursor = 0;
+}
+
+/*void VM::handleBufferCommands(int input) {
   switch (input) {
     case KEY_LEFT:
       if (commandCursor > 1) commandCursor--;
@@ -366,8 +490,139 @@ void VM::handleBufferCommands(int input) {
       bufferCommand.insert(commandCursor, 1, input);
       commandCursor++;
   }
+} */
+
+void VM::handleSearchForward() {
+    pattern = bufferCommand.substr(1);
+    bufferCommand.clear();
+    state = 0;
+    commandCursor = 0;
+    searchDirection = 1;
+    saveSearch();
+    searchPlusOne();
 }
 
+void VM::handleSearchBackward() {
+  pattern = bufferCommand.substr(1);
+  bufferCommand.clear();
+  state = 0;
+  commandCursor = 0;
+  searchDirection = 0;
+  saveSearch();
+  searchPlusOne();
+}
+
+void VM::saveSearch() {
+    searchLibrary.clear();
+    if (pattern.size() == 0) return;
+    smatch m;
+    regex exp{pattern};
+    int offset = 0;
+    string tempstr;
+    for (int i = 0; i < text.size(); ++i) {
+        tempstr = text[i];
+        offset = 0;
+        while (regex_search (tempstr, m, exp)) {
+          if (m.size() > 0) {
+            searchLibrary.push_back(pair<int, int>(i, m.position(0) + offset));
+            offset += m.length(0) + m.position(0);
+          }
+          tempstr = m.suffix().str();
+        }
+    }
+}
+
+void VM::findNear() {
+  pair<int, int> near{searchLibrary[0]};
+     for (int i = 1; i < searchLibrary.size(); ++i) {
+         if (abs(searchLibrary[i].first - vcursor.getRow()) < abs(near.first - vcursor.getRow())) {
+           near = searchLibrary[i];
+           searchPointer = i;
+         } else if (abs(searchLibrary[i].first - vcursor.getRow()) == abs(near.first - vcursor.getRow())) {
+           if (abs(searchLibrary[i].second - vcursor.getCol()) < abs(near.second - vcursor.getCol())) {
+              near = searchLibrary[i];
+              searchPointer = i;
+           } else if (abs(searchLibrary[i].second - vcursor.getCol()) == abs(near.second - vcursor.getCol())) {
+             continue;
+           } else {
+             break;
+           }
+         } else {
+           break;
+         }
+     }
+     vcursor.setCursor(near.first, near.second);
+}
+
+void VM::searchPlusOne() {
+  if (searchLibrary.size() == 0) {
+     theComponents.addElement({0});
+     errorMessage = "E486 Pattern not found: " + pattern;
+     return;
+  }
+  if (searchPointer == -1) {
+      findNear();
+  } else if (searchDirection) {
+    if (searchPointer == searchLibrary.size() - 1) {
+      theComponents.addElement({6});
+      errorMessage = "search hit BOTTOM, continuing at TOP";
+      searchPointer = 0;
+      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+    } else {
+      searchPointer++;
+      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+      theComponents.deleteElement({6});
+      errorMessage.clear();
+    }
+  } else {
+    if (searchPointer == 0) {
+      theComponents.addElement({6});
+      errorMessage = "search hit TOP, continuing at BOTTOM";
+      searchPointer = searchLibrary.size() - 1;
+      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+    } else {
+      searchPointer--;
+      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+      theComponents.deleteElement({6});
+      errorMessage.clear();
+    }
+  }
+}
+
+void VM::searchMinusOne() {
+  if (searchLibrary.size() == 0) {
+     theComponents.addElement({0});
+     errorMessage = "E486 Pattern not found: " + pattern;
+     return;
+  }
+  if (searchPointer == -1) {
+      findNear();
+  } else if (searchDirection) {
+    if (searchPointer == 0) {
+      theComponents.addElement({6});
+      errorMessage = "search hit TOP, continuing at BOTTOM";
+      searchPointer = searchLibrary.size() - 1;
+      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+    } else {
+      searchPointer--;
+      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+      theComponents.deleteElement({6});
+      errorMessage.clear();
+    }
+  } else {
+    if (searchPointer == searchLibrary.size() - 1) {
+      theComponents.addElement({6});
+      errorMessage = "search hit BOTTOM, continuing at TOP";
+      searchPointer = 0;
+      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+    } else {
+      searchPointer++;
+      vcursor.setCursor(searchLibrary[searchPointer].first, searchLibrary[searchPointer].second);
+      theComponents.deleteElement({6});
+      errorMessage.clear();
+    }
+  }
+}
 void VM::handleCommands(int input) {
   switch (input) {
     case 65:  // A
@@ -422,6 +677,29 @@ void VM::handleCommands(int input) {
       commandCursor = 1;
       bufferCommand = ":";
       break;
+    case 47: // /
+      state = 4; // search forward state
+      commandCursor = 1;
+      bufferCommand = "/";
+      break;
+    case 63: // ?
+      state = 5; // search back state
+      commandCursor = 1;
+      bufferCommand = "?";
+      break;
+    case 113: // q
+      if (recordOn) handleRecordEnd();
+      else {
+        state = 6;
+        commandCursor = 1;
+        bufferCommand = "q";
+      }
+      break;
+    case 64: // @
+      state = 7;
+      commandCursor = 1;
+      bufferCommand = "@";
+      break;
     case 82:  // R
       state = 2;
       vcursor.updateStateOffset(0);
@@ -445,6 +723,13 @@ void VM::handleCommands(int input) {
     case 119:  // w
       vcursor.handlew();
       break;
+    case 110:
+      searchPlusOne();
+      break;
+    case 78:
+      searchMinusOne();
+      break;
+
   }
 }
 

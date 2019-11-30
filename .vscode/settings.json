@@ -46,7 +46,18 @@
     "ctime": "cpp",
     "iterator": "cpp",
     "map": "cpp",
-    "regex": "cpp"
+    "regex": "cpp",
+    "array": "cpp",
+    "atomic": "cpp",
+    "cctype": "cpp",
+    "clocale": "cpp",
+    "cstdarg": "cpp",
+    "cwctype": "cpp",
+    "unordered_map": "cpp",
+    "memory_resource": "cpp",
+    "optional": "cpp",
+    "string_view": "cpp",
+    "sstream": "cpp"
   },
   "files.eol": "\n",
   "C_Cpp.errorSquiggles": "Disabled"
