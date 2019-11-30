@@ -3,11 +3,13 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <memory>
 #include <string>
 #include <vector>
 
 using std::pair;
 using std::string;
+using std::unique_ptr;
 using std::vector;
 namespace CS246E {
 class Cursor {
@@ -25,6 +27,7 @@ class Cursor {
   pair<int, int>& winPtr;
   pair<int, int>& winSize;
   int& state;
+  // unique_ptr<ControlCommand> ctrlcmd;
 
  public:
   Cursor(int row, int col, vector<string>& theText, pair<int, int>& winPtr,
@@ -45,6 +48,8 @@ class Cursor {
   void handleSemiColon();
   void handleb();
   void handlew();
+  void handleCtrlD();
+  void handleCtrlB();
   void updatePointer(int mode);
   int calculateLine();
   void updateStateOffset(int offset);

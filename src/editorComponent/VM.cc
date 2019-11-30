@@ -387,6 +387,12 @@ void VM::handleBufferCommands(int input) {
 
 void VM::handleCommands(int input, bool* shouldSave) {
   switch (input) {
+    case 2:  // ^B
+      vcursor.handleCtrlB();
+      break;
+    case 4:  // ^D
+      vcursor.handleCtrlD();
+      break;
     case 65:  // A
       vcursor.setCursor(vcursor.getRow(), text[vcursor.getRow()].length());
       state = 1;
@@ -449,7 +455,8 @@ void VM::handleCommands(int input, bool* shouldSave) {
       loadCursor();
       *shouldSave = true;
       break;
-    case 104:  // h --vcursor;
+    case 104:  // h
+      --vcursor;
       break;
     case 106:  // j
       vcursor.nextLine();

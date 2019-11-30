@@ -354,9 +354,30 @@ void Cursor::handleSemiColon() {
 
 void Cursor::updateStateOffset(int offset) { stateOffset = offset; }
 
+void Cursor::handleCtrlD() {
+  // std::fstream temp;
+  // temp.open("debug.txt");
+  int toMoveRow = std::min(theCursor.first + winSize.first / 2,
+                           ifNegativeThenZero(theText.size() - 1));
+  int col = 0;
+  while ((theText[toMoveRow][col] == ' ' || theText[toMoveRow][col] == '\t') &&
+         col < theText[toMoveRow].length())
+    ++col;
+
+  if (winSize.first / 2 <= 6 && theCursor.first < winSize.first / 2) {
+    setCursor(winSize.first - 1, col);
+  } else if (theCursor.first < winSize.first / 2) {
+    setCursor((winSize.first) / 2 + 5, col);
+  } else {
+    setCursor(toMoveRow, col);
+  }
+}
+
+void Cursor::handleCtrlB() {}
+
 void Cursor::handleb() {
-  std::fstream f;
-  f.open("debug.txt");
+  // std::fstream f;
+  // f.open("debug.txt");
   // cursor is at the beginning
   if (!theCursor.first && !theCursor.second) return;
   int row = theCursor.first;
