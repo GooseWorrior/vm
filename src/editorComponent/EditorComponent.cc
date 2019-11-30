@@ -18,11 +18,13 @@ const int MODE = 2;
 const int LINENUMBER = 3;
 const int COMMANDLINE = 4;
 const int STATUS = 5;
+const int SUBWARNING = 6;
+const int GLOBAL = 7;
 EditorComponent::EditorComponent(pair<int, int> &winSize,
                                  pair<int, int> &winPtr, Cursor &vcursor,
                                  vector<string> &theText, int &state,
                                  string &VMStatusLine, string &VMCommandLine,
-                                 string &VMErrorMessage)
+                                 string &VMErrorMessage, string & VMMacroName)
     : winSize{winSize},
       winPtr{winPtr},
       vcursor{vcursor},
@@ -30,7 +32,8 @@ EditorComponent::EditorComponent(pair<int, int> &winSize,
       state{state},
       VMCommandLine{VMCommandLine},
       VMStatusLine{VMStatusLine},
-      VMErrorMessage{VMErrorMessage} {}
+      VMErrorMessage{VMErrorMessage},
+      VMMacroName{VMMacroName} {}
 void EditorComponent::reset() { components.clear(); }
 void EditorComponent::deleteElement(initializer_list<int> types) {
   for (auto i : types) {
@@ -70,6 +73,12 @@ pair<int, int> EditorComponent::getLocation(int type) {
     case WARNING:
       col = 1;
       break;
+    case SUBWARNING:
+      col = 0;
+      break;
+    case GLOBAL:
+      col = winSize.second - 39 - VMMacroName.size();  
+      break;
     default:
       break;
   }
@@ -108,6 +117,12 @@ string EditorComponent::getContents(int type) {
       break;
     case WARNING:
       ret = VMErrorMessage;
+      break;
+    case SUBWARNING:
+      ret = VMErrorMessage;
+      break;
+    case GLOBAL:
+      ret = "recording @" + VMMacroName;
       break;
     default:
       break;
@@ -149,7 +164,7 @@ void EditorComponent::print() {
   mvaddstr(winSize.first, 0,
            string(winSize.second, ' ').c_str());  // little trick here
   for (auto &i : components) {
-    if (i.first == MODE) {
+    if (i.first == MODE || i.first == GLOBAL) {
       attron(A_BOLD);
       i.second->print();
       attroff(A_BOLD);
@@ -157,6 +172,10 @@ void EditorComponent::print() {
       attron(COLOR_PAIR(2));
       i.second->print();
       attroff(COLOR_PAIR(2));
+    } else if (i.first == SUBWARNING) {
+      attron(COLOR_PAIR(6));
+      i.second->print();
+      attroff(COLOR_PAIR(6));
     } else {
       i.second->print();
     }

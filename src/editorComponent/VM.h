@@ -5,6 +5,7 @@
 #include <time.h>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "../Model.h"
 #include "../view/PlainView.h"
@@ -26,9 +27,13 @@ namespace CS246E {
 class VM : public Model {
   int state;  // 0 - command/readonly, 1 - insert, 2 - commandline
   int commandCursor;
+  int searchPointer;
   int savedSize;
   bool exitCode;
   bool CFile;
+  bool searchDirection; // 0 backwards, 1 forwards
+  bool recordOn;
+  bool playOn;
   string fileName;
   string bufferCommand;
   string errorMessage;
@@ -41,9 +46,16 @@ class VM : public Model {
   vector<unique_ptr<EditorComponent>> components;
   vector<FILE*> undoStack;                           // row text and which row
   vector<pair<pair<int, int>, time_t>> cursorStack;  // cursor position and time
+  vector<pair<int, int>> searchLibrary;
+  std::map<string, vector<int>> macroLibrary;
+  pair<string, vector<int>> curMacro;
+  std::stack<pair<string, vector<int>>> curPlay;
+  std::stack<int> macroPointer;
   pair<int, int> undoCount;
   string vmStatusString;
 
+  int macroGets();
+  void checkPlayEnd();
   int checkLineLength(int x, int lineLength);
   bool checkExists(string file);
   bool isNumber(const string& str);
@@ -51,14 +63,26 @@ class VM : public Model {
   void writeFile(string file);
   void copyFile(string file);
   void findPairedBracket();
-  void handleCommands(int input, bool* shouldSave);
-  void handleBufferCommands(int input);
+  void handleCommands(int input);
+  //void handleBufferCommands(int input);
+  void handleBCTemplate(int input, int state);
+  void handleGeneralBC();
+  void handleSearchForward();
+  void handleSearchBackward();
+  void handleRecordMacro();
+  void handleRecordEnd();
+  void handlePlayMacro();
+  void loadMacro(int input);
   void loadFile(string filename);
   void saveText();
   void saveRow();
   void loadUndo();
   void loadCursor();
   void exeBufferCommand();
+  void saveSearch();
+  void searchMinusOne();
+  void searchPlusOne();
+  void findNear();
 
  public:
   VM(string filename);
