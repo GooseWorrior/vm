@@ -518,10 +518,13 @@ char Cursor::handlex() {
 void Cursor::handlep(pair<vector<string>, bool>& clipBoard) {
   if (!clipBoard.first.size()) return;
 
-  string firstChunk = theText[theCursor.first].substr(0, theCursor.second + 1);
-  string secondChunk = theText[theCursor.first].substr(
-      theCursor.second + 1, theText[theCursor.first].length());
-
+  string firstChunk;
+  string secondChunk;
+  if (theText[theCursor.first].length()) {
+    firstChunk = theText[theCursor.first].substr(0, theCursor.second + 1);
+    secondChunk = theText[theCursor.first].substr(
+        theCursor.second + 1, theText[theCursor.first].length());
+  }
   if (clipBoard.second) {  // special case
     for (size_t i = 0; i < clipBoard.first.size(); ++i)
       theText.insert(theText.begin() + theCursor.first + 1 + i,
@@ -545,9 +548,13 @@ void Cursor::handlep(pair<vector<string>, bool>& clipBoard) {
 void Cursor::handleP(pair<vector<string>, bool>& clipBoard) {
   if (!clipBoard.first.size()) return;
 
-  string firstChunk = theText[theCursor.first].substr(0, theCursor.second);
-  string secondChunk = theText[theCursor.first].substr(
-      theCursor.second, theText[theCursor.first].length());
+  string firstChunk;
+  string secondChunk;
+  if (theText[theCursor.first].length()) {
+    firstChunk = theText[theCursor.first].substr(0, theCursor.second + 1);
+    secondChunk = theText[theCursor.first].substr(
+        theCursor.second + 1, theText[theCursor.first].length());
+  }
 
   if (clipBoard.second) {  // special case
     for (size_t i = 0; i < clipBoard.first.size(); ++i)

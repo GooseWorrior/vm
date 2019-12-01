@@ -23,7 +23,8 @@ using std::stringstream;
 using std::to_string;
 
 namespace CS246E {
-  const vector<char> motion{'b', 'c', 'f', 'h', 'j', 'k', 'l', 'n', 'N', 'w', 'F', '$', '^', '0', ';', '%'};
+const vector<char> motion{'b', 'c', 'f', 'h', 'j', 'k', 'l', 'n',
+                          'N', 'w', 'F', '$', '^', '0', ';', '%'};
 VM::VM(string filename)
     : state{0},
       commandCursor{0},
@@ -65,11 +66,6 @@ void VM::setFilenameStatus() {
 }
 
 void VM::loadFile(string filename) {
-  clipBoard.first.push_back("yeet");
-  clipBoard.first.push_back("hello");
-  clipBoard.first.push_back("bye");
-  clipBoard.first.push_back("");
-  clipBoard.second = true;
   // load files
   fileName = filename;  // in case we change file
   CFile = isCFile();
@@ -165,8 +161,8 @@ void VM::process() {
     } else if (state == 7) {
       handleBCTemplate(input, 7);
     } else if (state == 8) {
-      handleNoEditBC(input); 
-    }else
+      handleNoEditBC(input);
+    } else
       switch (input) {
         case 'Q':  // remove later
           return;
@@ -221,7 +217,7 @@ void VM::process() {
                 vcursor.updateStateOffset(0);  // replace later
                 view->printTextAll();          // replace later
                 break; */
-              case 120: { // x
+              case 120: {  // x
                 if (shouldSave) {
                   saveText();
                   shouldSave = false;
@@ -229,7 +225,8 @@ void VM::process() {
                 edit = true;
                 prevChar = vcursor.handlex();
                 break;
-              } case 79: { // O
+              }
+              case 79: {  // O
                 if (shouldSave) {
                   saveText();
                   shouldSave = false;
@@ -241,7 +238,8 @@ void VM::process() {
                 vcursor.setCursor(tmpRow, 0);
                 edit = true;
                 break;
-             } case 111: {// o
+              }
+              case 111: {  // o
                 if (shouldSave) {
                   saveText();
                   shouldSave = false;
@@ -249,12 +247,12 @@ void VM::process() {
                 int tmpRow = vcursor.getRow();
                 changeState(1);
                 vcursor.setCursor(tmpRow, text[tmpRow].size());
-                pair<int, int>  loc = updateLoc();
+                pair<int, int> loc = updateLoc();
                 move(loc.first, loc.second);
                 vcursor.insert('\n');
                 edit = true;
                 break;
-             }
+              }
             }
           } else if (state == 1 || state == 2) {
             if (shouldSave) {
@@ -308,7 +306,8 @@ void VM::process() {
 
     // render();
 
-    if (state == 3 || state == 4 || state == 5 || state == 6 || state == 7 || state == 8) {
+    if (state == 3 || state == 4 || state == 5 || state == 6 || state == 7 ||
+        state == 8) {
       move(WindowSize.first, commandCursor);
     } else {
       pair<int, int> loc = updateLoc();
@@ -336,7 +335,7 @@ void VM::changeState(int mode) {
     state = 2;
     vcursor.updateStateOffset(0);
   }
-} 
+}
 void VM::loadMacro(int input) {
   if (input != 'q') curMacro.second.push_back(input);
 }
@@ -390,12 +389,12 @@ void VM::checkPlayEnd() {
     curPlay.pop();
     macroPointer.pop();
     if (type == "MOTIONDELETEC") {
-        exeMotionDelete(macroLocation.top());
-        changeState(1);
+      exeMotionDelete(macroLocation.top());
+      changeState(1);
     } else if (type == "MOTIONDELETED") {
-        exeMotionDelete(macroLocation.top());
+      exeMotionDelete(macroLocation.top());
     } else if (type == "MOTIONCOPY") {
-        exeMotionCopy(macroLocation.top());
+      exeMotionCopy(macroLocation.top());
     }
     macroLocation.pop();
     if (!macroPointer.empty()) macroPointer.top() += shift;
@@ -511,7 +510,7 @@ void VM::exeBufferCommand() {
 }
 
 void VM::handleNoEditBC(int input) {
-   switch (input) {
+  switch (input) {
     case KEY_LEFT:
       if (commandCursor > 1) commandCursor--;
       break;
@@ -545,143 +544,156 @@ void VM::handleNoEditBC(int input) {
   }
 }
 
-void VM::parseMultiplier() {
-   changeState(0);
-}
+void VM::parseMultiplier() { changeState(0); }
 
 void VM::handleMotionCopy(string cmd) {
   if (cmd.empty()) {
-     changeState(0); return;
-   } else if (isdigit(cmd[0])) {
-     parseMultiplier();
-   } else {
-     if (cmd[0] == 'y') {
-        clipBoard.first.clear();
-        clipBoard.first.push_back(text[vcursor.getRow()]);
-        changeState(0);
-        return;
-     } 
-     string name = "MOTIONCOPY";
-     macroLibrary[name] = vector<int>(cmd.begin(), cmd.end()); // keyWord !
-     if (macroLibrary[name][0] == '@') macroLibrary[name].push_back('\n'); // optional
-     macroPointer.push(0);
-     curPlay.push(pair<string, vector<int>>(name, macroLibrary[name]));
-     macroLocation.push(pair<int, int>(vcursor.getRow(), vcursor.getCol()));
-   }
-   changeState(0);
+    changeState(0);
+    return;
+  } else if (isdigit(cmd[0])) {
+    parseMultiplier();
+  } else {
+    if (cmd[0] == 'y') {
+      clipBoard.first.clear();
+      clipBoard.first.push_back(text[vcursor.getRow()]);
+      changeState(0);
+      return;
+    }
+    string name = "MOTIONCOPY";
+    macroLibrary[name] = vector<int>(cmd.begin(), cmd.end());  // keyWord !
+    if (macroLibrary[name][0] == '@')
+      macroLibrary[name].push_back('\n');  // optional
+    macroPointer.push(0);
+    curPlay.push(pair<string, vector<int>>(name, macroLibrary[name]));
+    macroLocation.push(pair<int, int>(vcursor.getRow(), vcursor.getCol()));
+  }
+  changeState(0);
 }
 
 void VM::handleMotionDelete(bool mode, string cmd) {
-   if (cmd.empty()) {
-     changeState(0); return;
-   } else if (isdigit(cmd[0])) {
-     parseMultiplier();
-   } else {
-     if ((!mode && cmd[0] == 'd') || (mode && cmd[0] == 'c')) {
-        text[vcursor.getRow()].clear();
-        if (text.size() > 1) {
-          text.erase(text.begin() + vcursor.getRow());
-        } else {
-          vcursor.updatePointer(-1);
-          vcursor.updatePointer(1);
-          vcursor.updatePointer(0);
-          view->printTextAll();
-          view->printPlaceholder();
-          pair<int, int> loc = updateLoc();
-          move(loc.first, loc.second);
-        }
-        vcursor.setCursor(ifNegativeThenZero(vcursor.getRow() - 1), 0);
-        if (!mode && cmd[0] == 'd') {
-            changeState(0);
-        } else if (mode && cmd[0] == 'c') {
-           changeState(1);
-        }
-        return;
-     } 
-     string name; 
-     if (mode) {
-       name = "MOTIONDELETEC";
-     } else { 
-       name = "MOTIONDELETED";
-     }
-     macroLibrary[name] = vector<int>(cmd.begin(), cmd.end()); // keyWord !
-     if (macroLibrary[name][0] == '@') macroLibrary[name].push_back('\n'); // optional
-     macroPointer.push(0);
-     curPlay.push(pair<string, vector<int>>(name, macroLibrary[name]));
-     macroLocation.push(pair<int, int>(vcursor.getRow(), vcursor.getCol()));
-   }
-   changeState(0);
+  if (cmd.empty()) {
+    changeState(0);
+    return;
+  } else if (isdigit(cmd[0])) {
+    parseMultiplier();
+  } else {
+    if ((!mode && cmd[0] == 'd') || (mode && cmd[0] == 'c')) {
+      text[vcursor.getRow()].clear();
+      if (text.size() > 1) {
+        text.erase(text.begin() + vcursor.getRow());
+      } else {
+        vcursor.updatePointer(-1);
+        vcursor.updatePointer(1);
+        vcursor.updatePointer(0);
+        view->printTextAll();
+        view->printPlaceholder();
+        pair<int, int> loc = updateLoc();
+        move(loc.first, loc.second);
+      }
+      vcursor.setCursor(ifNegativeThenZero(vcursor.getRow() - 1), 0);
+      if (!mode && cmd[0] == 'd') {
+        changeState(0);
+      } else if (mode && cmd[0] == 'c') {
+        changeState(1);
+      }
+      return;
+    }
+    string name;
+    if (mode) {
+      name = "MOTIONDELETEC";
+    } else {
+      name = "MOTIONDELETED";
+    }
+    macroLibrary[name] = vector<int>(cmd.begin(), cmd.end());  // keyWord !
+    if (macroLibrary[name][0] == '@')
+      macroLibrary[name].push_back('\n');  // optional
+    macroPointer.push(0);
+    curPlay.push(pair<string, vector<int>>(name, macroLibrary[name]));
+    macroLocation.push(pair<int, int>(vcursor.getRow(), vcursor.getCol()));
+  }
+  changeState(0);
 }
 
 void VM::exeMotionCopy(pair<int, int> ref) {
-   clipBoard.first.clear();
-   if (ref.first < vcursor.getRow()) {
-      clipBoard.first.push_back(text[ref.first].substr(ref.second));
-      if (ref.first + 1 < vcursor.getRow()) {
-        for (int i = ref.first + 1; i < vcursor.getRow(); ++i) {
-          clipBoard.first.push_back(text[i]);
-        }
+  clipBoard.first.clear();
+  if (ref.first < vcursor.getRow()) {
+    clipBoard.first.push_back(text[ref.first].substr(ref.second));
+    if (ref.first + 1 < vcursor.getRow()) {
+      for (int i = ref.first + 1; i < vcursor.getRow(); ++i) {
+        clipBoard.first.push_back(text[i]);
       }
-      clipBoard.first.push_back(text[vcursor.getRow()].substr(0, vcursor.getCol()));
-    } else if (ref.first > vcursor.getRow()) {
-      clipBoard.first.push_back(text[vcursor.getRow()].substr(vcursor.getCol()));
-      if (ref.first > vcursor.getRow() + 1) {
-        for (int i = vcursor.getRow() + 1; i < ref.first; ++i) {
-          clipBoard.first.push_back(text[i]);
-        }
-      }
-      clipBoard.first.push_back(text[ref.first].substr(0, ref.second));
-    } else if (ref.second > vcursor.getCol()){
-      clipBoard.first.push_back(text[ref.first].substr(vcursor.getCol(), ref.second - vcursor.getCol()));
-    } else if (ref.second < vcursor.getCol()) {
-      clipBoard.first.push_back(text[vcursor.getRow()].substr(ref.second, vcursor.getCol() - ref.second));
-    } else {
-      return;
     }
+    clipBoard.first.push_back(
+        text[vcursor.getRow()].substr(0, vcursor.getCol()));
+  } else if (ref.first > vcursor.getRow()) {
+    clipBoard.first.push_back(text[vcursor.getRow()].substr(vcursor.getCol()));
+    if (ref.first > vcursor.getRow() + 1) {
+      for (int i = vcursor.getRow() + 1; i < ref.first; ++i) {
+        clipBoard.first.push_back(text[i]);
+      }
+    }
+    clipBoard.first.push_back(text[ref.first].substr(0, ref.second));
+  } else if (ref.second > vcursor.getCol()) {
+    clipBoard.first.push_back(text[ref.first].substr(
+        vcursor.getCol(), ref.second - vcursor.getCol()));
+  } else if (ref.second < vcursor.getCol()) {
+    clipBoard.first.push_back(text[vcursor.getRow()].substr(
+        ref.second, vcursor.getCol() - ref.second));
+  } else {
+    return;
+  }
 }
 void VM::exeMotionDelete(pair<int, int> ref) {
-    if (ref.first < vcursor.getRow()) {
-      text[ref.first].erase(text[ref.first].begin() + ref.second, text[ref.first].end());
-      text[vcursor.getRow()].erase(text[vcursor.getRow()].begin(), text[vcursor.getRow()].begin() + vcursor.getCol());
-      if (text[ref.first].empty()) {
-        text.erase(text.begin() + ref.first);
-        vcursor.setCursor(ref.first, ref.second);
-      } else {
-        vcursor.setCursor(ifNegativeThenZero(ref.first - 1), 0);
-      }
-      if (text[vcursor.getRow()].empty()) text.erase(text.begin() + vcursor.getRow());
-      if (ref.first + 1 < vcursor.getRow()) {
-        text.erase(text.begin() + ref.first + 1, text.begin() + vcursor.getRow());
-      }
-    } else if (ref.first > vcursor.getRow()) {
-      text[vcursor.getRow()].erase(text[vcursor.getRow()].begin() + vcursor.getCol(), text[vcursor.getRow()].end());
-      text[ref.first].erase(text[ref.first].begin(), text[ref.first].begin() + ref.second);
-      if (text[ref.first].empty()) text.erase(text.begin() + ref.first);
-      if (text[vcursor.getRow()].empty()) {
-        text.erase(text.begin() + vcursor.getRow());
-        vcursor.setCursor(ifNegativeThenZero(vcursor.getRow() - 1), 0);
-      }
-      if (ref.first > vcursor.getRow() + 1) {
-        text.erase(text.begin() + vcursor.getRow() + 1, text.begin() + ref.first);
-      }
-
-    } else if (ref.second > vcursor.getCol()){
-      text[ref.first].erase(text[ref.first].begin() + vcursor.getCol(), text[ref.first].begin() + ref.second);
-    } else if (ref.second < vcursor.getCol()) {
-      text[ref.first].erase(text[ref.first].begin() + ref.second, text[ref.first].begin() + vcursor.getCol());
+  if (ref.first < vcursor.getRow()) {
+    text[ref.first].erase(text[ref.first].begin() + ref.second,
+                          text[ref.first].end());
+    text[vcursor.getRow()].erase(
+        text[vcursor.getRow()].begin(),
+        text[vcursor.getRow()].begin() + vcursor.getCol());
+    if (text[ref.first].empty()) {
+      text.erase(text.begin() + ref.first);
       vcursor.setCursor(ref.first, ref.second);
     } else {
-      return;
+      vcursor.setCursor(ifNegativeThenZero(ref.first - 1), 0);
     }
-    vcursor.updatePointer(-1);
-    vcursor.updatePointer(1);
-    vcursor.updatePointer(0);
-    view->printTextAll();
-    view->printPlaceholder();
-    pair<int, int> loc = updateLoc();
-    move(loc.first, loc.second);
-}
+    if (text[vcursor.getRow()].empty())
+      text.erase(text.begin() + vcursor.getRow());
+    if (ref.first + 1 < vcursor.getRow()) {
+      text.erase(text.begin() + ref.first + 1, text.begin() + vcursor.getRow());
+    }
+  } else if (ref.first > vcursor.getRow()) {
+    text[vcursor.getRow()].erase(
+        text[vcursor.getRow()].begin() + vcursor.getCol(),
+        text[vcursor.getRow()].end());
+    text[ref.first].erase(text[ref.first].begin(),
+                          text[ref.first].begin() + ref.second);
+    if (text[ref.first].empty()) text.erase(text.begin() + ref.first);
+    if (text[vcursor.getRow()].empty()) {
+      text.erase(text.begin() + vcursor.getRow());
+      vcursor.setCursor(ifNegativeThenZero(vcursor.getRow() - 1), 0);
+    }
+    if (ref.first > vcursor.getRow() + 1) {
+      text.erase(text.begin() + vcursor.getRow() + 1, text.begin() + ref.first);
+    }
 
+  } else if (ref.second > vcursor.getCol()) {
+    text[ref.first].erase(text[ref.first].begin() + vcursor.getCol(),
+                          text[ref.first].begin() + ref.second);
+  } else if (ref.second < vcursor.getCol()) {
+    text[ref.first].erase(text[ref.first].begin() + ref.second,
+                          text[ref.first].begin() + vcursor.getCol());
+    vcursor.setCursor(ref.first, ref.second);
+  } else {
+    return;
+  }
+  vcursor.updatePointer(-1);
+  vcursor.updatePointer(1);
+  vcursor.updatePointer(0);
+  view->printTextAll();
+  view->printPlaceholder();
+  pair<int, int> loc = updateLoc();
+  move(loc.first, loc.second);
+}
 
 void VM::handleBCTemplate(int input, int mode) {
   switch (input) {
@@ -1043,7 +1055,7 @@ void VM::handleCommands(int input, bool* shouldSave) {
       vcursor.handleP(clipBoard);
       view->printTextAll();  // remove later
     default:
-      if(std::isdigit(input)) {
+      if (std::isdigit(input)) {
         state = 8;
         commandCursor = 1;
         bufferCommand = string(1, char(input));
