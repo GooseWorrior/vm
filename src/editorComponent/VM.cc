@@ -324,6 +324,17 @@ void VM::changeState(int mode) {
     vcursor.updateStateOffset(0);
   }
 }
+
+void VM::forcePrint() {
+  vcursor.updatePointer(-1);
+  vcursor.updatePointer(1);
+  vcursor.updatePointer(0);
+  view->printTextAll();
+  view->printPlaceholder();
+  pair<int, int> loc = updateLoc();
+  move(loc.first, loc.second);
+}
+
 void VM::loadMacro(int input) {
   if (input != 'q') curMacro.second.push_back(input);
 }
@@ -571,13 +582,7 @@ void VM::handleMotionDelete(bool mode, string cmd) {
       if (text.size() > 1) {
         text.erase(text.begin() + vcursor.getRow());
       } else {
-        vcursor.updatePointer(-1);
-        vcursor.updatePointer(1);
-        vcursor.updatePointer(0);
-        view->printTextAll();
-        view->printPlaceholder();
-        pair<int, int> loc = updateLoc();
-        move(loc.first, loc.second);
+        forcePrint();
       }
       vcursor.setCursor(ifNegativeThenZero(vcursor.getRow() - 1), 0);
       if (!mode && cmd[0] == 'd') {
@@ -632,6 +637,7 @@ void VM::exeMotionCopy(pair<int, int> ref) {
     return;
   }
 }
+
 void VM::exeMotionDelete(pair<int, int> ref) {
   if (ref.first < vcursor.getRow()) {
     text[ref.first].erase(text[ref.first].begin() + ref.second,
@@ -675,13 +681,7 @@ void VM::exeMotionDelete(pair<int, int> ref) {
   } else {
     return;
   }
-  vcursor.updatePointer(-1);
-  vcursor.updatePointer(1);
-  vcursor.updatePointer(0);
-  view->printTextAll();
-  view->printPlaceholder();
-  pair<int, int> loc = updateLoc();
-  move(loc.first, loc.second);
+  forcePrint();
 }
 
 void VM::handleBCTemplate(int input, int mode) {
@@ -1038,11 +1038,13 @@ void VM::handleCommands(int input, bool* shouldSave) {
       break;
     case 112:  // p
       vcursor.handlep(clipBoard);
-      view->printTextAll();  // remove later
+      forcePrint();
+      //view->printTextAll();  // remove later
       break;
-    case 80:  // P
+    case 80:   // P
       vcursor.handleP(clipBoard);
-      view->printTextAll();  // remove later
+      forcePrint();
+      //view->printTextAll();  // remove later
       break;
     default:
       if (std::isdigit(input)) {
