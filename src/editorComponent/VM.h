@@ -52,9 +52,17 @@ class VM : public Model {
   pair<string, vector<int>> curMacro;
   std::stack<pair<string, vector<int>>> curPlay;
   std::stack<int> macroPointer;
+  std::stack<pair<int, int>> macroLocation;
   pair<int, int> undoCount;
   string vmStatusString;
+  vector<string> clipBoard;
 
+  void exeMotionDelete(pair<int, int> ref);
+  void exeMotionCopy(pair<int, int> ref);
+  void parseMultiplier();
+  void handleMotionDelete(bool mode, string cmd);
+  void handleMotionCopy(string cmd);
+  void changeState(int mode);
   int macroGets();
   void checkPlayEnd();
   int checkLineLength(int x, int lineLength);
@@ -67,6 +75,7 @@ class VM : public Model {
   void handleCommands(int input, bool* shouldSave);
   // void handleBufferCommands(int input);
   void handleBCTemplate(int input, int state);
+  void handleNoEditBC(int input);
   void handleGeneralBC();
   void handleSearchForward();
   void handleSearchBackward();
