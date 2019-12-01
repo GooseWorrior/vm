@@ -55,7 +55,6 @@ class VM : public Model {
   std::stack<pair<int, int>> macroLocation;
   pair<int, int> undoCount;
   string vmStatusString;
-  vector<string> clipBoard;
 
   void exeMotionDelete(pair<int, int> ref);
   void exeMotionCopy(pair<int, int> ref);

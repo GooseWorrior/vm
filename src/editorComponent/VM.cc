@@ -210,7 +210,7 @@ void VM::process() {
           if (state == 0) {
             handleCommands(input, &shouldSave);
             switch (input) {
-              case 115:  // s, doesn't work yet
+              /*case 115:  // s, doesn't work yet
                 if (shouldSave) {
                   saveText();
                   shouldSave = false;
@@ -220,8 +220,8 @@ void VM::process() {
                 state = 1;                     // replace later
                 vcursor.updateStateOffset(0);  // replace later
                 view->printTextAll();          // replace later
-                break;
-              case 120:  // x
+                break; */
+              case 120: { // x
                 if (shouldSave) {
                   saveText();
                   shouldSave = false;
@@ -556,8 +556,8 @@ void VM::handleMotionCopy(string cmd) {
      parseMultiplier();
    } else {
      if (cmd[0] == 'y') {
-        clipBoard.clear();
-        clipBoard.push_back(text[vcursor.getRow()]);
+        clipBoard.first.clear();
+        clipBoard.first.push_back(text[vcursor.getRow()]);
         changeState(0);
         return;
      } 
@@ -614,7 +614,30 @@ void VM::handleMotionDelete(bool mode, string cmd) {
 }
 
 void VM::exeMotionCopy(pair<int, int> ref) {
-   clipBoard.clear();
+   clipBoard.first.clear();
+   if (ref.first < vcursor.getRow()) {
+      clipBoard.first.push_back(text[ref.first].substr(ref.second));
+      if (ref.first + 1 < vcursor.getRow()) {
+        for (int i = ref.first + 1; i < vcursor.getRow(); ++i) {
+          clipBoard.first.push_back(text[i]);
+        }
+      }
+      clipBoard.first.push_back(text[vcursor.getRow()].substr(0, vcursor.getCol()));
+    } else if (ref.first > vcursor.getRow()) {
+      clipBoard.first.push_back(text[vcursor.getRow()].substr(vcursor.getCol()));
+      if (ref.first > vcursor.getRow() + 1) {
+        for (int i = vcursor.getRow() + 1; i < ref.first; ++i) {
+          clipBoard.first.push_back(text[i]);
+        }
+      }
+      clipBoard.first.push_back(text[ref.first].substr(0, ref.second));
+    } else if (ref.second > vcursor.getCol()){
+      clipBoard.first.push_back(text[ref.first].substr(vcursor.getCol(), ref.second - vcursor.getCol()));
+    } else if (ref.second < vcursor.getCol()) {
+      clipBoard.first.push_back(text[vcursor.getRow()].substr(ref.second, vcursor.getCol() - ref.second));
+    } else {
+      return;
+    }
 }
 void VM::exeMotionDelete(pair<int, int> ref) {
     if (ref.first < vcursor.getRow()) {

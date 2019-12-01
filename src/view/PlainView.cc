@@ -94,7 +94,7 @@ void PlainView::printTextLine(int input, pair<int, int> prevCursor,
 
 void PlainView::printTextChar(int input, int prevChar) {
   pair<int, int> loc = vm->updateLoc();
-  if (input == KEY_BACKSPACE || input == 'x' || input == 's') {
+  if (input == KEY_BACKSPACE || input == 'x') {
     move(loc.first, loc.second);
     if (prevChar == '\t')
       addch('\t');
