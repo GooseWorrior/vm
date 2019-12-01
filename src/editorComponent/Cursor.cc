@@ -544,16 +544,15 @@ void Cursor::handlep(pair<vector<string>, bool>& clipBoard) {
   }
 }
 
-// will add special case later
 void Cursor::handleP(pair<vector<string>, bool>& clipBoard) {
   if (!clipBoard.first.size()) return;
 
   string firstChunk;
   string secondChunk;
   if (theText[theCursor.first].length()) {
-    firstChunk = theText[theCursor.first].substr(0, theCursor.second + 1);
+    firstChunk = theText[theCursor.first].substr(0, theCursor.second);
     secondChunk = theText[theCursor.first].substr(
-        theCursor.second + 1, theText[theCursor.first].length());
+        theCursor.second, theText[theCursor.first].length());
   }
 
   if (clipBoard.second) {  // special case

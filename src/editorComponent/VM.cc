@@ -1054,6 +1054,7 @@ void VM::handleCommands(int input, bool* shouldSave) {
     case 80:  // P
       vcursor.handleP(clipBoard);
       view->printTextAll();  // remove later
+      break;
     default:
       if (std::isdigit(input)) {
         state = 8;
