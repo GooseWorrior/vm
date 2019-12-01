@@ -56,6 +56,7 @@ class Cursor {
   char handlex();
   void handlep(pair<vector<string>, bool>& clipBoard);
   void handleP(pair<vector<string>, bool>& clipBoard);
+  void handler(int input);
   void updatePointer(int mode);
   int calculateLine();
   void updateStateOffset(int offset);

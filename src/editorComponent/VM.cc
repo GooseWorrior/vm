@@ -214,6 +214,12 @@ void VM::process() {
                 prevChar = vcursor.handlex();
                 break;
               }
+              case 114:  // r
+                edit = true;
+                prevChar = controller->getChar();
+                vcursor.handler(prevChar);
+                view->printTextAll();
+                break;
               case 79: {  // O
                 if (shouldSave) {
                   saveText();
@@ -955,10 +961,10 @@ void VM::handleCommands(int input, bool* shouldSave) {
       vcursor.handleCaret();
       break;
     case 70:  // big F
-      vcursor.handleF(getch());
+      vcursor.handleF(controller->getChar());
       break;
     case 102:  // little f
-      vcursor.handlef(getch());
+      vcursor.handlef(controller->getChar());
       break;
     case 59:  // semi colon ;
       vcursor.handleSemiColon();

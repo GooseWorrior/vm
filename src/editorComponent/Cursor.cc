@@ -691,6 +691,11 @@ void Cursor::handleb() {
   }
 }
 
+void Cursor::handler(int input) {
+  if (!theText[theCursor.first].length()) return;
+  theText[theCursor.first][theCursor.second] = input;
+}
+
 void Cursor::handlew() {
   // cursor is already at the end
   if (theCursor.first == ifNegativeThenZero(theText.size() - 1) &&
