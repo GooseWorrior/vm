@@ -51,6 +51,7 @@ class Cursor {
   void handlew();
   void handleCtrlD();
   void handleCtrlB();
+  void handleCtrlU();
   char handlex();
   void updatePointer(int mode);
   int calculateLine();
