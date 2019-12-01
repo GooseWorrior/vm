@@ -194,17 +194,17 @@ void VM::process() {
           if (state == 0) {
             handleCommands(input, &shouldSave);
             switch (input) {
-              /*case 115:  // s, doesn't work yet
+              case 115:  // s, doesn't work yet
                 if (shouldSave) {
                   saveText();
                   shouldSave = false;
                 }
                 edit = true;
                 vcursor.handlex();
-                state = 1;                     // replace later
-                vcursor.updateStateOffset(0);  // replace later
-                view->printTextAll();          // replace later
-                break; */
+                changeState(1);
+                // forcePrint();
+                view->printTextAll();  // works with this
+                break;
               case 120: {  // x
                 if (shouldSave) {
                   saveText();
@@ -1039,12 +1039,12 @@ void VM::handleCommands(int input, bool* shouldSave) {
     case 112:  // p
       vcursor.handlep(clipBoard);
       forcePrint();
-      //view->printTextAll();  // remove later
+      // view->printTextAll();  // remove later
       break;
-    case 80:   // P
+    case 80:  // P
       vcursor.handleP(clipBoard);
       forcePrint();
-      //view->printTextAll();  // remove later
+      // view->printTextAll();  // remove later
       break;
     default:
       if (std::isdigit(input)) {
