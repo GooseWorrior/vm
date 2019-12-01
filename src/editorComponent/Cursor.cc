@@ -532,6 +532,7 @@ void Cursor::handlep(pair<vector<string>, bool>& clipBoard) {
       theText.insert(theText.begin() + theCursor.first + 1 + i,
                      clipBoard.first[i]);
     nextLine();
+    theCursor.second = 0;
   } else if (clipBoard.first.size() == 1) {
     theText[theCursor.first] = firstChunk + clipBoard.first[0] + secondChunk;
     ++theCursor.second;
@@ -560,6 +561,7 @@ void Cursor::handleP(pair<vector<string>, bool>& clipBoard) {
   if (clipBoard.second) {  // special case
     for (size_t i = 0; i < clipBoard.first.size(); ++i)
       theText.insert(theText.begin() + theCursor.first + i, clipBoard.first[i]);
+    theCursor.second = 0;
   } else if (clipBoard.first.size() == 1) {
     theText[theCursor.first] = firstChunk + clipBoard.first[0] + secondChunk;
     ++theCursor.second;

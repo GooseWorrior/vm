@@ -83,18 +83,6 @@ void VM::loadFile(string filename) {
     }
   }
   if (line.length() || !text.size()) text.push_back(line);  // pushes last line
-  // WindowPointer = pair<int, int>(0, text.size() - 1);
-
-  // clear();
-  // refresh();
-  // view->printTextAll();
-
-  // std::ofstream f1;
-  // f1.open("debug.txt");
-  // for (auto i : text) {
-  //   f1 << i << '\n';
-  // }
-  // f1.close();
   setFilenameStatus();
 
   vcursor.setCursor(text.size() - 1,
@@ -128,8 +116,8 @@ void VM::process() {
   int prevInput = 0;
   int input = 0;
   bool shouldSave = true;
-  std::fstream f1;
-  f1.open("debug.txt");
+  // std::fstream f1;
+  // f1.open("debug.txt");
 
   while (exitCode && input != '|') {
     if (!macroPointer.empty()) checkPlayEnd();
@@ -314,12 +302,12 @@ void VM::process() {
       move(loc.first, loc.second);
     }
     if (curPlay.size() > 0) {
-      std::ofstream f1;
-      f1.open("debug.txt", std::ios::app);
-      for (auto j : curPlay.top().second) f1 << wchar_t(j) << " ";
-      f1 << '\n';
-      f1 << macroPointer.top() << '\n';
-      f1.close();
+      // std::ofstream f1;
+      // f1.open("debug.txt", std::ios::app);
+      // for (auto j : curPlay.top().second) f1 << wchar_t(j) << " ";
+      // f1 << '\n';
+      // f1 << macroPointer.top() << '\n';
+      // f1.close();
     }
   }
 }
@@ -473,8 +461,6 @@ void VM::exeBufferCommand() {
                        "L, " + to_string(count) + "C" + " written";
     } else if (cmd == "q") {
       if (savedSize != undoStack.size()) {
-        // std::fstream f{"debug.txt"};
-        // f << savedSize << " " << undoStack.size();
         theComponents.addElement({0});
         errorMessage = "E37: No write since last change (add ! to override)";
       } else {
@@ -553,8 +539,8 @@ void VM::handleMotionCopy(string cmd) {
   } else if (isdigit(cmd[0])) {
     parseMultiplier();
   } else {
+    clipBoard.second = cmd[0] == 'y' || cmd[0] == 'j' || cmd[0] == 'k';
     if (cmd[0] == 'y') {
-      clipBoard.second = true;
       clipBoard.first.clear();
       clipBoard.first.push_back(text[vcursor.getRow()]);
       changeState(0);
@@ -1076,9 +1062,7 @@ void VM::saveText() {
       fputs(text[i].c_str(), pFile);
     }
   }
-  // std::fstream f;
-  // f.open("debug.txt");
-  // for (auto i : text) f << i << "\n";
+
   rewind(pFile);
   undoStack.push_back(pFile);
 
@@ -1089,8 +1073,6 @@ void VM::saveText() {
 }
 
 void VM::loadUndo() {
-  std::fstream f;
-  f.open("debug.txt");
   if (undoStack.size()) {
     char tempChar;
     FILE* pFile = undoStack.back();
