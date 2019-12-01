@@ -987,6 +987,16 @@ void VM::handleCommands(int input, bool* shouldSave) {
         bufferCommand = "q";
       }
       break;
+    case 83:  // S
+      changeState(1);
+      vcursor.setCursor(vcursor.getRow(), 0);
+      text[vcursor.getRow()] = "";
+      forcePrint();
+      // move(0, vcursor.getRow());
+      // refresh();
+      // clrtoeol();
+      // refresh();
+      break;
     case 64:  // @
       state = 7;
       commandCursor = 1;
