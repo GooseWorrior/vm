@@ -355,21 +355,36 @@ void Cursor::handleSemiColon() {
 void Cursor::updateStateOffset(int offset) { stateOffset = offset; }
 
 void Cursor::handleCtrlD() {
-  // std::fstream temp;
-  // temp.open("debug.txt");
+  std::fstream f;
+  f.open("debug.txt");
   int toMoveRow = std::min(theCursor.first + winSize.first / 2,
                            ifNegativeThenZero(theText.size() - 1));
   int col = 0;
-  while ((theText[toMoveRow][col] == ' ' || theText[toMoveRow][col] == '\t') &&
-         col < theText[toMoveRow].length())
-    ++col;
 
-  if (winSize.first / 2 <= 6 && theCursor.first < winSize.first / 2) {
+  if (winSize.first / 2 < 6 && theCursor.first < winSize.first / 2) {
+    while ((theText[winSize.first - 1][col] == ' ' ||
+            theText[winSize.first - 1][col] == '\t') &&
+           col < theText[winSize.first - 1].length())
+      ++col;
     setCursor(winSize.first - 1, col);
   } else if (theCursor.first < winSize.first / 2) {
+    while ((theText[(winSize.first) / 2 + 5][col] == ' ' ||
+            theText[(winSize.first) / 2 + 5][col] == '\t') &&
+           col < theText[(winSize.first) / 2 + 5].length())
+      ++col;
     setCursor((winSize.first) / 2 + 5, col);
   } else {
+    while (
+        (theText[toMoveRow][col] == ' ' || theText[toMoveRow][col] == '\t') &&
+        col < theText[toMoveRow].length())
+      ++col;
     setCursor(toMoveRow, col);
+  }
+  if (toMoveRow != ifNegativeThenZero(theText.size() - 1)) {
+    winPtr.first = theCursor.first - 6;
+    winPtr.second = std::min(winPtr.first + winSize.first,
+                             ifNegativeThenZero(theText.size() - 1));
+    f << winPtr.first << ", " << winPtr.second << "\n";
   }
 }
 
@@ -414,6 +429,25 @@ void Cursor::handleCtrlB() {
   // }
 }
 
+void Cursor::handleCtrlU() {
+  // std::fstream temp;
+  // temp.open("debug.txt");
+  int toMoveRow = std::min(theCursor.first + winSize.first / 2,
+                           ifNegativeThenZero(theText.size() - 1));
+  int col = 0;
+  while ((theText[toMoveRow][col] == ' ' || theText[toMoveRow][col] == '\t') &&
+         col < theText[toMoveRow].length())
+    ++col;
+
+  if (winSize.first / 2 <= 6 && theCursor.first < winSize.first / 2) {
+    setCursor(winSize.first - 1, col);
+  } else if (theCursor.first < winSize.first / 2) {
+    setCursor((winSize.first) / 2 + 5, col);
+  } else {
+    setCursor(toMoveRow, col);
+  }
+}
+
 char Cursor::handlex() {
   if (!theText[theCursor.first].length()) return 'a';
   if (theText[theCursor.first].length() == 1) {
@@ -432,10 +466,6 @@ char Cursor::handlex() {
     setCursor(theCursor.first, theCursor.second - 1);
     return temp;
   }
-
-  // theText[theCursor.first].substr(0, theCursor.first) +
-  // theText[theCursor.first].substr(theCursor.first + 1,
-  //                                 theText[theCursor.first].length());
 }
 
 void Cursor::handleb() {

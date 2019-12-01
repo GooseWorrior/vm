@@ -83,6 +83,7 @@ class VM : public Model {
   void searchMinusOne();
   void searchPlusOne();
   void findNear();
+  void setFilenameStatus();
 
  public:
   VM(string filename);

@@ -50,6 +50,19 @@ VM::VM(string filename)
 
 int ifNegativeThenZero(int x);
 
+void VM::setFilenameStatus() {
+  if (checkExists(fileName)) {
+    int count = 0;
+    for (auto i : text) count += i.size();
+    vmStatusString = "\"" + fileName + "\" " + to_string(text.size()) + "L, " +
+                     to_string(count) + "C";
+  } else {
+    vmStatusString = "\"" + fileName + "\" " + "[New File]";
+  }
+
+  if (CFile) vmStatusString += " [CFile]";
+}
+
 void VM::loadFile(string filename) {
   // load files
   fileName = filename;  // in case we change file
@@ -80,16 +93,7 @@ void VM::loadFile(string filename) {
   //   f1 << i << '\n';
   // }
   // f1.close();
-  if (checkExists(filename)) {
-    int count = 0;
-    for (auto i : text) count += i.size();
-    vmStatusString = "\"" + filename + "\" " + to_string(text.size()) + "L, " +
-                     to_string(count) + "C";
-  } else {
-    vmStatusString = "\"" + filename + "\" " + "[New File]";
-  }
-
-  if (CFile) vmStatusString += " [CFile]";
+  setFilenameStatus();
 
   vcursor.setCursor(text.size() - 1,
                     ifNegativeThenZero(text.back().length() - 1));
@@ -126,7 +130,7 @@ void VM::process() {
   f1.open("debug.txt");
 
   while (exitCode && input != '|') {
-    // f1 << WindowPointer.first << ", " << WindowPointer.second << "\n";
+    // for (auto i : text) f1 << i << "\n";
     if (!macroPointer.empty()) checkPlayEnd();
     prevInput = input;
     if (!macroPointer.empty()) {
@@ -662,6 +666,12 @@ void VM::handleCommands(int input, bool* shouldSave) {
       break;
     case 4:  // ^D
       vcursor.handleCtrlD();
+      break;
+    case 7:  // ^G
+      setFilenameStatus();
+      break;
+    case 21:  // ^U
+      vcursor.handleCtrlU();
       break;
     case 65:  // A
       vcursor.setCursor(vcursor.getRow(), text[vcursor.getRow()].length());
