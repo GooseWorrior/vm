@@ -2,7 +2,6 @@
 #define CRUSH_H
 
 #include <ctype.h>
-#include <math.h>
 #include <stdio.h>
 #include <memory>
 #include <string>

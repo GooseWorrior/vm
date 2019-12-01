@@ -554,6 +554,7 @@ void VM::handleMotionCopy(string cmd) {
     parseMultiplier();
   } else {
     if (cmd[0] == 'y') {
+      clipBoard.second = true;
       clipBoard.first.clear();
       clipBoard.first.push_back(text[vcursor.getRow()]);
       changeState(0);
@@ -1088,10 +1089,13 @@ void VM::saveText() {
 }
 
 void VM::loadUndo() {
+  std::fstream f;
+  f.open("debug.txt");
   if (undoStack.size()) {
     char tempChar;
     FILE* pFile = undoStack.back();
     string line;
+    int textRows = text.size();
     text.clear();
     while ((tempChar = fgetc(pFile)) != EOF) {
       if (tempChar == '\n') {
@@ -1125,7 +1129,12 @@ void VM::loadUndo() {
     if (undoStack.size() >= undoCount.second) {
       undoCount = std::make_pair(undoCount.first, undoStack.size());
     }
-    vmStatusString = "1 change; before #" +
+    int rowsChanged = std::max(textRows - static_cast<int>(text.size()),
+                               static_cast<int>(text.size()) - textRows) +
+                      1;
+    string changes = rowsChanged > 1 ? to_string(rowsChanged) + " changes;"
+                                     : to_string(rowsChanged) + " change;";
+    vmStatusString = changes + " before #" +
                      std::to_string(undoCount.first + undoStack.size()) + "  ";
     undoStack.pop_back();
     if (!undoStack.size()) {

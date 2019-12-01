@@ -1,7 +1,9 @@
 #include "Cursor.h"
+#include <math.h>
 #include <ncurses.h>
 #include <algorithm>
 #include <fstream>
+
 using std::min;
 using std::pair;
 using std::string;
