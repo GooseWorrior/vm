@@ -564,6 +564,8 @@ void VM::handleMotionDelete(bool mode, string cmd) {
   } else if (isdigit(cmd[0])) {
     parseMultiplier();
   } else {
+    clipBoard.second =
+        cmd[0] == 'd' || cmd[0] == 'c' || cmd[0] == 'j' || cmd[0] == 'k';
     if ((!mode && cmd[0] == 'd') || (mode && cmd[0] == 'c')) {
       text[vcursor.getRow()].clear();
       if (text.size() > 1) {
