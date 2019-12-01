@@ -47,6 +47,7 @@ class VM : public Model {
   vector<FILE*> undoStack;                           // row text and which row
   vector<pair<pair<int, int>, time_t>> cursorStack;  // cursor position and time
   vector<pair<int, int>> searchLibrary;
+  pair<vector<string>, bool> clipBoard;
   std::map<string, vector<int>> macroLibrary;
   pair<string, vector<int>> curMacro;
   std::stack<pair<string, vector<int>>> curPlay;

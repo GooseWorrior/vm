@@ -64,6 +64,11 @@ void VM::setFilenameStatus() {
 }
 
 void VM::loadFile(string filename) {
+  clipBoard.first.push_back("yeet");
+  clipBoard.first.push_back("hello");
+  clipBoard.first.push_back("bye");
+  clipBoard.first.push_back("");
+  clipBoard.second = true;
   // load files
   fileName = filename;  // in case we change file
   CFile = isCFile();
@@ -126,11 +131,10 @@ void VM::process() {
   int prevInput = 0;
   int input = 0;
   bool shouldSave = true;
-  std::ofstream f1;
+  std::fstream f1;
   f1.open("debug.txt");
 
   while (exitCode && input != '|') {
-    // for (auto i : text) f1 << i << "\n";
     if (!macroPointer.empty()) checkPlayEnd();
     prevInput = input;
     if (!macroPointer.empty()) {
@@ -204,12 +208,22 @@ void VM::process() {
           if (state == 0) {
             handleCommands(input, &shouldSave);
             switch (input) {
+              case 115:  // s, doesn't work yet
+                if (shouldSave) {
+                  saveText();
+                  shouldSave = false;
+                }
+                edit = true;
+                vcursor.handlex();
+                state = 1;                     // replace later
+                vcursor.updateStateOffset(0);  // replace later
+                view->printTextAll();          // replace later
+                break;
               case 120:  // x
                 if (shouldSave) {
                   saveText();
                   shouldSave = false;
                 }
-
                 edit = true;
                 prevChar = vcursor.handlex();
                 break;
@@ -667,6 +681,9 @@ void VM::handleCommands(int input, bool* shouldSave) {
     case 4:  // ^D
       vcursor.handleCtrlD();
       break;
+    case 6:  // ^F v
+      vcursor.handleCtrlF();
+      break;
     case 7:  // ^G
       setFilenameStatus();
       break;
@@ -701,6 +718,9 @@ void VM::handleCommands(int input, bool* shouldSave) {
       vcursor.setCursor(
           vcursor.getRow(),
           ifNegativeThenZero(text[vcursor.getRow()].length() - 1));
+      break;
+    case 74:
+      vcursor.handleJ();
       break;
     case 48:
       // set to start of line
@@ -780,6 +800,13 @@ void VM::handleCommands(int input, bool* shouldSave) {
     case 78:
       searchMinusOne();
       break;
+    case 112:  // p
+      vcursor.handlep(clipBoard);
+      view->printTextAll();  // remove later
+      break;
+    case 80:  // P
+      vcursor.handleP(clipBoard);
+      view->printTextAll();  // remove later
   }
 }
 

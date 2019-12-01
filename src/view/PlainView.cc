@@ -71,9 +71,9 @@ void PlainView::printTextAfterward(int input, pair<int, int> prevCursor) {
 
 void PlainView::printTextLine(int input, pair<int, int> prevCursor,
                               int prevChar) {
-  if ((input == KEY_BACKSPACE || input == 'x') && prevChar == 0) return;
+  if ((input == KEY_BACKSPACE) && prevChar == 0) return;
   pair<int, int> loc = vm->updateLoc();
-  if (input == KEY_BACKSPACE || input == 'x') {
+  if (input == KEY_BACKSPACE) {
     clrtoeol();
     move(loc.first, loc.second);
     for (size_t i = vm->vcursor.getCol();
@@ -94,7 +94,7 @@ void PlainView::printTextLine(int input, pair<int, int> prevCursor,
 
 void PlainView::printTextChar(int input, int prevChar) {
   pair<int, int> loc = vm->updateLoc();
-  if (input == KEY_BACKSPACE || input == 'x') {
+  if (input == KEY_BACKSPACE || input == 'x' || input == 's') {
     move(loc.first, loc.second);
     if (prevChar == '\t')
       addch('\t');

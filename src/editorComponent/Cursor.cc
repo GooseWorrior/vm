@@ -355,16 +355,22 @@ void Cursor::handleSemiColon() {
 void Cursor::updateStateOffset(int offset) { stateOffset = offset; }
 
 void Cursor::handleCtrlD() {
+  if (theText.size() == 1) return;
+
   int toMoveRow = std::min(theCursor.first + winSize.first / 2,
                            ifNegativeThenZero(theText.size() - 1));
   int col = 0;
-
-  if (winSize.first / 2 < 6 && theCursor.first < winSize.first / 2) {
-    while ((theText[winSize.first - 1][col] == ' ' ||
-            theText[winSize.first - 1][col] == '\t') &&
-           col < theText[winSize.first - 1].length())
+  if (winSize.first >= theText.size()) {  // prevent seg fault
+    while ((theText[0][col] == ' ' || theText[0][col] == '\t') &&
+           col < theText[0].length())
       ++col;
-    setCursor(winSize.first - 1, col);
+    setCursor(0, col);
+  } else if (winSize.first / 2 < 6 && theCursor.first < winSize.first / 2) {
+    int offset = ifNegativeThenZero(winSize.first - 1);
+    while ((theText[offset][col] == ' ' || theText[offset][col] == '\t') &&
+           col < theText[offset].length())
+      ++col;
+    setCursor(offset, col);
   } else if (theCursor.first < winSize.first / 2) {
     while ((theText[(winSize.first) / 2 + 5][col] == ' ' ||
             theText[(winSize.first) / 2 + 5][col] == '\t') &&
@@ -417,21 +423,15 @@ void Cursor::handleCtrlB() {
 }
 
 void Cursor::handleCtrlU() {
-  int toMoveRow = std::max(theCursor.first - winSize.first / 2, 0);
+  int toMoveRow = ifNegativeThenZero(theCursor.first - winSize.first / 2);
   int col = 0;
 
-  if (winSize.first / 2 < 6 && theCursor.first > winSize.first / 2) {
-    while ((theText[winSize.first - 1][col] == ' ' ||
-            theText[winSize.first - 1][col] == '\t') &&
-           col < theText[winSize.first - 1].length())
+  if (theCursor.first > winSize.first / 2) {
+    int offset = ifNegativeThenZero(winPtr.first + (winSize.first) / 2 - 5);
+    while ((theText[offset][col] == ' ' || theText[offset][col] == '\t') &&
+           col < theText[offset].length())
       ++col;
-    setCursor(winSize.first + 1, col);
-  } else if (theCursor.first > winSize.first / 2) {
-    while ((theText[(winSize.first) / 2 + 5][col] == ' ' ||
-            theText[(winSize.first) / 2 + 5][col] == '\t') &&
-           col < theText[(winSize.first) / 2 + 5].length())
-      ++col;
-    setCursor(winPtr.first + (winSize.first) / 2 - 5, col);
+    setCursor(offset, col);
   } else {
     while (
         (theText[toMoveRow][col] == ' ' || theText[toMoveRow][col] == '\t') &&
@@ -439,14 +439,63 @@ void Cursor::handleCtrlU() {
       ++col;
     setCursor(toMoveRow, col);
   }
-  if (toMoveRow != ifNegativeThenZero(theText.size() - 1)) {
+  if (toMoveRow != 0) {
     winPtr.second = theCursor.first + 5;
-    winPtr.first = std::max(winPtr.second - winSize.first, 0);
+    winPtr.first = ifNegativeThenZero(winPtr.second - winSize.first);
+  }
+}
+
+void Cursor::handleCtrlF() {
+  std::fstream f;
+  f.open("debug.txt");
+  int toMoveRow;
+  if (winSize.first / 2 > 5) {
+    toMoveRow = winPtr.second + 4;
+  } else {
+    toMoveRow = winPtr.second + std::floor(winSize.first / 2) + 1;
+  }
+  f << winPtr.second << " " << toMoveRow << "\n";
+  if (toMoveRow < theText.size()) {
+    int col = 0;
+    while (
+        (theText[toMoveRow][col] == ' ' || theText[toMoveRow][col] == '\t') &&
+        col < theText[toMoveRow].length())
+      ++col;
+    setCursor(toMoveRow, col);
+
+    winPtr.first = toMoveRow - 5;
+    winPtr.second = winPtr.first + winSize.first;
+  } else {
+    int index = ifNegativeThenZero(theText.size() - 1);
+    int col = 0;
+    while ((theText[index][col] == ' ' || theText[index][col] == '\t') &&
+           col < theText[index].length())
+      ++col;
+    setCursor(index, col);
+  }
+}
+
+void Cursor::handleJ() {
+  // does nothing on last row (or if only one row)
+  if (theCursor.first == ifNegativeThenZero(theText.size() - 1)) return;
+
+  // always 1 behind last letter of current row
+  setCursor(theCursor.first, theText[theCursor.first].length());
+  if (theText[theCursor.first + 1].length()) {
+    while (theText[theCursor.first + 1][0] == ' ')
+      theText[theCursor.first + 1].erase(0, 1);
+    string middleSpace = theText[theCursor.first].back() == ' ' ? "" : " ";
+    theText[theCursor.first] =
+        theText[theCursor.first] + middleSpace + theText[theCursor.first + 1];
+    theText.erase(theText.begin() + theCursor.first + 1);
+  } else {  // empty line adds a space
+    theText[theCursor.first] = theText[theCursor.first] + " ";
+    theText.erase(theText.begin() + theCursor.first + 1);
   }
 }
 
 char Cursor::handlex() {
-  if (!theText[theCursor.first].length()) return 'a';
+  if (!theText[theCursor.first].length()) return 'z';
   if (theText[theCursor.first].length() == 1) {
     char temp = theText[theCursor.first][0];
     theText[theCursor.first] = "";
@@ -462,6 +511,58 @@ char Cursor::handlex() {
         theText[theCursor.first].erase(theCursor.second, 1);
     setCursor(theCursor.first, theCursor.second - 1);
     return temp;
+  }
+}
+
+// will add special case later
+void Cursor::handlep(pair<vector<string>, bool>& clipBoard) {
+  if (!clipBoard.first.size()) return;
+
+  string firstChunk = theText[theCursor.first].substr(0, theCursor.second + 1);
+  string secondChunk = theText[theCursor.first].substr(
+      theCursor.second + 1, theText[theCursor.first].length());
+
+  if (clipBoard.second) {  // special case
+    for (size_t i = 0; i < clipBoard.first.size(); ++i)
+      theText.insert(theText.begin() + theCursor.first + 1 + i,
+                     clipBoard.first[i]);
+    nextLine();
+  } else if (clipBoard.first.size() == 1) {
+    theText[theCursor.first] = firstChunk + clipBoard.first[0] + secondChunk;
+    ++theCursor.second;
+  } else {
+    theText[theCursor.first] = firstChunk + clipBoard.first[0];
+    for (size_t i = 1; i < clipBoard.first.size() - 1; ++i) {
+      theText.insert(theText.begin() + theCursor.first + i, clipBoard.first[i]);
+    }
+    theText.insert(
+        theText.begin() + theCursor.first + clipBoard.first.size() - 1,
+        clipBoard.first.back() + secondChunk);
+  }
+}
+
+// will add special case later
+void Cursor::handleP(pair<vector<string>, bool>& clipBoard) {
+  if (!clipBoard.first.size()) return;
+
+  string firstChunk = theText[theCursor.first].substr(0, theCursor.second);
+  string secondChunk = theText[theCursor.first].substr(
+      theCursor.second, theText[theCursor.first].length());
+
+  if (clipBoard.second) {  // special case
+    for (size_t i = 0; i < clipBoard.first.size(); ++i)
+      theText.insert(theText.begin() + theCursor.first + i, clipBoard.first[i]);
+  } else if (clipBoard.first.size() == 1) {
+    theText[theCursor.first] = firstChunk + clipBoard.first[0] + secondChunk;
+    ++theCursor.second;
+  } else {
+    theText[theCursor.first] = firstChunk + clipBoard.first[0];
+    for (size_t i = 1; i < clipBoard.first.size() - 1; ++i) {
+      theText.insert(theText.begin() + theCursor.first + i, clipBoard.first[i]);
+    }
+    theText.insert(
+        theText.begin() + theCursor.first + clipBoard.first.size() - 1,
+        clipBoard.first.back() + secondChunk);
   }
 }
 

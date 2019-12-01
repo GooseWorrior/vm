@@ -52,7 +52,11 @@ class Cursor {
   void handleCtrlD();
   void handleCtrlB();
   void handleCtrlU();
+  void handleCtrlF();
+  void handleJ();
   char handlex();
+  void handlep(pair<vector<string>, bool>& clipBoard);
+  void handleP(pair<vector<string>, bool>& clipBoard);
   void updatePointer(int mode);
   int calculateLine();
   void updateStateOffset(int offset);

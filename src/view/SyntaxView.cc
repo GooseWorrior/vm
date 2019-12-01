@@ -307,7 +307,7 @@ void SyntaxView::display(pair<int, int> prevPointer, int input,
                          int prevSize, bool edit) {
   if (prevWindowSize != vm->WindowSize ||
       prevPointer.first < vm->WindowPointer.first ||
-      prevPointer.second > vm->WindowPointer.second) {
+      prevPointer.second > vm->WindowPointer.second || input == 'u') {
     printTextAll();
   } else if (vm->text.size() != prevSize) {
     printTextAfterward(input, prevCursor);
@@ -320,7 +320,7 @@ void SyntaxView::display(pair<int, int> prevPointer, int input,
 
   if (vm->vcursor.calculateLine() < vm->WindowSize.first &&
           prevPointer != vm->WindowPointer ||
-      prevWindowSize != vm->WindowSize) {
+      prevWindowSize != vm->WindowSize || input == 'u') {
     printPlaceholder();
   }
   update();
@@ -363,9 +363,9 @@ void SyntaxView::printTextAfterward(int input, pair<int, int> prevCursor) {
 
 void SyntaxView::printTextLine(int input, pair<int, int> prevCursor,
                                int prevChar) {
-  if ((input == KEY_BACKSPACE || input == 'x') && prevChar == 0) return;
+  if ((input == KEY_BACKSPACE) && prevChar == 0) return;
   pair<int, int> loc = vm->updateLoc();
-  if (input == KEY_BACKSPACE || input == 'x') {
+  if (input == KEY_BACKSPACE) {
     clrtoeol();
     move(loc.first, loc.second);
     for (size_t i = vm->vcursor.getCol();
@@ -386,7 +386,7 @@ void SyntaxView::printTextLine(int input, pair<int, int> prevCursor,
 
 void SyntaxView::printTextChar(int input, int prevChar) {
   pair<int, int> loc = vm->updateLoc();
-  if (input == KEY_BACKSPACE || input == 'x') {
+  if (input == KEY_BACKSPACE) {
     move(loc.first, loc.second);
     if (prevChar == '\t')
       addch('\t');
