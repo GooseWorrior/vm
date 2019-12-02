@@ -164,24 +164,28 @@ void VM::process() {
           if (vcursor.getCol() != (--vcursor).getCol()) {
             shouldSave = true;
             vcursor.replaceModeDelete.clear();
+            if (state == 0) vcursor.dot.clear();
           }
           break;
         case KEY_RIGHT:
           if (vcursor.getCol() != (++vcursor).getCol()) {
             shouldSave = true;
             vcursor.replaceModeDelete.clear();
+            if (state == 0) vcursor.dot.clear();
           }
           break;
         case KEY_UP:
           if (vcursor.getRow() != vcursor.prevLine().getRow()) {
             shouldSave = true;
             vcursor.replaceModeDelete.clear();
+            if (state == 0) vcursor.dot.clear();
           }
           break;
         case KEY_DOWN:
           if (vcursor.getRow() != vcursor.nextLine().getRow()) {
             shouldSave = true;
             vcursor.replaceModeDelete.clear();
+            if (state == 0) vcursor.dot.clear();
           }
           break;
         case KEY_BACKSPACE:
