@@ -391,9 +391,11 @@ void VM::checkPlayEnd() {
       exeMotionDelete(macroLocation.top());
     } else if (type == "MOTIONCOPY") {
       exeMotionCopy(macroLocation.top());
-    }
+    } 
     macroLocation.pop();
-    if (!macroPointer.empty()) macroPointer.top() += shift;
+    if (!macroPointer.empty() && type != "MOTIONCOPY" &&
+    type != "MOTIONDELETED" && type != "MOTIONDELETEC" &&
+    type != "MULTIPLIER") macroPointer.top() += shift;
   }
 }
 
@@ -521,7 +523,7 @@ void VM::handleNoEditBC(int input) {
       break;
     case '\n':
       if (isdigit(bufferCommand[0])) {
-        parseMultiplier();
+        handleMultiplier(bufferCommand);
       } else if (bufferCommand[0] == 'd') {
         saveText();
         handleMotionDelete(0, bufferCommand.substr(1));
@@ -541,14 +543,43 @@ void VM::handleNoEditBC(int input) {
   }
 }
 
-void VM::parseMultiplier() { changeState(0); }
+void VM::handleMultiplier(string cmd) { 
+  string number;
+  while (!cmd.empty() && isdigit(cmd[0])) {
+    number += cmd[0];
+    cmd = cmd.substr(1); 
+  } 
+  if (cmd.empty()) {
+    theComponents.addElement({0});
+    errorMessage = "E136 multiplier argument not specified";
+    changeState(0);
+  } else {
+    int num = 0;
+    try {
+      num = std::stoi(number, nullptr, 10); 
+    } catch (...) {
+      theComponents.addElement({0});
+      errorMessage = "E135 multiplier not valid";
+      changeState(0);
+      return;
+    }
+    if (cmd[0] == '@' || cmd[0] == 'c' || cmd[0] == 'y' || cmd[0] == 'd') cmd += '\n';
+    string multiCommand;
+    for (int i = 0; i < num; ++i) {
+      multiCommand += cmd;
+    }
+    string name = "MULTIPLIER";
+    macroPointer.push(0);
+    curPlay.push(pair<string, vector<int>>(name, vector<int>(multiCommand.begin(), multiCommand.end())));
+    macroLocation.push(pair<int, int>(vcursor.getRow(), vcursor.getCol()));
+  }
+  changeState(0);
+}
 
 void VM::handleMotionCopy(string cmd) {
   if (cmd.empty()) {
     changeState(0);
     return;
-  } else if (isdigit(cmd[0])) {
-    parseMultiplier();
   } else {
     clipBoard.second = cmd[0] == 'y' || cmd[0] == 'j' || cmd[0] == 'k';
     if (cmd[0] == 'y') {
@@ -557,12 +588,10 @@ void VM::handleMotionCopy(string cmd) {
       changeState(0);
       return;
     }
-    string name = "MOTIONCOPY";
-    macroLibrary[name] = vector<int>(cmd.begin(), cmd.end());  // keyWord !
-    if (macroLibrary[name][0] == '@')
-      macroLibrary[name].push_back('\n');  // optional
+    string name = "MOTIONCOPY"; 
+    if (cmd[0] == '@' || (isdigit(cmd[0]) && cmd[0] != 0)) cmd += '\n'; // optional
     macroPointer.push(0);
-    curPlay.push(pair<string, vector<int>>(name, macroLibrary[name]));
+    curPlay.push(pair<string, vector<int>>(name, vector<int>(cmd.begin(), cmd.end())));
     macroLocation.push(pair<int, int>(vcursor.getRow(), vcursor.getCol()));
   }
   changeState(0);
@@ -572,8 +601,6 @@ void VM::handleMotionDelete(bool mode, string cmd) {
   if (cmd.empty()) {
     changeState(0);
     return;
-  } else if (isdigit(cmd[0])) {
-    parseMultiplier();
   } else {
     clipBoard.second =
         cmd[0] == 'd' || cmd[0] == 'c' || cmd[0] == 'j' || cmd[0] == 'k';
@@ -598,11 +625,9 @@ void VM::handleMotionDelete(bool mode, string cmd) {
     } else {
       name = "MOTIONDELETED";
     }
-    macroLibrary[name] = vector<int>(cmd.begin(), cmd.end());  // keyWord !
-    if (macroLibrary[name][0] == '@')
-      macroLibrary[name].push_back('\n');  // optional
+   if (cmd[0] == '@' || (isdigit(cmd[0]) && cmd[0] != 0)) cmd += '\n'; // optional
     macroPointer.push(0);
-    curPlay.push(pair<string, vector<int>>(name, macroLibrary[name]));
+    curPlay.push(pair<string, vector<int>>(name, vector<int>(cmd.begin(), cmd.end())));
     macroLocation.push(pair<int, int>(vcursor.getRow(), vcursor.getCol()));
   }
   changeState(0);
@@ -640,6 +665,7 @@ void VM::exeMotionCopy(pair<int, int> ref) {
 
 void VM::exeMotionDelete(pair<int, int> ref) {
   if (ref.first < vcursor.getRow()) {
+    bool flag = false;
     text[ref.first].erase(text[ref.first].begin() + ref.second,
                           text[ref.first].end());
     text[vcursor.getRow()].erase(
@@ -647,14 +673,17 @@ void VM::exeMotionDelete(pair<int, int> ref) {
         text[vcursor.getRow()].begin() + vcursor.getCol());
     if (text[ref.first].empty()) {
       text.erase(text.begin() + ref.first);
-      vcursor.setCursor(ref.first, ref.second);
-    } else {
-      vcursor.setCursor(ifNegativeThenZero(ref.first - 1), 0);
+      flag = true;
     }
     if (text[vcursor.getRow()].empty())
       text.erase(text.begin() + vcursor.getRow());
     if (ref.first + 1 < vcursor.getRow()) {
       text.erase(text.begin() + ref.first + 1, text.begin() + vcursor.getRow());
+    }
+    if (flag) {
+      vcursor.setCursor(ifNegativeThenZero(ref.first - 1), 0);
+    } else {
+      vcursor.setCursor(ref.first, ref.second);
     }
   } else if (ref.first > vcursor.getRow()) {
     text[vcursor.getRow()].erase(
