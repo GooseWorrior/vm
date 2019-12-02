@@ -1,6 +1,5 @@
 #include <ncurses.h>
 #include <fstream>
-#include <iostream>  // remove after debugging
 
 #include <stdio.h>
 #include <algorithm>
@@ -116,10 +115,8 @@ void VM::process() {
   int prevInput = 0;
   int input = 0;
   bool shouldSave = true;
-  // std::fstream f1;
-  // f1.open("debug.txt");
 
-  while (exitCode && input != '|') {
+  while (exitCode) {
     if (!macroPointer.empty()) checkPlayEnd();
     prevInput = input;
     if (!macroPointer.empty()) {
@@ -152,8 +149,6 @@ void VM::process() {
       handleNoEditBC(input);
     } else
       switch (input) {
-        case 'Q':  // remove later
-          return;
         case KEY_LEFT:
           if (vcursor.getCol() != (--vcursor).getCol()) {
             shouldSave = true;
@@ -207,18 +202,17 @@ void VM::process() {
                 edit = true;
                 vcursor.handlex();
                 changeState(1);
-                // forcePrint();
                 view->printTextAll();  // works with this
                 break;
-              case 120: {  // x
+              case 120:  // x
                 if (shouldSave) {
                   saveText();
                   shouldSave = false;
                 }
                 edit = true;
                 prevChar = vcursor.handlex();
+                view->printTextAll();
                 break;
-              }
               case 114:  // r
                 edit = true;
                 prevChar = controller->getChar();
@@ -263,7 +257,6 @@ void VM::process() {
           }
       }
 
-    // WindowPointer.second - WindowPointer.first + 1 < text.size() ??? code
     updateWindowSize();
     vcursor.updatePointer(-1);
     vcursor.updatePointer(1);
@@ -283,13 +276,9 @@ void VM::process() {
         errorMessage.clear();
       }
       if (state == 1 || state == 2) {
-        // theComponents.reset();
-        // theComponents.addelement({2, 3, 1});
         theComponents.addElement({2, 3, 1});
       } else if (state == 3 || state == 4 || state == 5 || state == 6 ||
                  state == 7 || state == 8) {
-        // theComponents.reset();
-        // theComponents.addelement({3, 1});
         theComponents.addElement({4});
       } else if (state == 0) {
         theComponents.addElement({5, 3, 1});
@@ -300,10 +289,6 @@ void VM::process() {
     theComponents.updateContents();
     theComponents.updateLocation();
     theComponents.print();
-    // theComponents.deleteElement({0});
-    // theComponents.update();
-
-    // render();
 
     if (state == 3 || state == 4 || state == 5 || state == 6 || state == 7 ||
         state == 8) {
@@ -312,6 +297,7 @@ void VM::process() {
       pair<int, int> loc = updateLoc();
       move(loc.first, loc.second);
     }
+    // not sure if should keep
     if (curPlay.size() > 0) {
       // std::ofstream f1;
       // f1.open("debug.txt", std::ios::app);
@@ -1006,10 +992,6 @@ void VM::handleCommands(int input, bool* shouldSave) {
       vcursor.setCursor(vcursor.getRow(), 0);
       text[vcursor.getRow()] = "";
       forcePrint();
-      // move(0, vcursor.getRow());
-      // refresh();
-      // clrtoeol();
-      // refresh();
       break;
     case 64:  // @
       state = 7;
