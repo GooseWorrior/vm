@@ -56,6 +56,7 @@ class VM : public Model {
   pair<int, int> undoCount;
   string vmStatusString;
 
+  bool pureMacro(string type);
   void forcePrint();
   void exeMotionDelete(pair<int, int> ref);
   void exeMotionCopy(pair<int, int> ref);
