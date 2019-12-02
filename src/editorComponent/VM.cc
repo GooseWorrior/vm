@@ -294,7 +294,7 @@ void VM::process() {
           }
       }
     }
-    if (lastCommand.first == -1) changeState(0);
+    // if (lastCommand.first == -1) changeState(0);
     updateWindowSize();
     vcursor.updatePointer(-1);
     vcursor.updatePointer(1);
