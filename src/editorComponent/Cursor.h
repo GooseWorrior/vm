@@ -57,6 +57,7 @@ class Cursor {
   void handleCtrlF();
   void handleJ();
   char handlex();
+  char handleX();
   int handleDot(pair<int, int> lastCommand);
   void handlep(pair<vector<string>, bool>& clipBoard);
   void handleP(pair<vector<string>, bool>& clipBoard);

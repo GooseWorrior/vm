@@ -164,28 +164,24 @@ void VM::process() {
           if (vcursor.getCol() != (--vcursor).getCol()) {
             shouldSave = true;
             vcursor.replaceModeDelete.clear();
-            if (state == 0) vcursor.dot.clear();
           }
           break;
         case KEY_RIGHT:
           if (vcursor.getCol() != (++vcursor).getCol()) {
             shouldSave = true;
             vcursor.replaceModeDelete.clear();
-            if (state == 0) vcursor.dot.clear();
           }
           break;
         case KEY_UP:
           if (vcursor.getRow() != vcursor.prevLine().getRow()) {
             shouldSave = true;
             vcursor.replaceModeDelete.clear();
-            if (state == 0) vcursor.dot.clear();
           }
           break;
         case KEY_DOWN:
           if (vcursor.getRow() != vcursor.nextLine().getRow()) {
             shouldSave = true;
             vcursor.replaceModeDelete.clear();
-            if (state == 0) vcursor.dot.clear();
           }
           break;
         case KEY_BACKSPACE:
@@ -220,6 +216,8 @@ void VM::process() {
                 changeState(1);
                 view->printTextAll();  // works with this
                 lastCommand.first = 115;
+                vcursor.dot.clear();
+                vcursor.dot.push_back(KEY_BACKSPACE);
                 break;
               case 120:  // x
                 if (shouldSave) {
@@ -230,6 +228,16 @@ void VM::process() {
                 prevChar = vcursor.handlex();
                 forcePrint();
                 lastCommand.first = 120;
+                break;
+              case 88:  // X
+                if (shouldSave) {
+                  saveText();
+                  shouldSave = false;
+                }
+                edit = true;
+                prevChar = vcursor.handleX();
+                forcePrint();
+                lastCommand.first = 88;
                 break;
               case 114:  // r
                 saveText();
@@ -252,6 +260,8 @@ void VM::process() {
                 vcursor.setCursor(tmpRow, 0);
                 edit = true;
                 lastCommand.first = 79;
+                vcursor.dot.clear();
+                vcursor.dot.push_back(-1);  // special procedure: -1
                 break;
               }
               case 111: {  // o
@@ -267,6 +277,8 @@ void VM::process() {
                 vcursor.insert('\n');
                 edit = true;
                 lastCommand.first = 111;
+                vcursor.dot.clear();
+                vcursor.dot.push_back('\n');
                 break;
               }
             }
@@ -1065,11 +1077,12 @@ void VM::handleCommands(int input, bool* shouldSave) {
         bufferCommand = "q";
       }
       break;
-    case 83:  // S, needs custom clear line command
+    case 83:  // S
       changeState(1);
       vcursor.setCursor(vcursor.getRow(), 0);
       text[vcursor.getRow()] = "";
       forcePrint();
+      vcursor.dot.push_back(-1);  // special procedure: -1
       break;
     case 64:  // @
       state = 7;

@@ -155,8 +155,9 @@ int Cursor::erase(int prevInput, int input, int pseudoState) {
 }
 
 // special interations with dot
-const vector<char> special1{'a', 'i', 'I'};
-const vector<char> special2{'s', 'S', 'o', 'O'};
+// const vector<char> insert{'a', 'A', 'i', 'I'};
+// const vector<char> special{'s', 'o'};
+// const vector<char> custom{'S', 'O'};
 
 int Cursor::handleDot(pair<int, int> lastCommand) {
   if (lastCommand.first == 'r') {  // r needs input
@@ -166,13 +167,13 @@ int Cursor::handleDot(pair<int, int> lastCommand) {
   if (lastCommand.first == -1) {
     return '\n';  // simulate user input
   }
-  if (lastCommand.first == 82) {
+  if (lastCommand.first == 'R') {
     for (int entry : dot) {
       if (entry == KEY_BACKSPACE) {
         erase('a', KEY_BACKSPACE, 2);
       } else {
         insert(entry, 2);
-        // ++operator prevents going past last character
+        // ++operator prevents going past last character, so handles it here
         if (ifNegativeThenZero(theText[theCursor.first].length() - 1) ==
             theCursor.second) {
           ++theCursor.second;
@@ -181,18 +182,41 @@ int Cursor::handleDot(pair<int, int> lastCommand) {
     }
     return 46;
   }
-  if (lastCommand.first == 97) {
+  if (lastCommand.first == 'a' || lastCommand.first == 'A' ||
+      lastCommand.first == 'i' || lastCommand.first == 'I' ||
+      lastCommand.first == 's' || lastCommand.first == 'S' ||
+      lastCommand.first == 'o' || lastCommand.first == 'O') {
     for (int entry : dot) {
       if (entry == KEY_BACKSPACE) {
         erase(entry, KEY_BACKSPACE, 1);
+      } else if (entry == -1) {  // insert new line above
+        int tmpRow = theCursor.first;
+        setCursor(tmpRow, 0);
+        insert('\n');
+        setCursor(tmpRow, 0);
+      } else if (entry == -2) {  // delete row
+        theText[theCursor.first] = "";
       } else {
         insert(entry, 1);
+        // ++operator prevents going past last character, so handles it here
+        if (theText[theCursor.first].length() == 1) {
+          ++theCursor.second;
+        }
       }
     }
     return 46;
   }
 
   return lastCommand.first;  // just pipe the command through
+}
+
+char Cursor::handleX() {
+  if (theCursor.second == 0 || theText[theCursor.first].length() <= 1)
+    return 'z';
+  char temp = theText[theCursor.first][theCursor.second - 1];
+  theText[theCursor.first].erase(theCursor.second - 1, 1);
+  --(*this);
+  return temp;
 }
 
 void Cursor::updatePointer(int mode) {
