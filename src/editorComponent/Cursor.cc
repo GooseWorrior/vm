@@ -73,7 +73,7 @@ Cursor& Cursor::prevLine() {
 
 int Cursor::getRow() { return theCursor.first; }
 int Cursor::getCol() { return theCursor.second; }
-Cursor& Cursor::insert(wchar_t c) {
+Cursor& Cursor::insert(int c, int pseudoState) {
   if (c == '\n') {
     theText.insert(theText.begin() + theCursor.first + 1,
                    theText[theCursor.first].substr(
@@ -89,10 +89,10 @@ Cursor& Cursor::insert(wchar_t c) {
     theCursor.second = 0;
     theCursor.first++;
     replaceModeDelete.push_back(std::make_pair(theCursor.first, 0));
-  } else if (state == 1) {
+  } else if (state == 1 || pseudoState == 1) {
     theText[theCursor.first].insert(theCursor.second, 1, c);
     ++(*this);
-  } else if (state == 2) {
+  } else if (state == 2 || pseudoState == 2) {
     if (theCursor.second == theText[theCursor.first].size()) {
       theText[theCursor.first].insert(theCursor.second, 1, c);
       if (!replaceModeDelete.size() ||
@@ -158,12 +158,24 @@ const vector<char> special2{'s', 'S', 'o', 'O'};
 int Cursor::handleDot(pair<int, int> lastCommand) {
   if (lastCommand.first == 'r') {  // r needs input
     handler(lastCommand.second);
-    return 410;
-  } else if (lastCommand.first == -1) {
-    return '\n';  // simulate user inputting
-  } else {
-    return lastCommand.first;  // just pipe the command through
+    return 46;
   }
+  if (lastCommand.first == -1) {
+    return '\n';  // simulate user input
+  }
+
+  if (lastCommand.first == 97) {
+    for (int entry : dot) {
+      if (entry == KEY_BACKSPACE) {
+        erase(entry, KEY_BACKSPACE);
+      } else {
+        insert(entry, 1);
+      }
+    }
+    return 46;
+  }
+
+  return lastCommand.first;  // just pipe the command through
 }
 
 void Cursor::updatePointer(int mode) {

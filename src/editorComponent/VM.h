@@ -44,7 +44,6 @@ class VM : public Model {
   pair<int, int> WindowSize;
   pair<int, int> WindowPointer;
   vector<string> text;
-  vector<string> dot;
   vector<unique_ptr<EditorComponent>> components;
   vector<FILE*> undoStack;                           // row text and which row
   vector<pair<pair<int, int>, time_t>> cursorStack;  // cursor position and time
