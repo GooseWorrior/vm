@@ -433,12 +433,14 @@ void VM::checkPlayEnd() {
     macroLocation.pop();
     string curType;
     if (!curPlay.empty()) curType = curPlay.top().first;
-    if (!macroPointer.empty() && pureMacro(curType)) macroPointer.top() += shift;
+    if (!macroPointer.empty() && pureMacro(curType))
+      macroPointer.top() += shift;
   }
 }
 
 bool VM::pureMacro(string type) {
-  return type != "MOTIONCOPY" && type != "MOTIONDELETED" && type != "MOTIONDELETEC" && type != "MULTIPLIER";
+  return type != "MOTIONCOPY" && type != "MOTIONDELETED" &&
+         type != "MOTIONDELETEC" && type != "MULTIPLIER";
 }
 
 bool VM::checkExists(string file) {
