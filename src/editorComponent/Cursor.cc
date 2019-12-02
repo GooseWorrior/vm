@@ -73,7 +73,7 @@ Cursor& Cursor::prevLine() {
 
 int Cursor::getRow() { return theCursor.first; }
 int Cursor::getCol() { return theCursor.second; }
-Cursor& Cursor::insert(wchar_t c) {
+Cursor& Cursor::insert(int c, int pseudoState) {
   if (c == '\n') {
     theText.insert(theText.begin() + theCursor.first + 1,
                    theText[theCursor.first].substr(
@@ -89,11 +89,14 @@ Cursor& Cursor::insert(wchar_t c) {
     theCursor.second = 0;
     theCursor.first++;
     replaceModeDelete.push_back(std::make_pair(theCursor.first, 0));
-  } else if (state == 1) {
+  } else if (state == 1 || pseudoState == 1) {
     theText[theCursor.first].insert(theCursor.second, 1, c);
     ++(*this);
-  } else if (state == 2) {
+  } else if (state == 2 || pseudoState == 2) {
     if (theCursor.second == theText[theCursor.first].size()) {
+      std::fstream f;
+      f.open("debug.txt");
+      f << theText[theCursor.first];
       theText[theCursor.first].insert(theCursor.second, 1, c);
       if (!replaceModeDelete.size() ||
           replaceModeDelete.back().first != theCursor.first)
@@ -117,14 +120,14 @@ bool Cursor::canDelete() {
   return false;
 }
 
-int Cursor::erase(int prevInput, int input) {
+int Cursor::erase(int prevInput, int input, int pseudoState) {
   char prevChar = 0;
   int prevPos =
       ifNegativeThenZero(theText[theCursor.first - 1].size() + stateOffset);
   if (theCursor.second == 0 && theCursor.first == 0) {
     return prevChar;
   } else if (theCursor.second == 0) {
-    if ((state == 1 && input == KEY_BACKSPACE) ||
+    if (((state == 1 || pseudoState == 1) && input == KEY_BACKSPACE) ||
         (state == 0 && input == 120) || prevInput == '\n') {
       theText[theCursor.first - 1] += theText[theCursor.first];
       theText.erase(theText.begin() + theCursor.first);
@@ -140,7 +143,7 @@ int Cursor::erase(int prevInput, int input) {
     theCursor.first--;
     // theCursor.second = theText[theCursor.first].size();
     theCursor.second = prevPos;
-  } else if ((state == 1 && input == KEY_BACKSPACE) ||
+  } else if (((state == 1 || pseudoState == 1) && input == KEY_BACKSPACE) ||
              (state == 0 && input == 120) || (state == 2 && canDelete())) {
     prevChar = theText[theCursor.first][theCursor.second - 1];
     theText[theCursor.first].erase(theCursor.second - 1, 1);
@@ -158,12 +161,38 @@ const vector<char> special2{'s', 'S', 'o', 'O'};
 int Cursor::handleDot(pair<int, int> lastCommand) {
   if (lastCommand.first == 'r') {  // r needs input
     handler(lastCommand.second);
-    return 410;
-  } else if (lastCommand.first == -1) {
-    return '\n';  // simulate user inputting
-  } else {
-    return lastCommand.first;  // just pipe the command through
+    return 46;
   }
+  if (lastCommand.first == -1) {
+    return '\n';  // simulate user input
+  }
+  if (lastCommand.first == 82) {
+    for (int entry : dot) {
+      if (entry == KEY_BACKSPACE) {
+        erase('a', KEY_BACKSPACE, 2);
+      } else {
+        insert(entry, 2);
+        // ++operator prevents going past last character
+        if (ifNegativeThenZero(theText[theCursor.first].length() - 1) ==
+            theCursor.second) {
+          ++theCursor.second;
+        }
+      }
+    }
+    return 46;
+  }
+  if (lastCommand.first == 97) {
+    for (int entry : dot) {
+      if (entry == KEY_BACKSPACE) {
+        erase(entry, KEY_BACKSPACE, 1);
+      } else {
+        insert(entry, 1);
+      }
+    }
+    return 46;
+  }
+
+  return lastCommand.first;  // just pipe the command through
 }
 
 void Cursor::updatePointer(int mode) {
@@ -202,13 +231,7 @@ void Cursor::updatePointer(int mode) {
     } else if (winPtr.second < theCursor.first) {
       winPtr.second = theCursor.first;
       updatePointer(-1);
-      // int offset = winPtr.second - winPtr.first;
-      // winPtr.second =
-      //    min<int>((winSize.second - winSize.second) / 2 + theCursor.first,
-      //             theText.size() - 1);
-      // winPtr.first = winPtr.second - offset;
     }
-    // theCursor.first = min(winPtr.second, theCursor.first);
   }
 }
 

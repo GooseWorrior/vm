@@ -125,8 +125,10 @@ void VM::process() {
       input = controller->getChar();
     }
     if (input == '.') {
-      // most cases, we can replace input with lastCommand
+      // for most cases, we can replace input with lastCommand
       // otherwise we will keep input as '.' and handle it later
+      saveText();
+      shouldSave = false;
       input = vcursor.handleDot(lastCommand);
       if (input == '\n') {
         bufferCommand = lastBufferCommand;
@@ -189,21 +191,22 @@ void VM::process() {
           }
           edit = true;
           prevChar = vcursor.erase(prevInput, KEY_BACKSPACE);
+          vcursor.dot.push_back(KEY_BACKSPACE);
           break;
         case 410:  // special resize character
           break;
         case 27:  // escape
           if (state == 1 && vcursor.getCol() > 0) {
             vcursor.setCursor(vcursor.getRow(), vcursor.getCol() - 1);
-            vcursor.replaceModeDelete.clear();
           }
+          vcursor.replaceModeDelete.clear();
           changeState(0);
           break;
         default:
           if (state == 0) {
             handleCommands(input, &shouldSave);
             switch (input) {
-              case 115:  // s, doesn't work yet
+              case 115:  // s
                 if (shouldSave) {
                   saveText();
                   shouldSave = false;
@@ -221,10 +224,11 @@ void VM::process() {
                 }
                 edit = true;
                 prevChar = vcursor.handlex();
-                view->printTextAll();
+                forcePrint();
                 lastCommand.first = 120;
                 break;
               case 114:  // r
+                saveText();
                 edit = true;
                 prevChar = controller->getChar();
                 vcursor.handler(prevChar);
@@ -266,14 +270,11 @@ void VM::process() {
             if (shouldSave) {
               saveText();
               shouldSave = false;
-              dot.clear();
+              vcursor.dot.clear();
             }
             edit = true;
+            vcursor.dot.push_back(input);
             vcursor.insert(input);
-            if (!dot.size()) {
-            } else if (input == '\n') {
-              dot.push_back("");
-            }
           }
       }
     }
@@ -980,15 +981,18 @@ void VM::handleCommands(int input, bool* shouldSave) {
       vcursor.handleCtrlU();
       break;
     case 46:  // .
+      forcePrint();
       break;
     case 65:  // A
       vcursor.setCursor(vcursor.getRow(), text[vcursor.getRow()].length());
       changeState(1);
       lastCommand.first = 65;
+      vcursor.dot.clear();
       break;
     case 73:  // I
       vcursor.setCursor(vcursor.getRow(), 0);
       changeState(1);
+      vcursor.dot.clear();
       break;
     case 97:  // a
       vcursor.setCursor(vcursor.getRow(), text[vcursor.getRow()].length()
@@ -996,12 +1000,14 @@ void VM::handleCommands(int input, bool* shouldSave) {
                                               : 0);
       changeState(1);
       lastCommand.first = 97;
+      vcursor.dot.clear();
       break;
     case 98:  // b
       vcursor.handleb();
       break;
     case 105:  // i
       changeState(1);
+      vcursor.dot.clear();
     case 36:  // dollar $
       // set to end of line
       vcursor.setCursor(
@@ -1081,9 +1087,10 @@ void VM::handleCommands(int input, bool* shouldSave) {
       commandCursor = 1;
       bufferCommand = "y";
       break;
-    case 82:  // R, for dot: extremely difficult since it can insert and replace
+    case 82:  // R
       changeState(2);
       lastCommand.first = 82;
+      vcursor.dot.clear();
       break;
     case 117:  // u
       loadUndo();
