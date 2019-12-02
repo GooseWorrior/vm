@@ -128,7 +128,10 @@ void VM::process() {
       // most cases, we can replace input with lastCommand
       // otherwise we will keep input as '.' and handle it later
       input = vcursor.handleDot(lastCommand);
-      if (input = '\n') bufferCommand = lastBufferCommand;
+      if (input == '\n') {
+        bufferCommand = lastBufferCommand;
+        state = 8;
+      }
     }
     int prevChar = 0;
     bool edit = false;  // could be omitted
@@ -274,7 +277,7 @@ void VM::process() {
           }
       }
     }
-
+    if (lastCommand.first == -1) changeState(0);
     updateWindowSize();
     vcursor.updatePointer(-1);
     vcursor.updatePointer(1);
@@ -317,12 +320,12 @@ void VM::process() {
     }
     // not sure if should keep
     if (curPlay.size() > 0) {
-      // std::ofstream f1;
-      // f1.open("debug.txt", std::ios::app);
-      // for (auto j : curPlay.top().second) f1 << wchar_t(j) << " ";
-      // f1 << '\n';
-      // f1 << macroPointer.top() << '\n';
-      // f1.close();
+      std::ofstream f1;
+      f1.open("debug.txt", std::ios::app);
+      for (auto j : curPlay.top().second) f1 << wchar_t(j) << " ";
+      f1 << '\n';
+      f1 << macroPointer.top() << '\n';
+      f1.close();
     }
   }
 }

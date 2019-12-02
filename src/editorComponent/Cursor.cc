@@ -483,15 +483,12 @@ void Cursor::handleCtrlU() {
 }
 
 void Cursor::handleCtrlF() {
-  std::fstream f;
-  f.open("debug.txt");
   int toMoveRow;
   if (winSize.first / 2 > 5) {
     toMoveRow = winPtr.second + 4;
   } else {
     toMoveRow = winPtr.second + std::floor(winSize.first / 2) + 1;
   }
-  f << winPtr.second << " " << toMoveRow << "\n";
   if (toMoveRow < theText.size()) {
     int col = 0;
     while (
@@ -612,8 +609,6 @@ void Cursor::handleP(pair<vector<string>, bool>& clipBoard) {
 }
 
 void Cursor::handleb() {
-  // std::fstream f;
-  // f.open("debug.txt");
   // cursor is at the beginning
   if (!theCursor.first && !theCursor.second) return;
   int row = theCursor.first;
