@@ -11,9 +11,8 @@
 #include "../view/PlainView.h"
 #include "../view/SyntaxView.h"
 
-#include "CommandLine.h"
-//#include "Cursor.h"
 #include <regex>
+#include "CommandLine.h"
 #include "EditorComponent.h"
 #include "StatusLine.h"
 
@@ -25,10 +24,12 @@ using std::vector;
 
 namespace CS246E {
 class VM : public Model {
-  int state;  // 0 - command/readonly, 1 - insert, 2 - commandline
+  int state;  // 0 - command/readonly, 1 - insert
   int commandCursor;
   int searchPointer;
   int savedSize;
+  pair<int, int> lastCommand;  // <command char, input char (if necessary)>
+  string lastBufferCommand;
   bool exitCode;
   bool CFile;
   bool searchDirection;  // 0 backwards, 1 forwards
