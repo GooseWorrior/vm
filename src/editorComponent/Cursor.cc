@@ -43,6 +43,7 @@ Cursor& Cursor::nextLine() {
              winPtr.second < theText.size() - 1) {
     winPtr.second++;
     updatePointer(-1);
+
     // int shift = calculateShift();
     // theCursor.first += calculateShift();
   }
@@ -59,6 +60,7 @@ Cursor& Cursor::prevLine() {
              winPtr.first > 0) {
     winPtr.first--;
     updatePointer(1);
+
     // int shift = calculateShift();
     // theCursor.first += calculateShift();
   }
@@ -85,20 +87,37 @@ Cursor& Cursor::insert(wchar_t c) {
     }
     theCursor.second = 0;
     theCursor.first++;
+    replaceModeDelete.push_back(std::make_pair(theCursor.first, 0));
   } else if (state == 1) {
     theText[theCursor.first].insert(theCursor.second, 1, c);
     ++(*this);
   } else if (state == 2) {
     if (theCursor.second == theText[theCursor.first].size()) {
       theText[theCursor.first].insert(theCursor.second, 1, c);
+      if (!replaceModeDelete.size() ||
+          replaceModeDelete.back().first != theCursor.first)
+        replaceModeDelete.push_back(
+            std::make_pair(theCursor.first, theCursor.second + 1));
     } else {
       theText[theCursor.first][theCursor.second] = c;
+      replaceModeDelete.clear();
     }
     ++(*this);
   }
   return *this;
 }
+
+bool Cursor::canDelete() {
+  for (pair<int, int> canDelete : replaceModeDelete) {
+    if (theCursor.first == canDelete.first &&
+        theCursor.second >= canDelete.second)
+      return true;
+  }
+  return false;
+}
+
 int Cursor::erase(int prevInput, int input) {
+  f.open("debug.txt");
   char prevChar = 0;
   int prevPos =
       ifNegativeThenZero(theText[theCursor.first - 1].size() + stateOffset);
@@ -109,6 +128,7 @@ int Cursor::erase(int prevInput, int input) {
         (state == 0 && input == 120) || prevInput == '\n') {
       theText[theCursor.first - 1] += theText[theCursor.first];
       theText.erase(theText.begin() + theCursor.first);
+      replaceModeDelete.pop_back();
     }
     if ((theCursor.first - winPtr.first) <= (winPtr.second - winPtr.first) &&
         winPtr.first > 0) {
@@ -121,7 +141,8 @@ int Cursor::erase(int prevInput, int input) {
     // theCursor.second = theText[theCursor.first].size();
     theCursor.second = prevPos;
   } else if ((state == 1 && input == KEY_BACKSPACE) ||
-             (state == 0 && input == 120)) {
+             (state == 0 && input == 120) || (state == 2 && canDelete())) {
+    f << "dsfsdf";
     prevChar = theText[theCursor.first][theCursor.second - 1];
     theText[theCursor.first].erase(theCursor.second - 1, 1);
     --(*this);
