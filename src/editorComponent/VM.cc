@@ -398,7 +398,6 @@ void VM::checkPlayEnd() {
     string type = curPlay.top().first;
     curPlay.pop();
     macroPointer.pop();
-    saveText();
     if (type == "MOTIONDELETEC") {
       exeMotionDelete(macroLocation.top());
       changeState(1);
@@ -538,10 +537,13 @@ void VM::handleNoEditBC(int input) {
       if (isdigit(bufferCommand[0])) {
         parseMultiplier();
       } else if (bufferCommand[0] == 'd') {
+        saveText();
         handleMotionDelete(0, bufferCommand.substr(1));
       } else if (bufferCommand[0] == 'c') {
+        saveText();
         handleMotionDelete(1, bufferCommand.substr(1));
       } else if (bufferCommand[0] == 'y') {
+        saveText();
         handleMotionCopy(bufferCommand.substr(1));
       }
       break;
