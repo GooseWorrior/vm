@@ -31,6 +31,7 @@ class Cursor {
 
  public:
   vector<pair<int, int>> replaceModeDelete;
+  vector<int> dot;
 
   Cursor(int row, int col, vector<string>& theText, pair<int, int>& winPtr,
          pair<int, int>& winSize, int& state);
@@ -38,8 +39,8 @@ class Cursor {
   Cursor& operator--();
   Cursor& nextLine();
   Cursor& prevLine();
-  Cursor& insert(wchar_t c);
-  int erase(int prevInput, int input);
+  Cursor& insert(int c, int pseudoState = -1);
+  int erase(int prevInput, int input, int pseudoState = -1);
   int getRow();
   int getCol();
   void setCursor(int x, int y);
@@ -56,6 +57,8 @@ class Cursor {
   void handleCtrlF();
   void handleJ();
   char handlex();
+  char handleX();
+  int handleDot(pair<int, int> lastCommand);
   void handlep(pair<vector<string>, bool>& clipBoard);
   void handleP(pair<vector<string>, bool>& clipBoard);
   void handler(int input);
