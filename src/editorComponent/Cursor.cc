@@ -117,7 +117,6 @@ bool Cursor::canDelete() {
 }
 
 int Cursor::erase(int prevInput, int input) {
-  f.open("debug.txt");
   char prevChar = 0;
   int prevPos =
       ifNegativeThenZero(theText[theCursor.first - 1].size() + stateOffset);
@@ -142,7 +141,6 @@ int Cursor::erase(int prevInput, int input) {
     theCursor.second = prevPos;
   } else if ((state == 1 && input == KEY_BACKSPACE) ||
              (state == 0 && input == 120) || (state == 2 && canDelete())) {
-    f << "dsfsdf";
     prevChar = theText[theCursor.first][theCursor.second - 1];
     theText[theCursor.first].erase(theCursor.second - 1, 1);
     --(*this);

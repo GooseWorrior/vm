@@ -3,8 +3,8 @@
 #include <memory>
 #include <string>
 
-#include "EditorComponent/VM.h"
 #include "controller/Keyboard.h"
+#include "editorComponent/VM.h"
 #include "view/PlainView.h"
 
 using std::shared_ptr;

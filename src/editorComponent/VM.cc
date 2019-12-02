@@ -398,6 +398,7 @@ void VM::checkPlayEnd() {
     string type = curPlay.top().first;
     curPlay.pop();
     macroPointer.pop();
+    saveText();
     if (type == "MOTIONDELETEC") {
       exeMotionDelete(macroLocation.top());
       changeState(1);
