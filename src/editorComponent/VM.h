@@ -11,7 +11,7 @@
 #include "../view/PlainView.h"
 #include "../view/SyntaxView.h"
 
-#include "Commandline.h"
+#include "CommandLine.h"
 //#include "Cursor.h"
 #include <regex>
 #include "EditorComponent.h"

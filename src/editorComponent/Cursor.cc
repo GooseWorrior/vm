@@ -1,7 +1,9 @@
 #include "Cursor.h"
+#include <math.h>
 #include <ncurses.h>
 #include <algorithm>
 #include <fstream>
+
 using std::min;
 using std::pair;
 using std::string;
@@ -41,6 +43,7 @@ Cursor& Cursor::nextLine() {
              winPtr.second < theText.size() - 1) {
     winPtr.second++;
     updatePointer(-1);
+
     // int shift = calculateShift();
     // theCursor.first += calculateShift();
   }
@@ -57,6 +60,7 @@ Cursor& Cursor::prevLine() {
              winPtr.first > 0) {
     winPtr.first--;
     updatePointer(1);
+
     // int shift = calculateShift();
     // theCursor.first += calculateShift();
   }
@@ -83,19 +87,35 @@ Cursor& Cursor::insert(wchar_t c) {
     }
     theCursor.second = 0;
     theCursor.first++;
+    replaceModeDelete.push_back(std::make_pair(theCursor.first, 0));
   } else if (state == 1) {
     theText[theCursor.first].insert(theCursor.second, 1, c);
     ++(*this);
   } else if (state == 2) {
     if (theCursor.second == theText[theCursor.first].size()) {
       theText[theCursor.first].insert(theCursor.second, 1, c);
+      if (!replaceModeDelete.size() ||
+          replaceModeDelete.back().first != theCursor.first)
+        replaceModeDelete.push_back(
+            std::make_pair(theCursor.first, theCursor.second + 1));
     } else {
       theText[theCursor.first][theCursor.second] = c;
+      replaceModeDelete.clear();
     }
     ++(*this);
   }
   return *this;
 }
+
+bool Cursor::canDelete() {
+  for (pair<int, int> canDelete : replaceModeDelete) {
+    if (theCursor.first == canDelete.first &&
+        theCursor.second >= canDelete.second)
+      return true;
+  }
+  return false;
+}
+
 int Cursor::erase(int prevInput, int input) {
   char prevChar = 0;
   int prevPos =
@@ -107,6 +127,7 @@ int Cursor::erase(int prevInput, int input) {
         (state == 0 && input == 120) || prevInput == '\n') {
       theText[theCursor.first - 1] += theText[theCursor.first];
       theText.erase(theText.begin() + theCursor.first);
+      replaceModeDelete.pop_back();
     }
     if ((theCursor.first - winPtr.first) <= (winPtr.second - winPtr.first) &&
         winPtr.first > 0) {
@@ -119,7 +140,7 @@ int Cursor::erase(int prevInput, int input) {
     // theCursor.second = theText[theCursor.first].size();
     theCursor.second = prevPos;
   } else if ((state == 1 && input == KEY_BACKSPACE) ||
-             (state == 0 && input == 120)) {
+             (state == 0 && input == 120) || (state == 2 && canDelete())) {
     prevChar = theText[theCursor.first][theCursor.second - 1];
     theText[theCursor.first].erase(theCursor.second - 1, 1);
     --(*this);
@@ -530,6 +551,7 @@ void Cursor::handlep(pair<vector<string>, bool>& clipBoard) {
       theText.insert(theText.begin() + theCursor.first + 1 + i,
                      clipBoard.first[i]);
     nextLine();
+    theCursor.second = 0;
   } else if (clipBoard.first.size() == 1) {
     theText[theCursor.first] = firstChunk + clipBoard.first[0] + secondChunk;
     ++theCursor.second;
@@ -544,21 +566,21 @@ void Cursor::handlep(pair<vector<string>, bool>& clipBoard) {
   }
 }
 
-// will add special case later
 void Cursor::handleP(pair<vector<string>, bool>& clipBoard) {
   if (!clipBoard.first.size()) return;
 
   string firstChunk;
   string secondChunk;
   if (theText[theCursor.first].length()) {
-    firstChunk = theText[theCursor.first].substr(0, theCursor.second + 1);
+    firstChunk = theText[theCursor.first].substr(0, theCursor.second);
     secondChunk = theText[theCursor.first].substr(
-        theCursor.second + 1, theText[theCursor.first].length());
+        theCursor.second, theText[theCursor.first].length());
   }
 
   if (clipBoard.second) {  // special case
     for (size_t i = 0; i < clipBoard.first.size(); ++i)
       theText.insert(theText.begin() + theCursor.first + i, clipBoard.first[i]);
+    theCursor.second = 0;
   } else if (clipBoard.first.size() == 1) {
     theText[theCursor.first] = firstChunk + clipBoard.first[0] + secondChunk;
     ++theCursor.second;
@@ -686,6 +708,11 @@ void Cursor::handleb() {
     --row;
     setCursor(row, i);
   }
+}
+
+void Cursor::handler(int input) {
+  if (!theText[theCursor.first].length()) return;
+  theText[theCursor.first][theCursor.second] = input;
 }
 
 void Cursor::handlew() {

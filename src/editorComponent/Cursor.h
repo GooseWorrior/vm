@@ -2,7 +2,6 @@
 #define CRUSH_H
 
 #include <ctype.h>
-#include <math.h>
 #include <stdio.h>
 #include <memory>
 #include <string>
@@ -31,6 +30,8 @@ class Cursor {
   // unique_ptr<ControlCommand> ctrlcmd;
 
  public:
+  vector<pair<int, int>> replaceModeDelete;
+
   Cursor(int row, int col, vector<string>& theText, pair<int, int>& winPtr,
          pair<int, int>& winSize, int& state);
   Cursor& operator++();
@@ -57,7 +58,9 @@ class Cursor {
   char handlex();
   void handlep(pair<vector<string>, bool>& clipBoard);
   void handleP(pair<vector<string>, bool>& clipBoard);
+  void handler(int input);
   void updatePointer(int mode);
+  bool canDelete();
   int calculateLine();
   void updateStateOffset(int offset);
 };

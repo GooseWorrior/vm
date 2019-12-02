@@ -83,18 +83,6 @@ void VM::loadFile(string filename) {
     }
   }
   if (line.length() || !text.size()) text.push_back(line);  // pushes last line
-  // WindowPointer = pair<int, int>(0, text.size() - 1);
-
-  // clear();
-  // refresh();
-  // view->printTextAll();
-
-  // std::ofstream f1;
-  // f1.open("debug.txt");
-  // for (auto i : text) {
-  //   f1 << i << '\n';
-  // }
-  // f1.close();
   setFilenameStatus();
 
   vcursor.setCursor(text.size() - 1,
@@ -128,8 +116,8 @@ void VM::process() {
   int prevInput = 0;
   int input = 0;
   bool shouldSave = true;
-  std::fstream f1;
-  f1.open("debug.txt");
+  // std::fstream f1;
+  // f1.open("debug.txt");
 
   while (exitCode && input != '|') {
     if (!macroPointer.empty()) checkPlayEnd();
@@ -169,21 +157,25 @@ void VM::process() {
         case KEY_LEFT:
           if (vcursor.getCol() != (--vcursor).getCol()) {
             shouldSave = true;
+            vcursor.replaceModeDelete.clear();
           }
           break;
         case KEY_RIGHT:
           if (vcursor.getCol() != (++vcursor).getCol()) {
             shouldSave = true;
+            vcursor.replaceModeDelete.clear();
           }
           break;
         case KEY_UP:
           if (vcursor.getRow() != vcursor.prevLine().getRow()) {
             shouldSave = true;
+            vcursor.replaceModeDelete.clear();
           }
           break;
         case KEY_DOWN:
           if (vcursor.getRow() != vcursor.nextLine().getRow()) {
             shouldSave = true;
+            vcursor.replaceModeDelete.clear();
           }
           break;
         case KEY_BACKSPACE:
@@ -199,6 +191,7 @@ void VM::process() {
         case 27:  // escape
           if (state == 1 && vcursor.getCol() > 0) {
             vcursor.setCursor(vcursor.getRow(), vcursor.getCol() - 1);
+            vcursor.replaceModeDelete.clear();
           }
           changeState(0);
           break;
@@ -206,17 +199,17 @@ void VM::process() {
           if (state == 0) {
             handleCommands(input, &shouldSave);
             switch (input) {
-              /*case 115:  // s, doesn't work yet
+              case 115:  // s, doesn't work yet
                 if (shouldSave) {
                   saveText();
                   shouldSave = false;
                 }
                 edit = true;
                 vcursor.handlex();
-                state = 1;                     // replace later
-                vcursor.updateStateOffset(0);  // replace later
-                view->printTextAll();          // replace later
-                break; */
+                changeState(1);
+                // forcePrint();
+                view->printTextAll();  // works with this
+                break;
               case 120: {  // x
                 if (shouldSave) {
                   saveText();
@@ -226,6 +219,12 @@ void VM::process() {
                 prevChar = vcursor.handlex();
                 break;
               }
+              case 114:  // r
+                edit = true;
+                prevChar = controller->getChar();
+                vcursor.handler(prevChar);
+                view->printTextAll();
+                break;
               case 79: {  // O
                 if (shouldSave) {
                   saveText();
@@ -314,12 +313,12 @@ void VM::process() {
       move(loc.first, loc.second);
     }
     if (curPlay.size() > 0) {
-      std::ofstream f1;
-      f1.open("debug.txt", std::ios::app);
-      for (auto j : curPlay.top().second) f1 << wchar_t(j) << " ";
-      f1 << '\n';
-      f1 << macroPointer.top() << '\n';
-      f1.close();
+      // std::ofstream f1;
+      // f1.open("debug.txt", std::ios::app);
+      // for (auto j : curPlay.top().second) f1 << wchar_t(j) << " ";
+      // f1 << '\n';
+      // f1 << macroPointer.top() << '\n';
+      // f1.close();
     }
   }
 }
@@ -486,8 +485,6 @@ void VM::exeBufferCommand() {
                        "L, " + to_string(count) + "C" + " written";
     } else if (cmd == "q") {
       if (savedSize != undoStack.size()) {
-        // std::fstream f{"debug.txt"};
-        // f << savedSize << " " << undoStack.size();
         theComponents.addElement({0});
         errorMessage = "E37: No write since last change (add ! to override)";
       } else {
@@ -542,10 +539,13 @@ void VM::handleNoEditBC(int input) {
       if (isdigit(bufferCommand[0])) {
         handleMultiplier(bufferCommand);
       } else if (bufferCommand[0] == 'd') {
+        saveText();
         handleMotionDelete(0, bufferCommand.substr(1));
       } else if (bufferCommand[0] == 'c') {
+        saveText();
         handleMotionDelete(1, bufferCommand.substr(1));
       } else if (bufferCommand[0] == 'y') {
+        saveText();
         handleMotionCopy(bufferCommand.substr(1));
       }
       break;
@@ -595,6 +595,7 @@ void VM::handleMotionCopy(string cmd) {
     changeState(0);
     return;
   } else {
+    clipBoard.second = cmd[0] == 'y' || cmd[0] == 'j' || cmd[0] == 'k';
     if (cmd[0] == 'y') {
       clipBoard.first.clear();
       clipBoard.first.push_back(text[vcursor.getRow()]);
@@ -615,6 +616,8 @@ void VM::handleMotionDelete(bool mode, string cmd) {
     changeState(0);
     return;
   } else {
+    clipBoard.second =
+        cmd[0] == 'd' || cmd[0] == 'c' || cmd[0] == 'j' || cmd[0] == 'k';
     if ((!mode && cmd[0] == 'd') || (mode && cmd[0] == 'c')) {
       text[vcursor.getRow()].clear();
       if (text.size() > 1) {
@@ -995,10 +998,10 @@ void VM::handleCommands(int input, bool* shouldSave) {
       vcursor.handleCaret();
       break;
     case 70:  // big F
-      vcursor.handleF(getch());
+      vcursor.handleF(controller->getChar());
       break;
     case 102:  // little f
-      vcursor.handlef(getch());
+      vcursor.handlef(controller->getChar());
       break;
     case 59:  // semi colon ;
       vcursor.handleSemiColon();
@@ -1026,6 +1029,16 @@ void VM::handleCommands(int input, bool* shouldSave) {
         commandCursor = 1;
         bufferCommand = "q";
       }
+      break;
+    case 83:  // S
+      changeState(1);
+      vcursor.setCursor(vcursor.getRow(), 0);
+      text[vcursor.getRow()] = "";
+      forcePrint();
+      // move(0, vcursor.getRow());
+      // refresh();
+      // clrtoeol();
+      // refresh();
       break;
     case 64:  // @
       state = 7;
@@ -1079,12 +1092,12 @@ void VM::handleCommands(int input, bool* shouldSave) {
     case 112:  // p
       vcursor.handlep(clipBoard);
       forcePrint();
-      //view->printTextAll();  // remove later
+      // view->printTextAll();  // remove later
       break;
-    case 80:   // P
+    case 80:  // P
       vcursor.handleP(clipBoard);
       forcePrint();
-      //view->printTextAll();  // remove later
+      // view->printTextAll();  // remove later
       break;
     default:
       if (std::isdigit(input)) {
@@ -1106,9 +1119,7 @@ void VM::saveText() {
       fputs(text[i].c_str(), pFile);
     }
   }
-  // std::fstream f;
-  // f.open("debug.txt");
-  // for (auto i : text) f << i << "\n";
+
   rewind(pFile);
   undoStack.push_back(pFile);
 
@@ -1123,6 +1134,7 @@ void VM::loadUndo() {
     char tempChar;
     FILE* pFile = undoStack.back();
     string line;
+    int textRows = text.size();
     text.clear();
     while ((tempChar = fgetc(pFile)) != EOF) {
       if (tempChar == '\n') {
@@ -1156,7 +1168,12 @@ void VM::loadUndo() {
     if (undoStack.size() >= undoCount.second) {
       undoCount = std::make_pair(undoCount.first, undoStack.size());
     }
-    vmStatusString = "1 change; before #" +
+    int rowsChanged = std::max(textRows - static_cast<int>(text.size()),
+                               static_cast<int>(text.size()) - textRows) +
+                      1;
+    string changes = rowsChanged > 1 ? to_string(rowsChanged) + " changes;"
+                                     : to_string(rowsChanged) + " change;";
+    vmStatusString = changes + " before #" +
                      std::to_string(undoCount.first + undoStack.size()) + "  ";
     undoStack.pop_back();
     if (!undoStack.size()) {
