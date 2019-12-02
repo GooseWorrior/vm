@@ -11,9 +11,8 @@
 #include "../view/PlainView.h"
 #include "../view/SyntaxView.h"
 
-#include "CommandLine.h"
-//#include "Cursor.h"
 #include <regex>
+#include "CommandLine.h"
 #include "EditorComponent.h"
 #include "StatusLine.h"
 
@@ -29,6 +28,8 @@ class VM : public Model {
   int commandCursor;
   int searchPointer;
   int savedSize;
+  pair<int, int> lastCommand;  // <command char, input char (if necessary)>
+  string lastBufferCommand;
   bool exitCode;
   bool CFile;
   bool searchDirection;  // 0 backwards, 1 forwards
@@ -43,6 +44,7 @@ class VM : public Model {
   pair<int, int> WindowSize;
   pair<int, int> WindowPointer;
   vector<string> text;
+  vector<string> dot;
   vector<unique_ptr<EditorComponent>> components;
   vector<FILE*> undoStack;                           // row text and which row
   vector<pair<pair<int, int>, time_t>> cursorStack;  // cursor position and time

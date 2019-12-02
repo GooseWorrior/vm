@@ -124,6 +124,12 @@ void VM::process() {
     } else {
       input = controller->getChar();
     }
+    if (input == '.') {
+      // most cases, we can replace input with lastCommand
+      // otherwise we will keep input as '.' and handle it later
+      input = vcursor.handleDot(lastCommand);
+      if (input = '\n') bufferCommand = lastBufferCommand;
+    }
     int prevChar = 0;
     bool edit = false;  // could be omitted
     if (state == 1 || state == 2 || state == 0)
@@ -147,7 +153,7 @@ void VM::process() {
       handleBCTemplate(input, 7);
     } else if (state == 8) {
       handleNoEditBC(input);
-    } else
+    } else {
       switch (input) {
         case KEY_LEFT:
           if (vcursor.getCol() != (--vcursor).getCol()) {
@@ -203,6 +209,7 @@ void VM::process() {
                 vcursor.handlex();
                 changeState(1);
                 view->printTextAll();  // works with this
+                lastCommand.first = 115;
                 break;
               case 120:  // x
                 if (shouldSave) {
@@ -212,12 +219,15 @@ void VM::process() {
                 edit = true;
                 prevChar = vcursor.handlex();
                 view->printTextAll();
+                lastCommand.first = 120;
                 break;
               case 114:  // r
                 edit = true;
                 prevChar = controller->getChar();
                 vcursor.handler(prevChar);
                 view->printTextAll();
+                lastCommand.first = 114;
+                lastCommand.second = prevChar;
                 break;
               case 79: {  // O
                 if (shouldSave) {
@@ -230,6 +240,7 @@ void VM::process() {
                 vcursor.insert('\n');
                 vcursor.setCursor(tmpRow, 0);
                 edit = true;
+                lastCommand.first = 79;
                 break;
               }
               case 111: {  // o
@@ -244,6 +255,7 @@ void VM::process() {
                 move(loc.first, loc.second);
                 vcursor.insert('\n');
                 edit = true;
+                lastCommand.first = 111;
                 break;
               }
             }
@@ -251,11 +263,17 @@ void VM::process() {
             if (shouldSave) {
               saveText();
               shouldSave = false;
+              dot.clear();
             }
             edit = true;
             vcursor.insert(input);
+            if (!dot.size()) {
+            } else if (input == '\n') {
+              dot.push_back("");
+            }
           }
       }
+    }
 
     updateWindowSize();
     vcursor.updatePointer(-1);
@@ -391,11 +409,12 @@ void VM::checkPlayEnd() {
       exeMotionDelete(macroLocation.top());
     } else if (type == "MOTIONCOPY") {
       exeMotionCopy(macroLocation.top());
-    } 
+    }
     macroLocation.pop();
     if (!macroPointer.empty() && type != "MOTIONCOPY" &&
-    type != "MOTIONDELETED" && type != "MOTIONDELETEC" &&
-    type != "MULTIPLIER") macroPointer.top() += shift;
+        type != "MOTIONDELETED" && type != "MOTIONDELETEC" &&
+        type != "MULTIPLIER")
+      macroPointer.top() += shift;
   }
 }
 
@@ -527,12 +546,18 @@ void VM::handleNoEditBC(int input) {
       } else if (bufferCommand[0] == 'd') {
         saveText();
         handleMotionDelete(0, bufferCommand.substr(1));
+        lastCommand.first = -1;
+        lastBufferCommand = bufferCommand;
       } else if (bufferCommand[0] == 'c') {
         saveText();
         handleMotionDelete(1, bufferCommand.substr(1));
+        lastCommand.first = -1;
+        lastBufferCommand = bufferCommand;
       } else if (bufferCommand[0] == 'y') {
         saveText();
         handleMotionCopy(bufferCommand.substr(1));
+        lastCommand.first = -1;
+        lastBufferCommand = bufferCommand;
       }
       break;
     default:
@@ -543,12 +568,12 @@ void VM::handleNoEditBC(int input) {
   }
 }
 
-void VM::handleMultiplier(string cmd) { 
+void VM::handleMultiplier(string cmd) {
   string number;
   while (!cmd.empty() && isdigit(cmd[0])) {
     number += cmd[0];
-    cmd = cmd.substr(1); 
-  } 
+    cmd = cmd.substr(1);
+  }
   if (cmd.empty()) {
     theComponents.addElement({0});
     errorMessage = "E136 multiplier argument not specified";
@@ -556,21 +581,23 @@ void VM::handleMultiplier(string cmd) {
   } else {
     int num = 0;
     try {
-      num = std::stoi(number, nullptr, 10); 
+      num = std::stoi(number, nullptr, 10);
     } catch (...) {
       theComponents.addElement({0});
       errorMessage = "E135 multiplier not valid";
       changeState(0);
       return;
     }
-    if (cmd[0] == '@' || cmd[0] == 'c' || cmd[0] == 'y' || cmd[0] == 'd') cmd += '\n';
+    if (cmd[0] == '@' || cmd[0] == 'c' || cmd[0] == 'y' || cmd[0] == 'd')
+      cmd += '\n';
     string multiCommand;
     for (int i = 0; i < num; ++i) {
       multiCommand += cmd;
     }
     string name = "MULTIPLIER";
     macroPointer.push(0);
-    curPlay.push(pair<string, vector<int>>(name, vector<int>(multiCommand.begin(), multiCommand.end())));
+    curPlay.push(pair<string, vector<int>>(
+        name, vector<int>(multiCommand.begin(), multiCommand.end())));
     macroLocation.push(pair<int, int>(vcursor.getRow(), vcursor.getCol()));
   }
   changeState(0);
@@ -588,10 +615,12 @@ void VM::handleMotionCopy(string cmd) {
       changeState(0);
       return;
     }
-    string name = "MOTIONCOPY"; 
-    if (cmd[0] == '@' || (isdigit(cmd[0]) && cmd[0] != 0)) cmd += '\n'; // optional
+    string name = "MOTIONCOPY";
+    if (cmd[0] == '@' || (isdigit(cmd[0]) && cmd[0] != 0))
+      cmd += '\n';  // optional
     macroPointer.push(0);
-    curPlay.push(pair<string, vector<int>>(name, vector<int>(cmd.begin(), cmd.end())));
+    curPlay.push(
+        pair<string, vector<int>>(name, vector<int>(cmd.begin(), cmd.end())));
     macroLocation.push(pair<int, int>(vcursor.getRow(), vcursor.getCol()));
   }
   changeState(0);
@@ -625,9 +654,11 @@ void VM::handleMotionDelete(bool mode, string cmd) {
     } else {
       name = "MOTIONDELETED";
     }
-   if (cmd[0] == '@' || (isdigit(cmd[0]) && cmd[0] != 0)) cmd += '\n'; // optional
+    if (cmd[0] == '@' || (isdigit(cmd[0]) && cmd[0] != 0))
+      cmd += '\n';  // optional
     macroPointer.push(0);
-    curPlay.push(pair<string, vector<int>>(name, vector<int>(cmd.begin(), cmd.end())));
+    curPlay.push(
+        pair<string, vector<int>>(name, vector<int>(cmd.begin(), cmd.end())));
     macroLocation.push(pair<int, int>(vcursor.getRow(), vcursor.getCol()));
   }
   changeState(0);
@@ -936,7 +967,7 @@ void VM::handleCommands(int input, bool* shouldSave) {
     case 4:  // ^D
       vcursor.handleCtrlD();
       break;
-    case 6:  // ^F v
+    case 6:  // ^F
       vcursor.handleCtrlF();
       break;
     case 7:  // ^G
@@ -945,9 +976,12 @@ void VM::handleCommands(int input, bool* shouldSave) {
     case 21:  // ^U
       vcursor.handleCtrlU();
       break;
+    case 46:  // .
+      break;
     case 65:  // A
       vcursor.setCursor(vcursor.getRow(), text[vcursor.getRow()].length());
       changeState(1);
+      lastCommand.first = 65;
       break;
     case 73:  // I
       vcursor.setCursor(vcursor.getRow(), 0);
@@ -958,6 +992,7 @@ void VM::handleCommands(int input, bool* shouldSave) {
                                               ? vcursor.getCol() + 1
                                               : 0);
       changeState(1);
+      lastCommand.first = 97;
       break;
     case 98:  // b
       vcursor.handleb();
@@ -972,6 +1007,7 @@ void VM::handleCommands(int input, bool* shouldSave) {
       break;
     case 74:
       vcursor.handleJ();
+      lastCommand.first = 74;
       break;
     case 48:
       // set to start of line
@@ -1016,7 +1052,7 @@ void VM::handleCommands(int input, bool* shouldSave) {
         bufferCommand = "q";
       }
       break;
-    case 83:  // S
+    case 83:  // S, needs custom clear line command
       changeState(1);
       vcursor.setCursor(vcursor.getRow(), 0);
       text[vcursor.getRow()] = "";
@@ -1042,8 +1078,9 @@ void VM::handleCommands(int input, bool* shouldSave) {
       commandCursor = 1;
       bufferCommand = "y";
       break;
-    case 82:  // R
+    case 82:  // R, for dot: extremely difficult since it can insert and replace
       changeState(2);
+      lastCommand.first = 82;
       break;
     case 117:  // u
       loadUndo();
@@ -1074,12 +1111,12 @@ void VM::handleCommands(int input, bool* shouldSave) {
     case 112:  // p
       vcursor.handlep(clipBoard);
       forcePrint();
-      // view->printTextAll();  // remove later
+      lastCommand.first = 112;
       break;
     case 80:  // P
       vcursor.handleP(clipBoard);
       forcePrint();
-      // view->printTextAll();  // remove later
+      lastCommand.first = 80;
       break;
     default:
       if (std::isdigit(input)) {

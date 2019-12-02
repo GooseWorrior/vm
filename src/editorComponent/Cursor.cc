@@ -10,6 +10,7 @@ using std::string;
 using std::vector;
 
 namespace CS246E {
+
 Cursor::Cursor(int row, int col, vector<string>& theText,
                pair<int, int>& winPtr, pair<int, int>& winSize, int& state)
     : theCursor{row, col},
@@ -148,6 +149,21 @@ int Cursor::erase(int prevInput, int input) {
     --(*this);
   }
   return prevChar;
+}
+
+// special interations with dot
+const vector<char> special1{'a', 'i', 'I'};
+const vector<char> special2{'s', 'S', 'o', 'O'};
+
+int Cursor::handleDot(pair<int, int> lastCommand) {
+  if (lastCommand.first == 'r') {  // r needs input
+    handler(lastCommand.second);
+    return 410;
+  } else if (lastCommand.first == -1) {
+    return '\n';  // simulate user inputting
+  } else {
+    return lastCommand.first;  // just pipe the command through
+  }
 }
 
 void Cursor::updatePointer(int mode) {
