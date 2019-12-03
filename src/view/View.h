@@ -9,6 +9,9 @@ class VM;
 class View {
  protected:
   VM* vm;
+  void printTextAfterward(int input, pair<int, int> prevCursor);
+  void printTextChar(int input, int prevChar);
+  void printTextLine(int input, pair<int, int> prevCursor, int prevChar);
 
  public:
   View(VM* vm);
@@ -20,9 +23,7 @@ class View {
                bool edit);
   void printTextAll();
   void printPlaceholder();
-  void printTextAfterward(int input, pair<int, int> prevCursor);
-  void printTextChar(int input, int prevChar);
-  void printTextLine(int input, pair<int, int> prevCursor, int prevChar);
+
   virtual ~View();
 };
 }  // namespace CS246E
