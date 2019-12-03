@@ -343,7 +343,15 @@ void SyntaxView::printPlaceholder() {
 void SyntaxView::printTextAll() {
   clear();
   for (size_t i = vm->WindowPointer.first; i <= vm->WindowPointer.second; ++i) {
-    printw("%s\n", vm->text[i].c_str());
+    for (int j = 0; j < vm->text[i].size(); ++j) {
+        if (vm->text[i][j] == '\t') {
+          addstr("        ");
+        } else {
+          addch(vm->text[i][j]);
+        }
+    }
+    addch('\n');
+    //printw("%s\n", vm->text[i].c_str()); if we ignore '/t'
   }
   refresh();
 }
@@ -355,7 +363,15 @@ void SyntaxView::printTextAfterward(int input, pair<int, int> prevCursor) {
   move(loc.first, 0);
   for (size_t i = vm->vcursor.getRow(); i <= vm->WindowPointer.second; ++i) {
     clrtoeol();
-    printw("%s\n", vm->text[i].c_str());
+    for (int j = 0; j < vm->text[i].size(); ++j) {
+        if (vm->text[i][j] == '\t') {
+          addstr("        ");
+        } else {
+          addch(vm->text[i][j]);
+        }
+    }
+    addch('\n');
+    //printw("%s\n", vm->text[i].c_str()); if we ignore '/t'
     refresh();
   }
 }
@@ -369,7 +385,12 @@ void SyntaxView::printTextLine(int input, pair<int, int> prevCursor,
     move(loc.first, loc.second);
     for (size_t i = vm->vcursor.getCol();
          i < vm->text[vm->vcursor.getRow()].size(); ++i) {
-      addch(vm->text[vm->vcursor.getRow()][i]);
+      if (vm->text[vm->vcursor.getRow()][i] == '\t') {
+          addstr("        ");
+      } else {
+          addch(vm->text[vm->vcursor.getRow()][i]);
+      }
+      //addch(vm->text[vm->vcursor.getRow()][i]); if ignore '\t'
     }
   } else if (vm->state == 1) {
     if (input == '\t') {
