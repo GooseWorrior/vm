@@ -96,11 +96,11 @@ class VM : public Model {
   void searchPlusOne();
   void findNear();
   void setFilenameStatus();
+  bool updateWindowSize();
 
  public:
   VM(string filename);
   void process();
-  bool updateWindowSize();
   pair<int, int> updateLoc();
   friend class SyntaxView;
   friend class PlainView;
