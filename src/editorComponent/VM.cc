@@ -211,22 +211,20 @@ void VM::process() {
                   saveText();
                   shouldSave = false;
                 }
-                edit = true;
-                vcursor.handlex();
                 changeState(1);
-                view->printTextAll();  // works with this
+                prevChar = vcursor.handlex();
+                forcePrint();
                 lastCommand.first = 115;
                 vcursor.dot.clear();
                 vcursor.dot.push_back(KEY_BACKSPACE);
-                break;
+                break;   // continue solves the null character
               case 120:  // x
                 if (shouldSave) {
                   saveText();
                   shouldSave = false;
                 }
-                edit = true;
                 prevChar = vcursor.handlex();
-                view->printTextAll();
+                forcePrint();
                 lastCommand.first = 120;
                 break;
               case 88:  // X
@@ -234,18 +232,15 @@ void VM::process() {
                   saveText();
                   shouldSave = false;
                 }
-                edit = true;
                 prevChar = vcursor.handleX();
-                view->printTextAll();
-
+                forcePrint();
                 lastCommand.first = 88;
                 break;
               case 114:  // r
                 saveText();
-                edit = true;
                 prevChar = controller->getChar();
                 vcursor.handler(prevChar);
-                view->printTextAll();
+                forcePrint();
                 lastCommand.first = 114;
                 lastCommand.second = prevChar;
                 break;

@@ -126,12 +126,12 @@ int Cursor::erase(int prevInput, int input, int pseudoState) {
     return prevChar;
   } else if (theCursor.second == 0) {
     int prevPos =
-      ifNegativeThenZero(theText[theCursor.first - 1].size() + stateOffset);
+        ifNegativeThenZero(theText[theCursor.first - 1].size() + stateOffset);
     if (((state == 1 || pseudoState == 1) && input == KEY_BACKSPACE) ||
-        (state == 0 && input == 120) || prevInput == '\n') {
+        (state == 0 && input == 120) || (state == 2 && canDelete())) {
       theText[theCursor.first - 1] += theText[theCursor.first];
       theText.erase(theText.begin() + theCursor.first);
-      replaceModeDelete.pop_back();
+      if (replaceModeDelete.size()) replaceModeDelete.pop_back();
     }
     if ((theCursor.first - winPtr.first) <= (winPtr.second - winPtr.first) &&
         winPtr.first > 0) {
