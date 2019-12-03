@@ -122,11 +122,11 @@ bool Cursor::canDelete() {
 
 int Cursor::erase(int prevInput, int input, int pseudoState) {
   char prevChar = 0;
-  int prevPos =
-      ifNegativeThenZero(theText[theCursor.first - 1].size() + stateOffset);
   if (theCursor.second == 0 && theCursor.first == 0) {
     return prevChar;
   } else if (theCursor.second == 0) {
+    int prevPos =
+      ifNegativeThenZero(theText[theCursor.first - 1].size() + stateOffset);
     if (((state == 1 || pseudoState == 1) && input == KEY_BACKSPACE) ||
         (state == 0 && input == 120) || prevInput == '\n') {
       theText[theCursor.first - 1] += theText[theCursor.first];

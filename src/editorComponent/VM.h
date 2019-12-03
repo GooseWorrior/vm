@@ -40,6 +40,7 @@ class VM : public Model {
   string errorMessage;
   string pattern;
   Cursor vcursor;
+  pair<string, vector<int>> curMacro;
   EditorComponent theComponents;
   pair<int, int> WindowSize;
   pair<int, int> WindowPointer;
@@ -50,7 +51,6 @@ class VM : public Model {
   vector<pair<int, int>> searchLibrary;
   pair<vector<string>, bool> clipBoard;
   std::map<string, vector<int>> macroLibrary;
-  pair<string, vector<int>> curMacro;
   std::stack<pair<string, vector<int>>> curPlay;
   std::stack<int> macroPointer;
   std::stack<pair<int, int>> macroLocation;
