@@ -76,9 +76,9 @@ void SyntaxView::loadLibrary() {
         DBETA, pair<regex, int>("^\\s*(" + i + ")($|\\s+)", 3)));
   }
   renderLibrary.push_back(pair<int, pair<regex, int>>(
-      PREDIRECT, pair<regex, int>("^\\s*(#include)\\s*(<|\")", 3)));
+      PREDIRECT, pair<regex, int>("^\\s*(#)\\s*(include)\\s*(<|\")", 3)));
   renderLibrary.push_back(pair<int, pair<regex, int>>(
-      POSTDIRECT, pair<regex, int>("^\\s*#include\\s*(<.*>|\".*\")", 6)));
+      POSTDIRECT, pair<regex, int>("^\\s*#\\s*include\\s*(<.*>|\".*\")", 6)));
   renderLibrary.push_back(
       pair<int, pair<regex, int>>(STRING, pair<regex, int>("\"", 6)));
   renderLibrary.push_back(
@@ -118,9 +118,11 @@ void SyntaxView::render(vector<pair<int, int>>& singleComment,
           if (it.first == PREDIRECT) {
             pair<int, int> loc1 = transferLoc(i, m.position(1));
             pair<int, int> loc2 = transferLoc(i, m.position(2));
-            mvchgat(loc1.first, loc1.second, 8, A_NORMAL, it.second.second,
+            pair<int, int> loc3 = transferLoc(i, m.position(3));
+            mvchgat(loc1.first, loc1.second, 1, A_NORMAL, it.second.second, NULL);
+            mvchgat(loc2.first, loc2.second, 8, A_NORMAL, it.second.second,
                     NULL);
-            mvchgat(loc2.first, loc2.second, 1, A_NORMAL, 6, NULL);
+            mvchgat(loc3.first, loc3.second, 1, A_NORMAL, 6, NULL);
             break;
           } else if (it.first == POSTDIRECT) {
             pair<int, int> loc = transferLoc(i, m.position(1));
