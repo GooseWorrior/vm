@@ -717,19 +717,18 @@ void VM::exeMotionCopy(pair<int, int> ref) {
 void VM::exeMotionDelete(pair<int, int> ref) {
   if (ref.first < vcursor.getRow()) {
     bool flag = false;
+    text[vcursor.getRow()].erase(
+      text[vcursor.getRow()].begin(),
+      text[vcursor.getRow()].begin() + 
+      ((vcursor.getCol() == text[vcursor.getRow()].size() - 1 && vcursor.getCol() != 0) ? vcursor.getCol() + 1: vcursor.getCol()));
+    text[ref.first].erase(text[ref.first].begin() + ref.second,
+                          text[ref.first].end());
     if (text[vcursor.getRow()].empty()){
       text.erase(text.begin() + vcursor.getRow());
-    } else {
-      text[vcursor.getRow()].erase(
-      text[vcursor.getRow()].begin(),
-      text[vcursor.getRow()].begin() + vcursor.getCol());
     }
     if (text[ref.first].empty()) {
       text.erase(text.begin() + ref.first);
       flag = true;
-    } else {
-      text[ref.first].erase(text[ref.first].begin() + ref.second,
-                          text[ref.first].end());
     }
     if (ref.first + 1 < vcursor.getRow()) {
       text.erase(text.begin() + ref.first + 1, text.begin() + vcursor.getRow());
@@ -760,8 +759,9 @@ void VM::exeMotionDelete(pair<int, int> ref) {
                           text[ref.first].begin() + ref.second);
   } else if (ref.second < vcursor.getCol()) {
     text[ref.first].erase(text[ref.first].begin() + ref.second,
-                          text[ref.first].begin() + vcursor.getCol());
-    vcursor.setCursor(ref.first, ref.second);
+                          text[ref.first].begin() + 
+                         ((vcursor.getCol() == text[vcursor.getRow()].size() - 1 && vcursor.getCol() != 0) ? vcursor.getCol() + 1: vcursor.getCol()));
+    vcursor.setCursor(ifNegativeThenZero(ref.first - 1), ref.second);
   } else {
     return;
   }
