@@ -226,7 +226,7 @@ void VM::process() {
                 }
                 edit = true;
                 prevChar = vcursor.handlex();
-                forcePrint();
+                view->printTextAll();
                 lastCommand.first = 120;
                 break;
               case 88:  // X
@@ -236,7 +236,8 @@ void VM::process() {
                 }
                 edit = true;
                 prevChar = vcursor.handleX();
-                forcePrint();
+                view->printTextAll();
+
                 lastCommand.first = 88;
                 break;
               case 114:  // r
@@ -294,7 +295,6 @@ void VM::process() {
           }
       }
     }
-    // if (lastCommand.first == -1) changeState(0);
     updateWindowSize();
     vcursor.updatePointer(-1);
     vcursor.updatePointer(1);

@@ -340,9 +340,6 @@ void SyntaxView::printPlaceholder() {
 
 void SyntaxView::printTextAll() {
   clear();
-  /*for (auto i : text) {
-    printw("%s\n", i.c_str());
-  }*/
   for (size_t i = vm->WindowPointer.first; i <= vm->WindowPointer.second; ++i) {
     printw("%s\n", vm->text[i].c_str());
   }
