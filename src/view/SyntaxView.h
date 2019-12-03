@@ -21,10 +21,6 @@ namespace CS246E {
 class VM;
 class SyntaxView : public View {
   vector<pair<int, pair<regex, int>>> renderLibrary;
-  void printTextAfterward(int input, pair<int, int> prevCursor);
-  void printTextLine(int input, pair<int, int> prevCursor,
-                     int prevChar);  // temporary
-  void printTextChar(int input, int prevChar);
   void loadLibrary();  // move to View
   void render(
       vector<pair<int, int>>& singleComment,
@@ -42,10 +38,6 @@ class SyntaxView : public View {
   SyntaxView(VM* vm);
   void update() override;
   ~SyntaxView();
-
-  // transport functions
-  void printTextAll();  // temporary
-  void printPlaceholder();
   void initialize();
 };
 }  // namespace CS246E
