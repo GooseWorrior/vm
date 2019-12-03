@@ -717,25 +717,29 @@ void VM::exeMotionCopy(pair<int, int> ref) {
 void VM::exeMotionDelete(pair<int, int> ref) {
   if (ref.first < vcursor.getRow()) {
     bool flag = false;
-    text[ref.first].erase(text[ref.first].begin() + ref.second,
-                          text[ref.first].end());
-    text[vcursor.getRow()].erase(
-        text[vcursor.getRow()].begin(),
-        text[vcursor.getRow()].begin() + vcursor.getCol());
+    if (text[vcursor.getRow()].empty()){
+      text.erase(text.begin() + vcursor.getRow());
+    } else {
+      text[vcursor.getRow()].erase(
+      text[vcursor.getRow()].begin(),
+      text[vcursor.getRow()].begin() + vcursor.getCol());
+    }
     if (text[ref.first].empty()) {
       text.erase(text.begin() + ref.first);
       flag = true;
+    } else {
+      text[ref.first].erase(text[ref.first].begin() + ref.second,
+                          text[ref.first].end());
     }
-    if (text[vcursor.getRow()].empty())
-      text.erase(text.begin() + vcursor.getRow());
     if (ref.first + 1 < vcursor.getRow()) {
       text.erase(text.begin() + ref.first + 1, text.begin() + vcursor.getRow());
     }
     if (flag) {
       vcursor.setCursor(ifNegativeThenZero(ref.first - 1), 0);
     } else {
-      vcursor.setCursor(ref.first, ref.second);
+      vcursor.setCursor(ref.first, ifNegativeThenZero(ref.second - 1));
     }
+    if (text.empty()) text.push_back("");
   } else if (ref.first > vcursor.getRow()) {
     text[vcursor.getRow()].erase(
         text[vcursor.getRow()].begin() + vcursor.getCol(),
