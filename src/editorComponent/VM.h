@@ -23,6 +23,14 @@ using std::vector;
 
 namespace CS246E {
 class VM : public Model {
+  class Undo {
+   public:
+    FILE* undoData;
+    pair<int, int> cursorPos;
+    time_t timer;
+    Undo(FILE* undoData, pair<int, int> cursorPos, time_t timer)
+        : undoData{undoData}, cursorPos{cursorPos}, timer{timer} {};
+  };
   int state;  // 0 - command/readonly, 1 - insert
   int commandCursor;
   int searchPointer;
@@ -45,8 +53,7 @@ class VM : public Model {
   pair<int, int> WindowPointer;
   vector<string> text;
   vector<unique_ptr<EditorComponent>> components;
-  vector<FILE*> undoStack;                           // row text and which row
-  vector<pair<pair<int, int>, time_t>> cursorStack;  // cursor position and time
+  vector<unique_ptr<Undo>> undoStack;  // cursor position and time
   vector<pair<int, int>> searchLibrary;
   pair<vector<string>, bool> clipBoard;
   std::map<string, vector<int>> macroLibrary;
@@ -74,7 +81,6 @@ class VM : public Model {
   void copyFile(string file);
   void findPairedBracket();
   void handleCommands(int input, bool* shouldSave);
-  // void handleBufferCommands(int input);
   void handleBCTemplate(int input, int state);
   void handleNoEditBC(int input);
   void handleGeneralBC();
@@ -88,7 +94,6 @@ class VM : public Model {
   void saveText();
   void saveRow();
   void loadUndo();
-  void loadCursor();
   void exeBufferCommand();
   void saveSearch();
   void searchMinusOne();

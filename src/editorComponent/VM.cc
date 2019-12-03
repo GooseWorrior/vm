@@ -718,12 +718,15 @@ void VM::exeMotionDelete(pair<int, int> ref) {
   if (ref.first < vcursor.getRow()) {
     bool flag = false;
     text[vcursor.getRow()].erase(
-      text[vcursor.getRow()].begin(),
-      text[vcursor.getRow()].begin() + 
-      ((vcursor.getCol() == text[vcursor.getRow()].size() - 1 && vcursor.getCol() != 0) ? vcursor.getCol() + 1: vcursor.getCol()));
+        text[vcursor.getRow()].begin(),
+        text[vcursor.getRow()].begin() +
+            ((vcursor.getCol() == text[vcursor.getRow()].size() - 1 &&
+              vcursor.getCol() != 0)
+                 ? vcursor.getCol() + 1
+                 : vcursor.getCol()));
     text[ref.first].erase(text[ref.first].begin() + ref.second,
                           text[ref.first].end());
-    if (text[vcursor.getRow()].empty()){
+    if (text[vcursor.getRow()].empty()) {
       text.erase(text.begin() + vcursor.getRow());
     }
     if (text[ref.first].empty()) {
@@ -758,9 +761,13 @@ void VM::exeMotionDelete(pair<int, int> ref) {
     text[ref.first].erase(text[ref.first].begin() + vcursor.getCol(),
                           text[ref.first].begin() + ref.second);
   } else if (ref.second < vcursor.getCol()) {
-    text[ref.first].erase(text[ref.first].begin() + ref.second,
-                          text[ref.first].begin() + 
-                         ((vcursor.getCol() == text[vcursor.getRow()].size() - 1 && vcursor.getCol() != 0) ? vcursor.getCol() + 1: vcursor.getCol()));
+    text[ref.first].erase(
+        text[ref.first].begin() + ref.second,
+        text[ref.first].begin() +
+            ((vcursor.getCol() == text[vcursor.getRow()].size() - 1 &&
+              vcursor.getCol() != 0)
+                 ? vcursor.getCol() + 1
+                 : vcursor.getCol()));
     vcursor.setCursor(ifNegativeThenZero(ref.first - 1), ref.second);
   } else {
     return;
@@ -1091,7 +1098,6 @@ void VM::handleCommands(int input, bool* shouldSave) {
       break;
     case 117:  // u
       loadUndo();
-      loadCursor();
       *shouldSave = true;
       break;
     case 104:  // h
@@ -1145,20 +1151,17 @@ void VM::saveText() {
       fputs(text[i].c_str(), pFile);
     }
   }
-
   rewind(pFile);
-  undoStack.push_back(pFile);
-
   time_t timer;
   time(&timer);
-  cursorStack.push_back(std::make_pair(
-      std::make_pair(vcursor.getRow(), vcursor.getCol()), timer));
+  undoStack.push_back(std::move(std::make_unique<Undo>(
+      pFile, std::make_pair(vcursor.getRow(), vcursor.getCol()), timer)));
 }
 
 void VM::loadUndo() {
   if (undoStack.size()) {
     char tempChar;
-    FILE* pFile = undoStack.back();
+    FILE* pFile = undoStack.back()->undoData;
     string line;
     int textRows = text.size();
     text.clear();
@@ -1201,28 +1204,23 @@ void VM::loadUndo() {
                                      : to_string(rowsChanged) + " change;";
     vmStatusString = changes + " before #" +
                      std::to_string(undoCount.first + undoStack.size()) + "  ";
-    undoStack.pop_back();
-    if (!undoStack.size()) {
-      undoCount = std::make_pair(undoCount.first + undoCount.second, 0);
-    }
-  } else {
-    vmStatusString = "Already at oldest change";
-  }
-}
 
-void VM::loadCursor() {
-  if (cursorStack.size()) {
-    int row = cursorStack.back().first.first;
-    int col = cursorStack.back().first.second;
+    int row = undoStack.back()->cursorPos.first;
+    int col = undoStack.back()->cursorPos.second;
     vcursor.setCursor(
         row, text[row].length() == col && text[row] != "" ? col - 1 : col);
     time_t currentTime;
     time(&currentTime);
 
     vmStatusString +=
-        std::to_string((int)difftime(currentTime, cursorStack.back().second)) +
+        std::to_string((int)difftime(currentTime, undoStack.back()->timer)) +
         " seconds ago";
-    cursorStack.pop_back();
+    undoStack.pop_back();
+    if (!undoStack.size()) {
+      undoCount = std::make_pair(undoCount.first + undoCount.second, 0);
+    }
+  } else {
+    vmStatusString = "Already at oldest change";
   }
 }
 
