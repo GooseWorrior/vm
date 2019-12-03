@@ -18,6 +18,7 @@ class PlainView : public View {
   void printTextLine(int input, pair<int, int> prevCursor,
                      int prevChar);  // temporary
   void printTextChar(int input, int prevChar);
+  void printTextAfterward(int input, pair<int, int> prevCursor);
 
  public:
   PlainView(VM* vm);
@@ -29,7 +30,6 @@ class PlainView : public View {
 
   // transport functions
   void printTextAll();  // temporary
-  void printTextAfterward(int input, pair<int, int> prevCursor);
   void printPlaceholder();
 
   void initialize();
