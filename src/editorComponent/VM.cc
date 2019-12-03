@@ -1082,6 +1082,10 @@ void VM::handleCommands(int input, bool* shouldSave) {
       }
       break;
     case 83:  // S
+      if (shouldSave) {
+        saveText();
+        *shouldSave = true;
+      }
       changeState(1);
       vcursor.setCursor(vcursor.getRow(), 0);
       text[vcursor.getRow()] = "";

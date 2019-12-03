@@ -23,20 +23,20 @@ class EditorComponent {
   string& VMErrorMessage;
   string& VMMacroName;
   vector<pair<int, unique_ptr<StatusLine>>> components;
+  void update();
+  string getContents(int type);
+  void reset();
 
  public:
   EditorComponent(pair<int, int>& winSize, pair<int, int>& winPtr,
                   Cursor& vcursor, vector<string>& text, int& state,
                   string& VMStatusLine, string& VMCommandLine,
                   string& errorMessage, string& VMMacroName);
-  void reset();
   void addElement(initializer_list<int> types);
   void deleteElement(initializer_list<int> types);
   pair<int, int> getLocation(int type);
-  string getContents(int type);
   bool updateContents();
   bool updateLocation();
-  void update();
   void print();
 };
 }  // namespace CS246E
