@@ -12,7 +12,6 @@
 #include "../view/SyntaxView.h"
 
 #include <regex>
-#include "CommandLine.h"
 #include "EditorComponent.h"
 #include "StatusLine.h"
 

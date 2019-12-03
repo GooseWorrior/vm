@@ -778,7 +778,15 @@ void Cursor::handlew() {
   if (theCursor.first == ifNegativeThenZero(theText.size() - 1) &&
       theCursor.second == ifNegativeThenZero(theText.back().length() - 1))
     return;
-
+  if (theText[theCursor.first].length() == 0 &&
+      theText.size() >= theCursor.first) {
+    int col = 0;
+    while (col < theText[theCursor.first + 1].length() &&
+           theText[theCursor.first + 1][col] == ' ')
+      ++col;
+    setCursor(theCursor.first + 1, col);
+    return;
+  }
   int row = theCursor.first;
   int col = theCursor.second;
   string temp;
