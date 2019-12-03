@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-#include "../editorComponent/VM.h"
 #include "View.h"
 
 using std::shared_ptr;
@@ -14,7 +13,6 @@ using std::vector;
 namespace CS246E {
 class VM;
 class PlainView : public View {
-  VM* vm;
   void printTextLine(int input, pair<int, int> prevCursor,
                      int prevChar);  // temporary
   void printTextChar(int input, int prevChar);
@@ -23,9 +21,6 @@ class PlainView : public View {
  public:
   PlainView(VM* vm);
   void update() override;
-  void display(pair<int, int> prevPointer, int input, pair<int, int> prevCursor,
-               pair<int, int> prevWindowSize, int prevChar, int prevSize,
-               bool edit) override;
   ~PlainView();
 
   // transport functions

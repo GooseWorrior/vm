@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-#include "../editorComponent/VM.h"
 #include "View.h"
 
 using std::map;
@@ -21,7 +20,6 @@ using std::vector;
 namespace CS246E {
 class VM;
 class SyntaxView : public View {
-  VM* vm;
   vector<pair<int, pair<regex, int>>> renderLibrary;
   void printTextAfterward(int input, pair<int, int> prevCursor);
   void printTextLine(int input, pair<int, int> prevCursor,
@@ -43,9 +41,6 @@ class SyntaxView : public View {
  public:
   SyntaxView(VM* vm);
   void update() override;
-  void display(pair<int, int> prevPointer, int input, pair<int, int> prevCursor,
-               pair<int, int> prevWindowSize, int prevChar, int prevSize,
-               bool edit) override;
   ~SyntaxView();
 
   // transport functions

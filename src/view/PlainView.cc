@@ -2,38 +2,16 @@
 #include <ncurses.h>
 #include <string>
 #include <vector>
+#include "../editorComponent/VM.h"
 
 using std::string;
 using std::vector;
 
 namespace CS246E {
-PlainView::PlainView(VM* vm) : View{}, vm{vm} {}
+PlainView::PlainView(VM* vm) : View{vm} {}
 
 void PlainView::initialize() {}
 
-void PlainView::display(pair<int, int> prevPointer, int input,
-                        pair<int, int> prevCursor,
-                        pair<int, int> prevWindowSize, int prevChar,
-                        int prevSize, bool edit) {
-  if (prevWindowSize != vm->WindowSize ||
-      prevPointer.first < vm->WindowPointer.first ||
-      prevPointer.second > vm->WindowPointer.second || input == 'u') {
-    printTextAll();
-  } else if (vm->text.size() != prevSize) {
-    printTextAfterward(input, prevCursor);
-  } else if (edit &&
-             vm->vcursor.getCol() != vm->text[vm->vcursor.getRow()].size()) {
-    printTextLine(input, prevCursor, prevChar);
-  } else if (edit) {
-    printTextChar(input, prevChar);
-  }
-
-  if (vm->vcursor.calculateLine() < vm->WindowSize.first &&
-          prevPointer != vm->WindowPointer ||
-      prevWindowSize != vm->WindowSize || input == 'u') {
-    printPlaceholder();
-  }
-}
 void PlainView::printPlaceholder() {
   attron(COLOR_PAIR(1));
   string placeholderString = "";
@@ -50,14 +28,14 @@ void PlainView::printTextAll() {
   clear();
   for (size_t i = vm->WindowPointer.first; i <= vm->WindowPointer.second; ++i) {
     for (int j = 0; j < vm->text[i].size(); ++j) {
-        if (vm->text[i][j] == '\t') {
-          addstr("        ");
-        } else {
-          addch(vm->text[i][j]);
-        }
+      if (vm->text[i][j] == '\t') {
+        addstr("        ");
+      } else {
+        addch(vm->text[i][j]);
+      }
     }
     addch('\n');
-    //printw("%s\n", vm->text[i].c_str()); if ignore '\n'
+    // printw("%s\n", vm->text[i].c_str()); if ignore '\n'
   }
   refresh();
 }
@@ -70,14 +48,14 @@ void PlainView::printTextAfterward(int input, pair<int, int> prevCursor) {
   for (size_t i = vm->vcursor.getRow(); i <= vm->WindowPointer.second; ++i) {
     clrtoeol();
     for (int j = 0; j < vm->text[i].size(); ++j) {
-        if (vm->text[i][j] == '\t') {
-          addstr("        ");
-        } else {
-          addch(vm->text[i][j]);
-        }
+      if (vm->text[i][j] == '\t') {
+        addstr("        ");
+      } else {
+        addch(vm->text[i][j]);
+      }
     }
     addch('\n');
-    //printw("%s\n", vm->text[i].c_str()); if ignore '\t'
+    // printw("%s\n", vm->text[i].c_str()); if ignore '\t'
     refresh();
   }
 }
@@ -92,11 +70,11 @@ void PlainView::printTextLine(int input, pair<int, int> prevCursor,
     for (size_t i = vm->vcursor.getCol();
          i < vm->text[vm->vcursor.getRow()].size(); ++i) {
       if (vm->text[vm->vcursor.getRow()][i] == '\t') {
-          addstr("        ");
+        addstr("        ");
       } else {
-          addch(vm->text[vm->vcursor.getRow()][i]);
+        addch(vm->text[vm->vcursor.getRow()][i]);
       }
-      //addch(vm->text[vm->vcursor.getRow()][i]); if ignore '\t'
+      // addch(vm->text[vm->vcursor.getRow()][i]); if ignore '\t'
     }
   } else if (vm->state == 1) {
     if (input == '\t') {

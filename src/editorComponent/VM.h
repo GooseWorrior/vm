@@ -108,6 +108,7 @@ class VM : public Model {
   pair<int, int> updateLoc();
   friend class SyntaxView;
   friend class PlainView;
+  friend class View;
 };
 }  // namespace CS246E
 #endif

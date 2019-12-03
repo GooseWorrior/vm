@@ -1,4 +1,6 @@
 #include "SyntaxView.h"
+#include "../editorComponent/VM.h"
+
 #include <ncurses.h>
 #include <algorithm>
 #include <cctype>
@@ -50,7 +52,7 @@ const vector<string> directiveType1{"#define", "#undef", "#if",    "#elif",
 const vector<string> directiveType2{"#endif", "#line"};
 const vector<char> bracketList{'(', ')', '[', ']', '{', '}'};
 
-SyntaxView::SyntaxView(VM* vm) : View{}, vm{vm} {}
+SyntaxView::SyntaxView(VM* vm) : View{vm} {}
 
 void SyntaxView::initialize() { loadLibrary(); }
 
@@ -119,7 +121,8 @@ void SyntaxView::render(vector<pair<int, int>>& singleComment,
             pair<int, int> loc1 = transferLoc(i, m.position(1));
             pair<int, int> loc2 = transferLoc(i, m.position(2));
             pair<int, int> loc3 = transferLoc(i, m.position(3));
-            mvchgat(loc1.first, loc1.second, 1, A_NORMAL, it.second.second, NULL);
+            mvchgat(loc1.first, loc1.second, 1, A_NORMAL, it.second.second,
+                    NULL);
             mvchgat(loc2.first, loc2.second, 8, A_NORMAL, it.second.second,
                     NULL);
             mvchgat(loc3.first, loc3.second, 1, A_NORMAL, 6, NULL);
@@ -303,31 +306,6 @@ pair<int, int> SyntaxView::OpenBracket(char openBracket, char closeBracket,
   return pair<int, int>{-1, -1};
 }
 
-void SyntaxView::display(pair<int, int> prevPointer, int input,
-                         pair<int, int> prevCursor,
-                         pair<int, int> prevWindowSize, int prevChar,
-                         int prevSize, bool edit) {
-  if (prevWindowSize != vm->WindowSize ||
-      prevPointer.first < vm->WindowPointer.first ||
-      prevPointer.second > vm->WindowPointer.second || input == 'u') {
-    printTextAll();
-  } else if (vm->text.size() != prevSize) {
-    printTextAfterward(input, prevCursor);
-  } else if (edit &&
-             vm->vcursor.getCol() != vm->text[vm->vcursor.getRow()].size()) {
-    printTextLine(input, prevCursor, prevChar);
-  } else if (edit) {
-    printTextChar(input, prevChar);
-  }
-
-  if (vm->vcursor.calculateLine() < vm->WindowSize.first &&
-          prevPointer != vm->WindowPointer ||
-      prevWindowSize != vm->WindowSize || input == 'u') {
-    printPlaceholder();
-  }
-  update();
-}
-
 void SyntaxView::printPlaceholder() {
   attron(COLOR_PAIR(1));
   string placeholderString = "";
@@ -344,14 +322,14 @@ void SyntaxView::printTextAll() {
   clear();
   for (size_t i = vm->WindowPointer.first; i <= vm->WindowPointer.second; ++i) {
     for (int j = 0; j < vm->text[i].size(); ++j) {
-        if (vm->text[i][j] == '\t') {
-          addstr("        ");
-        } else {
-          addch(vm->text[i][j]);
-        }
+      if (vm->text[i][j] == '\t') {
+        addstr("        ");
+      } else {
+        addch(vm->text[i][j]);
+      }
     }
     addch('\n');
-    //printw("%s\n", vm->text[i].c_str()); if we ignore '/t'
+    // printw("%s\n", vm->text[i].c_str()); if we ignore '/t'
   }
   refresh();
 }
@@ -364,14 +342,14 @@ void SyntaxView::printTextAfterward(int input, pair<int, int> prevCursor) {
   for (size_t i = vm->vcursor.getRow(); i <= vm->WindowPointer.second; ++i) {
     clrtoeol();
     for (int j = 0; j < vm->text[i].size(); ++j) {
-        if (vm->text[i][j] == '\t') {
-          addstr("        ");
-        } else {
-          addch(vm->text[i][j]);
-        }
+      if (vm->text[i][j] == '\t') {
+        addstr("        ");
+      } else {
+        addch(vm->text[i][j]);
+      }
     }
     addch('\n');
-    //printw("%s\n", vm->text[i].c_str()); if we ignore '/t'
+    // printw("%s\n", vm->text[i].c_str()); if we ignore '/t'
     refresh();
   }
 }
@@ -386,11 +364,11 @@ void SyntaxView::printTextLine(int input, pair<int, int> prevCursor,
     for (size_t i = vm->vcursor.getCol();
          i < vm->text[vm->vcursor.getRow()].size(); ++i) {
       if (vm->text[vm->vcursor.getRow()][i] == '\t') {
-          addstr("        ");
+        addstr("        ");
       } else {
-          addch(vm->text[vm->vcursor.getRow()][i]);
+        addch(vm->text[vm->vcursor.getRow()][i]);
       }
-      //addch(vm->text[vm->vcursor.getRow()][i]); if ignore '\t'
+      // addch(vm->text[vm->vcursor.getRow()][i]); if ignore '\t'
     }
   } else if (vm->state == 1) {
     if (input == '\t') {
