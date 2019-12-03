@@ -124,7 +124,7 @@ void VM::process() {
     } else {
       input = controller->getChar();
     }
-    if (input == '.') {
+    if (state == 0 && input == '.') {
       // for most cases, we can replace input with lastCommand
       // otherwise we will keep input as '.' and handle it later
       saveText();
