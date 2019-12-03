@@ -91,7 +91,12 @@ void PlainView::printTextLine(int input, pair<int, int> prevCursor,
     move(loc.first, loc.second);
     for (size_t i = vm->vcursor.getCol();
          i < vm->text[vm->vcursor.getRow()].size(); ++i) {
-      addch(vm->text[vm->vcursor.getRow()][i]);
+      if (vm->text[vm->vcursor.getRow()][i] == '\t') {
+          addstr("        ");
+      } else {
+          addch(vm->text[vm->vcursor.getRow()][i]);
+      }
+      //addch(vm->text[vm->vcursor.getRow()][i]); if ignore '\t'
     }
   } else if (vm->state == 1) {
     if (input == '\t') {
