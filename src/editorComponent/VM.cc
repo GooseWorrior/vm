@@ -808,34 +808,6 @@ void VM::handleGeneralBC() {
   commandCursor = 0;
 }
 
-/*void VM::handleBufferCommands(int input) {
-  switch (input) {
-    case KEY_LEFT:
-      if (commandCursor > 1) commandCursor--;
-      break;
-    case KEY_RIGHT:
-      if (commandCursor < bufferCommand.size()) commandCursor++;
-      break;
-    case KEY_BACKSPACE:
-      if (bufferCommand.size() == 1) {
-        state = 0;
-      } else if (commandCursor > 1) {
-        bufferCommand.erase(commandCursor - 1, 1);
-        commandCursor--;
-      }
-      break;
-    case '\n':
-      exeBufferCommand();
-      bufferCommand.clear();
-      state = 0;
-      commandCursor = 0;
-      break;
-    default:
-      bufferCommand.insert(commandCursor, 1, input);
-      commandCursor++;
-  }
-} */
-
 void VM::handleSearchForward() {
   pattern = bufferCommand.substr(1);
   bufferCommand.clear();
