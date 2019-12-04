@@ -412,7 +412,7 @@ int VM::macroGets() {
 }
 
 void VM::checkPlayEnd() {
-  if (macroPointer.top() >= curPlay.top().second.size()) {
+  while (!macroPointer.empty() && macroPointer.top() >= curPlay.top().second.size()) {
     int shift = macroPointer.top();
     string type = curPlay.top().first;
     curPlay.pop();
