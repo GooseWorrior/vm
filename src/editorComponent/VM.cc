@@ -330,15 +330,6 @@ void VM::process() {
       pair<int, int> loc = updateLoc();
       move(loc.first, loc.second);
     }
-    // not sure if should keep
-    if (curPlay.size() > 0) {
-      std::ofstream f1;
-      f1.open("debug.txt", std::ios::app);
-      for (auto j : curPlay.top().second) f1 << wchar_t(j) << " ";
-      f1 << '\n';
-      f1 << macroPointer.top() << '\n';
-      f1.close();
-    }
   }
 }
 
