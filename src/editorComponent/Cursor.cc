@@ -757,14 +757,22 @@ void Cursor::handleb() {
     }
     firstTime = false;
   }
+  if (i == theCursor.second && !theCursor.first) {
+    setCursor(0, 0);
+    return;
+  }
   if (theCursor.first && i >= theText[row - 1].length()) {  // stay on same row
-    int newCol = i - theText[row - 1].length();
-    setCursor(row, newCol);
+    if (!theText[row - 1].length() && i == -1) {
+      setCursor(row - 1, 0);
+    } else {
+      int newCol = i - theText[row - 1].length();
+      setCursor(row, newCol);
+    }
   } else if (!theCursor.first) {
     setCursor(row, ifNegativeThenZero(i));
   } else {
     --row;
-    setCursor(row, i);
+    setCursor(row, ifNegativeThenZero(i));
   }
 }
 
