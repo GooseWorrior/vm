@@ -65,10 +65,10 @@ class VM : public Model {
 
   bool pureMacro(string type);
   void forcePrint();
-  void exeMotionDelete(pair<int, int> ref);
+  void exeMotionRemove(pair<int, int> ref);
   void exeMotionCopy(pair<int, int> ref);
   void handleMultiplier(string cmd);
-  void handleMotionDelete(bool mode, string cmd);
+  void handleMotionRemove(bool mode, string cmd);
   void handleMotionCopy(string cmd);
   void changeState(int mode);
   int macroGets();

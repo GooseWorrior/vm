@@ -33,7 +33,7 @@ class EditorComponent {
                   string& VMStatusLine, string& VMCommandLine,
                   string& errorMessage, string& VMMacroName);
   void addElement(initializer_list<int> types);
-  void deleteElement(initializer_list<int> types);
+  void removeElement(initializer_list<int> types);
   pair<int, int> getLocation(int type);
   bool updateContents();
   bool updateLocation();

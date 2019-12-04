@@ -163,25 +163,25 @@ void VM::process() {
         case KEY_LEFT:
           if (vcursor.getCol() != (--vcursor).getCol()) {
             shouldSave = true;
-            vcursor.replaceModeDelete.clear();
+            vcursor.replaceModeRemove.clear();
           }
           break;
         case KEY_RIGHT:
           if (vcursor.getCol() != (++vcursor).getCol()) {
             shouldSave = true;
-            vcursor.replaceModeDelete.clear();
+            vcursor.replaceModeRemove.clear();
           }
           break;
         case KEY_UP:
           if (vcursor.getRow() != vcursor.prevLine().getRow()) {
             shouldSave = true;
-            vcursor.replaceModeDelete.clear();
+            vcursor.replaceModeRemove.clear();
           }
           break;
         case KEY_DOWN:
           if (vcursor.getRow() != vcursor.nextLine().getRow()) {
             shouldSave = true;
-            vcursor.replaceModeDelete.clear();
+            vcursor.replaceModeRemove.clear();
           }
           break;
         case KEY_BACKSPACE:
@@ -199,7 +199,7 @@ void VM::process() {
           if (state == 1 && vcursor.getCol() > 0) {
             vcursor.setCursor(vcursor.getRow(), vcursor.getCol() - 1);
           }
-          vcursor.replaceModeDelete.clear();
+          vcursor.replaceModeRemove.clear();
           changeState(0);
           break;
         default:
@@ -299,12 +299,12 @@ void VM::process() {
 
     if (prevState != state) {
       if (prevState == 1 || prevState == 2) {
-        theComponents.deleteElement({2, 3, 1});
+        theComponents.removeElement({2, 3, 1});
       } else if (prevState == 3 || prevState == 4 || prevState == 5 ||
                  prevState == 6 || prevState == 7 || prevState == 8) {
-        theComponents.deleteElement({4});
+        theComponents.removeElement({4});
       } else if (prevState == 0) {
-        theComponents.deleteElement({0, 5, 3, 1, 6});
+        theComponents.removeElement({0, 5, 3, 1, 6});
         vmStatusString.clear();
         errorMessage.clear();
       }
@@ -380,7 +380,7 @@ void VM::handleRecordEnd() {
   curMacro.first.clear();
   curMacro.second.clear();
   recordOn = false;
-  theComponents.deleteElement({7});
+  theComponents.removeElement({7});
 }
 
 void VM::handlePlayMacro() {
@@ -409,10 +409,10 @@ void VM::checkPlayEnd() {
     curPlay.pop();
     macroPointer.pop();
     if (type == "MOTIONDELETEC") {
-      exeMotionDelete(macroLocation.top());
+      exeMotionRemove(macroLocation.top());
       changeState(1);
     } else if (type == "MOTIONDELETED") {
-      exeMotionDelete(macroLocation.top());
+      exeMotionRemove(macroLocation.top());
     } else if (type == "MOTIONCOPY") {
       exeMotionCopy(macroLocation.top());
     }
@@ -556,12 +556,12 @@ void VM::handleNoEditBC(int input) {
         handleMultiplier(bufferCommand);
       } else if (bufferCommand[0] == 'd') {
         saveText();
-        handleMotionDelete(0, bufferCommand.substr(1));
+        handleMotionRemove(0, bufferCommand.substr(1));
         lastCommand.first = -1;
         lastBufferCommand = bufferCommand;
       } else if (bufferCommand[0] == 'c') {
         saveText();
-        handleMotionDelete(1, bufferCommand.substr(1));
+        handleMotionRemove(1, bufferCommand.substr(1));
         lastCommand.first = -1;
         lastBufferCommand = bufferCommand;
       } else if (bufferCommand[0] == 'y') {
@@ -637,7 +637,7 @@ void VM::handleMotionCopy(string cmd) {
   changeState(0);
 }
 
-void VM::handleMotionDelete(bool mode, string cmd) {
+void VM::handleMotionRemove(bool mode, string cmd) {
   if (cmd.empty()) {
     changeState(0);
     return;
@@ -705,7 +705,7 @@ void VM::exeMotionCopy(pair<int, int> ref) {
   }
 }
 
-void VM::exeMotionDelete(pair<int, int> ref) {
+void VM::exeMotionRemove(pair<int, int> ref) {
   if (ref.first < vcursor.getRow()) {
     bool flag = false;
     text[vcursor.getRow()].erase(
@@ -895,7 +895,7 @@ void VM::searchPlusOne() {
       searchPointer++;
       vcursor.setCursor(searchLibrary[searchPointer].first,
                         searchLibrary[searchPointer].second);
-      theComponents.deleteElement({6});
+      theComponents.removeElement({6});
       errorMessage.clear();
     }
   } else {
@@ -909,7 +909,7 @@ void VM::searchPlusOne() {
       searchPointer--;
       vcursor.setCursor(searchLibrary[searchPointer].first,
                         searchLibrary[searchPointer].second);
-      theComponents.deleteElement({6});
+      theComponents.removeElement({6});
       errorMessage.clear();
     }
   }
@@ -934,7 +934,7 @@ void VM::searchMinusOne() {
       searchPointer--;
       vcursor.setCursor(searchLibrary[searchPointer].first,
                         searchLibrary[searchPointer].second);
-      theComponents.deleteElement({6});
+      theComponents.removeElement({6});
       errorMessage.clear();
     }
   } else {
@@ -948,7 +948,7 @@ void VM::searchMinusOne() {
       searchPointer++;
       vcursor.setCursor(searchLibrary[searchPointer].first,
                         searchLibrary[searchPointer].second);
-      theComponents.deleteElement({6});
+      theComponents.removeElement({6});
       errorMessage.clear();
     }
   }

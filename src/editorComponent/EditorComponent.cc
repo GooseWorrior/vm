@@ -35,7 +35,7 @@ EditorComponent::EditorComponent(pair<int, int> &winSize,
       VMErrorMessage{VMErrorMessage},
       VMMacroName{VMMacroName} {}
 void EditorComponent::reset() { components.clear(); }
-void EditorComponent::deleteElement(initializer_list<int> types) {
+void EditorComponent::removeElement(initializer_list<int> types) {
   for (auto i : types) {
     auto iter = find_if(components.begin(), components.end(),
                         [&i](pair<int, unique_ptr<StatusLine>> &ref) {

@@ -29,7 +29,7 @@ class Cursor {
   int& state;
   // unique_ptr<ControlCommand> ctrlcmd;
 
-  vector<pair<int, int>> replaceModeDelete;
+  vector<pair<int, int>> replaceModeRemove;
   vector<int> dot;
 
   Cursor& operator++();
@@ -58,7 +58,7 @@ class Cursor {
   void handleP(pair<vector<string>, bool>& clipBoard);
   void handler(int input);
   void updatePointer(int mode);
-  bool canDelete();
+  bool canRemove();
   void updateStateOffset(int offset);
 
  public:

@@ -88,7 +88,7 @@ Cursor& Cursor::insert(int c, int pseudoState) {
     }
     theCursor.second = 0;
     theCursor.first++;
-    replaceModeDelete.push_back(std::make_pair(theCursor.first, 0));
+    replaceModeRemove.push_back(std::make_pair(theCursor.first, 0));
   } else if (state == 1 || pseudoState == 1) {
     theText[theCursor.first].insert(theCursor.second, 1, c);
     if (pseudoState == 1)
@@ -98,23 +98,23 @@ Cursor& Cursor::insert(int c, int pseudoState) {
   } else if (state == 2 || pseudoState == 2) {
     if (theCursor.second == theText[theCursor.first].size()) {
       theText[theCursor.first].insert(theCursor.second, 1, c);
-      if (!replaceModeDelete.size() ||
-          replaceModeDelete.back().first != theCursor.first)
-        replaceModeDelete.push_back(
+      if (!replaceModeRemove.size() ||
+          replaceModeRemove.back().first != theCursor.first)
+        replaceModeRemove.push_back(
             std::make_pair(theCursor.first, theCursor.second + 1));
     } else {
       theText[theCursor.first][theCursor.second] = c;
-      replaceModeDelete.clear();
+      replaceModeRemove.clear();
     }
     ++(*this);
   }
   return *this;
 }
 
-bool Cursor::canDelete() {
-  for (pair<int, int> canDelete : replaceModeDelete) {
-    if (theCursor.first == canDelete.first &&
-        theCursor.second >= canDelete.second)
+bool Cursor::canRemove() {
+  for (pair<int, int> canRemove : replaceModeRemove) {
+    if (theCursor.first == canRemove.first &&
+        theCursor.second >= canRemove.second)
       return true;
   }
   return false;
@@ -128,10 +128,10 @@ int Cursor::erase(int prevInput, int input, int pseudoState) {
     int prevPos =
         ifNegativeThenZero(theText[theCursor.first - 1].size() + stateOffset);
     if (((state == 1 || pseudoState == 1) && input == KEY_BACKSPACE) ||
-        (state == 0 && input == 120) || (state == 2 && canDelete())) {
+        (state == 0 && input == 120) || (state == 2 && canRemove())) {
       theText[theCursor.first - 1] += theText[theCursor.first];
       theText.erase(theText.begin() + theCursor.first);
-      if (replaceModeDelete.size()) replaceModeDelete.pop_back();
+      if (replaceModeRemove.size()) replaceModeRemove.pop_back();
     }
     if ((theCursor.first - winPtr.first) <= (winPtr.second - winPtr.first) &&
         winPtr.first > 0) {
@@ -144,7 +144,7 @@ int Cursor::erase(int prevInput, int input, int pseudoState) {
     // theCursor.second = theText[theCursor.first].size();
     theCursor.second = prevPos;
   } else if (((state == 1 || pseudoState == 1) && input == KEY_BACKSPACE) ||
-             (state == 0 && input == 120) || (state == 2 && canDelete())) {
+             (state == 0 && input == 120) || (state == 2 && canRemove())) {
     prevChar = theText[theCursor.first][theCursor.second - 1];
     theText[theCursor.first].erase(theCursor.second - 1, 1);
     --(*this);
@@ -196,7 +196,7 @@ int Cursor::handleDot(pair<int, int> lastCommand) {
         setCursor(tmpRow, 0);
         insert('\n');
         setCursor(tmpRow, 0);
-      } else if (entry == -2) {  // delete row
+      } else if (entry == -2) {  // remove row
         theText[theCursor.first] = "";
       } else {
         insert(entry, 1);

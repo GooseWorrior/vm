@@ -30,7 +30,7 @@ const int MULTCOMMTBETA = 11;
 
 const vector<string> keyWord{"if",          "else",         "while",
                              "for",         "do",           "using",
-                             "try",         "delete",       "break",
+                             "try",         "remove",       "break",
                              "case",        "catch",        "continue",
                              "default",     "dynamic_cast", "using",
                              "static_cast", "friend",       "goto",
