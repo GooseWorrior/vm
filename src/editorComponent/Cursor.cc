@@ -97,9 +97,6 @@ Cursor& Cursor::insert(int c, int pseudoState) {
       ++(*this);
   } else if (state == 2 || pseudoState == 2) {
     if (theCursor.second == theText[theCursor.first].size()) {
-      std::fstream f;
-      f.open("debug.txt");
-      f << theText[theCursor.first];
       theText[theCursor.first].insert(theCursor.second, 1, c);
       if (!replaceModeDelete.size() ||
           replaceModeDelete.back().first != theCursor.first)
@@ -183,6 +180,8 @@ int Cursor::handleDot(pair<int, int> lastCommand) {
         }
       }
     }
+    if (theCursor.second == theText[theCursor.first].length())
+      --theCursor.second;
     return 46;
   }
   if (lastCommand.first == 'a' || lastCommand.first == 'A' ||
