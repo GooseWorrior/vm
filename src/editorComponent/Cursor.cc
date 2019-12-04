@@ -91,7 +91,10 @@ Cursor& Cursor::insert(int c, int pseudoState) {
     replaceModeDelete.push_back(std::make_pair(theCursor.first, 0));
   } else if (state == 1 || pseudoState == 1) {
     theText[theCursor.first].insert(theCursor.second, 1, c);
-    ++(*this);
+    if (pseudoState == 1)
+      ++theCursor.second;
+    else
+      ++(*this);
   } else if (state == 2 || pseudoState == 2) {
     if (theCursor.second == theText[theCursor.first].size()) {
       std::fstream f;
@@ -201,6 +204,8 @@ int Cursor::handleDot(pair<int, int> lastCommand) {
         // ++operator prevents going past last character, so handles it here
       }
     }
+    if (theCursor.second == theText[theCursor.first].length())
+      --theCursor.second;
     return 46;
   }
 
