@@ -117,6 +117,7 @@ void VM::process() {
   bool shouldSave = true;
 
   while (exitCode) {
+    prevState = state;
     if (!macroPointer.empty()) checkPlayEnd();
     prevInput = input;
     if (!macroPointer.empty()) {
@@ -143,7 +144,6 @@ void VM::process() {
     prevSize = text.size();
     prevPointer = WindowPointer;
     prevWindowSize = WindowSize;
-    prevState = state;
     if (recordOn) loadMacro(input);
     if (input != 'n' && input != 'N') searchPointer = -1;
     if (state == 3) {
