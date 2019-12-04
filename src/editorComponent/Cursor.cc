@@ -199,9 +199,6 @@ int Cursor::handleDot(pair<int, int> lastCommand) {
       } else {
         insert(entry, 1);
         // ++operator prevents going past last character, so handles it here
-        if (theText[theCursor.first].length() == 1) {
-          ++theCursor.second;
-        }
       }
     }
     return 46;
@@ -761,10 +758,18 @@ void Cursor::handleb() {
     setCursor(0, 0);
     return;
   }
-  if (theCursor.first && i >= theText[row - 1].length()) {  // stay on same row
+  if (i == theCursor.second && !theCursor.first) {
     if (!theText[row - 1].length() && i == -1) {
       setCursor(row - 1, 0);
     } else {
+      int newCol = i - theText[row - 1].length();
+      setCursor(row, newCol);
+    }
+  }
+  if (theCursor.first && i >= theText[row - 1].length()) {  // stay on same row
+    if (!theText[row - 1].length() && i == -1) {
+      setCursor(row - 1, 0);
+      setCursor(row, ifNegativeThenZero(i));
       int newCol = i - theText[row - 1].length();
       setCursor(row, newCol);
     }
