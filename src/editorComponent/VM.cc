@@ -1,6 +1,9 @@
 #include <ncurses.h>
 #include <fstream>
 
+#include <unistd.h>
+#include <cstdlib>
+#include <ctime>
 #include <stdio.h>
 #include <algorithm>
 #include <cctype>
@@ -24,6 +27,19 @@ using std::to_string;
 namespace CS246E {
 const vector<char> motion{'b', 'c', 'f', 'h', 'j', 'k', 'l', 'n',
                           'N', 'w', 'F', '$', '^', '0', ';', '%'};
+const vector<string> picture   = {"   ****           ****      ****           *****       *****            ",
+						                      "    ****         ****       ****           *****       *****            ",
+						                      "     ****       ****                      *******     *******           ",
+						                      "      ****     ****         ****         *********   *********          ",
+						                      "        ****  ****          ****        ***** ***** ***** *****         ",
+						                      "         ********           ****       *****   *********   *****        ",
+						                      "          ******            ****      *****     *******     *****       ",
+						                      "           ****             ****     *****                   *****      ",
+						                      "            **              ****    *****                     *****     ",}; 
+						   
+const int pivot_x = 10;
+const int pivot_y = 5;
+
 VM::VM(string filename)
     : state{0},
       commandCursor{0},
@@ -1122,6 +1138,10 @@ void VM::handleCommands(int input, bool* shouldSave) {
       forcePrint();
       lastCommand.first = 80;
       break;
+    case 42: // * easter egg
+      printEasterEgg();
+      forcePrint();
+      break;
     default:
       if (std::isdigit(input)) {
         state = 8;
@@ -1131,6 +1151,68 @@ void VM::handleCommands(int input, bool* shouldSave) {
       break;
   }
 }
+
+void VM::printEasterEgg() {
+  clear();
+  std::srand(std::time(0));
+	bool flag[9] = {0};
+	int tmp_y = 0;
+	vector<int> pivot{62, 62, 62, 62, 66, 66, 62, 62, 62};
+	const int tmp_x = pivot_y;
+	vector<string> ref = picture;
+	vector<vector<int>> print_lst;
+	while (check_flag(flag)) {
+    clear();
+		do {
+			tmp_y = std::rand() % 9 + pivot_y;
+		} while (flag[tmp_y - pivot_y]);
+		print_lst.push_back({1, tmp_x, tmp_y});
+		printEasterCore(print_lst);
+		for (auto & i : print_lst) i[1] += i[0];
+		check_picture(print_lst, ref, flag, pivot);
+    refresh();
+    usleep(10000);
+	}	
+  refresh();
+	move(0, 0);
+	usleep(2000000);
+  clear();
+}
+
+void VM::check_picture(vector<vector<int>> & print_lst, vector<string> ref, bool flag[9], vector<int> & pivot) {
+	for (auto &i : print_lst) {
+		int ref_row = i[2] - pivot_y;
+		int ref_col = pivot[i[2] - pivot_y];
+		if (i[0] && i[1] == ref_col + pivot_x && flag[ref_row] == 0) {
+			i[0] = 0;
+			if (ref_col == 0) flag[ref_row] = 1;
+			else {
+			    pivot[ref_row]--;
+				while (ref[ref_row][pivot[ref_row]] != '*' && pivot[ref_row] > 0) {
+		    		pivot[ref_row]--;
+				}
+			}  	
+		} else if (i[0] && i[1] > pivot[i[2] - pivot_y] + pivot_x) {
+			i[1] = pivot[i[2] - pivot_y] + pivot_x;
+			i[0] = 0;
+		}
+	}
+}
+
+void VM::printEasterCore(vector<vector<int>> lst) {
+	for (auto & i : lst) {
+	  move(i[2], i[1]);
+		addch('*');
+	}
+}
+
+bool VM::check_flag(bool flag[9]) {
+	for (int i = 0; i < 9; i++) {
+		if (!flag[i]) return 1;
+	}
+	return 0;
+}
+
 
 void VM::saveText() {
   FILE* pFile;

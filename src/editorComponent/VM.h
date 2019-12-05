@@ -63,6 +63,11 @@ class VM : public Model {
   pair<int, int> undoCount;
   string vmStatusString;
 
+  void printEasterEgg();
+  void printEasterCore(vector<vector<int>> lst);
+  void check_picture(vector<vector<int>> & print_lst, vector<string> ref, bool flag[9], vector<int> & pivot);
+  bool check_flag(bool flag[9]);
+  
   bool pureMacro(string type);
   void forcePrint();
   void exeMotionRemove(pair<int, int> ref);
